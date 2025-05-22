@@ -1,103 +1,122 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Flight } from '@/services/flight';
-import { getUserDetails } from '@/services/flight';
+import { X } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface FlightDetailsProps {
-  flight: Flight | null;
+  flight: Flight;
   serverID: string;
   onClose: () => void;
 }
 
 const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [showMore, setShowMore] = useState(false);
+  
+  // Format last report time
+  const formatTime = (timestamp: number): string => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return 'Unknown';
+    }
+  };
 
   useEffect(() => {
-    const loadUserInfo = async () => {
-      if (!flight) return;
-      setLoading(true);
-      try {
-        const data = await getUserDetails(serverID, flight.userId);
-        if (data) {
-          setUserInfo(data);
-        }
-      } catch (error) {
-        console.error("Failed to load user info", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserInfo();
-  }, [flight, serverID]);
-
-  if (!flight) return null;
+    // Reset state when flight changes
+    setShowMore(false);
+  }, [flight]);
 
   return (
-    <Card className="absolute bottom-8 right-8 w-80 z-10 shadow-lg animate-fade-in bg-white/95 backdrop-blur-sm">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-bold text-flight-dark-blue">{flight.callsign}</h3>
-            <p className="text-sm text-gray-600">{flight.aircraft}</p>
+    <div className="absolute top-16 right-0 p-4 z-10 w-80 max-h-[80vh] overflow-y-auto">
+      <div className="bg-[#151920] border border-gray-700 rounded-md shadow-xl text-white">
+        <div className="flex justify-between items-center border-b border-gray-700 p-3">
+          <div className="flex flex-col">
+            <div className="flex space-x-2 items-baseline">
+              <span className="font-bold text-lg">{flight.callsign}</span>
+              <span className="text-sm text-gray-400">{flight.username}</span>
+            </div>
+            <div className="text-xs text-gray-300">{serverID}</div>
           </div>
-          <button 
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-gray-400 hover:text-white" 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800"
           >
-            ✕
-          </button>
+            <X size={18} />
+          </Button>
         </div>
         
-        <div className="mt-4 space-y-3">
-          <div>
-            <p className="text-xs text-gray-500">Altitude</p>
-            <p className="font-medium">{Math.round(flight.altitude).toLocaleString()} ft</p>
+        <div className="p-3 border-b border-gray-700">
+          <div className="flex justify-between mb-1">
+            <span className="text-sm text-gray-400">Aircraft</span>
+            <span className="font-medium">{flight.aircraft}</span>
           </div>
-          
-          <div>
-            <p className="text-xs text-gray-500">Speed</p>
-            <p className="font-medium">{Math.round(flight.speed).toLocaleString()} kts</p>
+          <div className="flex justify-between mb-1">
+            <span className="text-sm text-gray-400">Livery</span>
+            <span className="font-medium">{flight.livery}</span>
           </div>
-
-          <div>
-            <p className="text-xs text-gray-500">Heading</p>
-            <p className="font-medium">{Math.round(flight.heading)}°</p>
-          </div>
-
-          <div className="border-t pt-3 mt-3">
-            <h4 className="font-medium mb-2">User Information</h4>
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            ) : userInfo ? (
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-flight-light-blue flex items-center justify-center text-white font-bold">
-                    {userInfo.username?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <p className="font-medium">{userInfo.username}</p>
-                    {userInfo.virtualOrganization && (
-                      <p className="text-xs text-gray-600">{userInfo.virtualOrganization}</p>
-                    )}
-                  </div>
-                </div>
-                {userInfo.grade && (
-                  <p className="text-sm">Grade: {userInfo.grade}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm italic text-gray-500">No user information available</p>
-            )}
+          {flight.virtualOrganization && (
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-400">VA/Group</span>
+              <span className="font-medium">{flight.virtualOrganization}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="p-3 border-b border-gray-700">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="text-sm text-gray-400">Altitude</div>
+              <div className="font-medium">{Math.round(flight.altitude)} ft</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-400">Speed</div>
+              <div className="font-medium">{Math.round(flight.speed)} kts</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-400">Heading</div>
+              <div className="font-medium">{Math.round(flight.heading)}°</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-400">Last Update</div>
+              <div className="font-medium">{formatTime(flight.lastReportTime)}</div>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="p-3">
+          <Button 
+            variant="outline" 
+            className="w-full text-sm border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300"
+            onClick={() => setShowMore(!showMore)}
+          >
+            {showMore ? 'Show Less' : 'Show More'}
+          </Button>
+          
+          {showMore && (
+            <div className="mt-3 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-400">Flight ID</span>
+                <span className="text-xs text-gray-300 font-mono">{flight.flightId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-400">User ID</span>
+                <span className="text-xs text-gray-300 font-mono">{flight.userId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-400">Position</span>
+                <span className="text-xs text-gray-300 font-mono">
+                  {flight.latitude.toFixed(4)}, {flight.longitude.toFixed(4)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

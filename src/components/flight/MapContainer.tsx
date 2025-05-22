@@ -1,8 +1,6 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { toast } from "sonner";
 
 interface MapContainerProps {
   onMapInit: (map: mapboxgl.Map) => void;
@@ -10,106 +8,42 @@ interface MapContainerProps {
 
 const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapInitialized, setMapInitialized] = useState(false);
   
+  // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current) return;
     
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: {
-          version: 8,
-          sources: {
-            'osm-tiles': {
-              type: 'raster',
-              tiles: ['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-                      'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-                      'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: '© OpenStreetMap contributors, © CARTO'
-            }
-          },
-          layers: [
-            {
-              id: 'osm-tiles',
-              type: 'raster',
-              source: 'osm-tiles',
-              minzoom: 0,
-              maxzoom: 19
-            }
-          ]
-        },
-        center: [0, 30], // Center on Atlantic for global view
-        zoom: 2,
-        minZoom: 1.5,
-        projection: 'mercator', // Explicitly set to mercator for flat map
-        renderWorldCopies: true, // Show multiple copies of the world
-        trackResize: true, // Automatically resize when window resizes
-        pitchWithRotate: false, // Disable pitch with rotate for smoother experience
-        bearingSnap: 0, // Disable snapping to north during rotation
-        dragRotate: false, // Disable rotation to prevent disorientation
-        preserveDrawingBuffer: true, // Improve rendering consistency
-      });
-      
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl({
-        showCompass: false, // Hide compass since we disabled rotation
-      }), 'top-right');
-
-      // Add attribution control
-      map.current.addControl(new mapboxgl.AttributionControl({
-        customAttribution: '© OpenStreetMap contributors'
-      }));
-
-      // Disable map rotation using keyboard and touch rotation
-      map.current.keyboard.disableRotation();
-      map.current.touchZoomRotate.disableRotation();
-
-      // Improve rendering performance
-      map.current.on('movestart', () => {
-        if (map.current) {
-          // Optimize rendering during map movement
-          map.current.getCanvas().style.willChange = 'transform';
-          
-          // Pause marker updates during movement for better performance
-          map.current.getCanvas().classList.add('moving');
-        }
-      });
-      
-      map.current.on('moveend', () => {
-        if (map.current) {
-          // Reset optimization after movement ends
-          map.current.getCanvas().style.willChange = 'auto';
-          
-          // Resume marker updates after movement
-          map.current.getCanvas().classList.remove('moving');
-        }
-      });
-
-      // When the map is loaded, call the onMapInit callback
-      map.current.on('load', () => {
-        if (map.current) {
-          console.log("Map fully loaded and initialized");
-          setMapInitialized(true);
-          onMapInit(map.current);
-        }
-      });
-    } catch (error) {
-      console.error("Failed to initialize map:", error);
-      toast.error("Failed to initialize map. Please refresh the page.");
-    }
-
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v11', // Dunkler Stil wie im Bild
+      center: [10.5, 51.0], // Zentriert auf Deutschland
+      zoom: 5,
+      projection: 'mercator'
+    });
+    
+    // Add navigation controls and disable rotation
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false
+    }), 'top-right');
+    
+    // Disable map rotation
+    map.dragRotate.disable();
+    map.touchZoomRotate.disableRotation();
+    
+    // Call the onMapInit callback when map is loaded
+    map.on('load', () => {
+      onMapInit(map);
+    });
+    
+    // Cleanup function
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      map.remove();
     };
   }, [onMapInit]);
 
-  return <div ref={mapContainer} className="absolute inset-0" />;
+  return (
+    <div ref={mapContainer} className="absolute inset-0 z-0" />
+  );
 };
 
 export default MapContainer;

@@ -75,7 +75,7 @@ const FlightMap: React.FC = () => {
       if (map && flight) {
         map.flyTo({
           center: [flight.longitude, flight.latitude],
-          zoom: 6,
+          zoom: 7,
           speed: 1.2
         });
       }
@@ -86,7 +86,7 @@ const FlightMap: React.FC = () => {
   };
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="relative h-screen w-full bg-[#151920]">
       {/* Server Selection Tabs */}
       <ServerSelection 
         servers={servers} 
