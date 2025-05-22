@@ -1,3 +1,4 @@
+
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
@@ -86,7 +87,7 @@ export function createRouteGeoJSON(
   // Ensure currentPositionIndex is within bounds
   const safeIndex = Math.max(0, Math.min(currentPositionIndex, validRoutePoints.length - 1));
   
-  // Create GeoJSON for traveled and remaining route
+  // Create GeoJSON for traveled and remaining route - always include all points
   const traveledCoords = validRoutePoints
     .slice(0, safeIndex + 1)
     .map(p => [p.longitude, p.latitude]);
@@ -124,6 +125,38 @@ export function createRouteGeoJSON(
       geometry: {
         type: 'LineString' as const,
         coordinates: remainingCoords
+      }
+    });
+  }
+  
+  // Add waypoints at start and end of route
+  if (validRoutePoints.length >= 2) {
+    const startPoint = validRoutePoints[0];
+    const endPoint = validRoutePoints[validRoutePoints.length - 1];
+    
+    // Add departure waypoint
+    features.push({
+      type: 'Feature' as const,
+      properties: {
+        type: 'waypoint',
+        waypointType: 'departure'
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [startPoint.longitude, startPoint.latitude]
+      }
+    });
+    
+    // Add destination waypoint
+    features.push({
+      type: 'Feature' as const,
+      properties: {
+        type: 'waypoint',
+        waypointType: 'destination'
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [endPoint.longitude, endPoint.latitude]
       }
     });
   }

@@ -59,15 +59,35 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           }
         });
         
-        // Add a more subtle waypoints layer - only important points
+        // Add departure waypoint (green circle)
         map.addLayer({
-          id: 'route-waypoints',
+          id: 'route-waypoint-departure',
           type: 'circle',
           source: 'route',
-          filter: ['==', ['get', 'type'], 'waypoint'],
+          filter: ['all', 
+            ['==', ['get', 'type'], 'waypoint'],
+            ['==', ['get', 'waypointType'], 'departure']
+          ],
           paint: {
-            'circle-radius': 4,
-            'circle-color': '#2271B3',
+            'circle-radius': 6,
+            'circle-color': '#00AA00',
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+          }
+        });
+        
+        // Add destination waypoint (red circle)
+        map.addLayer({
+          id: 'route-waypoint-destination',
+          type: 'circle',
+          source: 'route',
+          filter: ['all', 
+            ['==', ['get', 'type'], 'waypoint'],
+            ['==', ['get', 'waypointType'], 'destination']
+          ],
+          paint: {
+            'circle-radius': 6,
+            'circle-color': '#AA0000',
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }

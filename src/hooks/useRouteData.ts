@@ -80,13 +80,8 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
       const currentPositionIndex = findCurrentPositionIndex(validRoutePoints, selectedFlight);
       console.log("Current position index:", currentPositionIndex, "of", validRoutePoints.length);
       
-      // Force currentPositionIndex to be at most half the route to ensure we always show future path
-      // This is a temporary debug measure to ensure the future path is visible
-      const forcedIndex = Math.min(currentPositionIndex, Math.floor(validRoutePoints.length * 0.5));
-      console.log("Using position index:", forcedIndex, "to ensure future path is visible");
-      
-      // Create and update GeoJSON
-      const routeGeoJSON = createRouteGeoJSON(validRoutePoints, forcedIndex);
+      // Create and update GeoJSON - we'll use the actual position index now
+      const routeGeoJSON = createRouteGeoJSON(validRoutePoints, currentPositionIndex);
       console.log("Route GeoJSON features count:", routeGeoJSON.features.length);
       
       // Debug the features to ensure we have both path types
