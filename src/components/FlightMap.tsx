@@ -135,6 +135,7 @@ const FlightMap: React.FC = () => {
   const [initializing, setInitializing] = useState(true);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flightRoute, setFlightRoute] = useState<FlightTrackPoint[]>([]);
+  const serversInitialized = useRef(false);
   
   // Initialize map
   useEffect(() => {
@@ -218,11 +219,14 @@ const FlightMap: React.FC = () => {
       try {
         const serverData = await getServers();
         setAvailableServers(serverData);
+        serversInitialized.current = true;
         
         // Set default server once we have server data
         if (serverData.length > 0) {
-          const casualServer = serverData.find(s => s.name.includes("Casual")) || serverData[0];
-          setActiveServer({ id: "casual", name: SERVER_TYPES.CASUAL });
+          // Wait a bit to ensure server mappings are set
+          setTimeout(() => {
+            setActiveServer({ id: "casual", name: SERVER_TYPES.CASUAL });
+          }, 500);
         }
       } catch (error) {
         console.error("Failed to fetch available servers", error);
@@ -242,7 +246,15 @@ const FlightMap: React.FC = () => {
       
       setLoading(true);
       try {
+        // Make sure server IDs are initialized before fetching flights
+        if (!serversInitialized.current) {
+          await getServers();
+          serversInitialized.current = true;
+        }
+        
+        console.log(`Fetching flights for server: ${activeServer.id}`);
         const flightData = await getFlights(activeServer.id);
+        console.log(`Retrieved ${flightData.length} flights`);
         setFlights(flightData);
         
         // Clear selected flight when changing server
@@ -412,6 +424,7 @@ const FlightMap: React.FC = () => {
             defaultValue="casual" 
             className="w-[400px]"
             onValueChange={(value) => {
+              console.log(`Selected server: ${value}`);
               const server = servers.find(s => s.id === value);
               if (server) setActiveServer(server);
             }}

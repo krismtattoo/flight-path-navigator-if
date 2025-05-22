@@ -62,6 +62,7 @@ export async function getServers(): Promise<ServerInfo[]> {
     }
 
     const data = await response.json();
+    console.log("Available servers:", data);
     
     // Map server names to IDs for easier lookup
     data.forEach((server: ServerInfo) => {
@@ -85,12 +86,22 @@ export async function getServers(): Promise<ServerInfo[]> {
 
 // Get the actual server ID for a named server type
 function getServerIdByName(serverName: string): string {
-  return serverIdMap[serverName] || "";
+  const serverId = serverIdMap[serverName.toLowerCase()];
+  if (!serverId) {
+    console.error(`No ID found for server: ${serverName}. Current mapping:`, serverIdMap);
+  }
+  return serverId || "";
 }
 
 // Get all flights for a specific server
 export async function getFlights(serverName: string): Promise<Flight[]> {
   try {
+    // Ensure we have server IDs
+    if (Object.keys(serverIdMap).length === 0) {
+      console.log("No server IDs available, fetching servers first");
+      await getServers();
+    }
+    
     // Get the actual server ID
     const serverId = getServerIdByName(serverName);
     
@@ -125,6 +136,12 @@ export async function getFlights(serverName: string): Promise<Flight[]> {
 // Get flight route for a specific flight
 export async function getFlightRoute(serverName: string, flightId: string): Promise<FlightTrackPoint[]> {
   try {
+    // Ensure we have server IDs
+    if (Object.keys(serverIdMap).length === 0) {
+      console.log("No server IDs available, fetching servers first");
+      await getServers();
+    }
+    
     // Get the actual server ID
     const serverId = getServerIdByName(serverName);
     
@@ -157,6 +174,12 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
 // Get user details
 export async function getUserDetails(serverName: string, userId: string) {
   try {
+    // Ensure we have server IDs
+    if (Object.keys(serverIdMap).length === 0) {
+      console.log("No server IDs available, fetching servers first");
+      await getServers();
+    }
+    
     // Get the actual server ID
     const serverId = getServerIdByName(serverName);
     
