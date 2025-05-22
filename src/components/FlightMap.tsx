@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from "sonner";
@@ -11,8 +10,8 @@ import { Map, Plane } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Mapbox token - ein besserer öffentlicher Token für Demo-Zwecke
-mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNqZ3VncXdoMzAwMnYyd24xZnlvcHkweXkifQ.edXFEKrFmGIlvGT7HMiKHA';
+// Mapbox token - ein besserer öffentlicher Token
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
 
 interface Server {
   id: string;

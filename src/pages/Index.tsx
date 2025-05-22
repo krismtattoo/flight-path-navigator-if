@@ -12,7 +12,10 @@ const Index = () => {
           </div>
         </div>
       </header>
-      <FlightMap />
+      {/* Added top margin to prevent header overlap */}
+      <div className="pt-14">
+        <FlightMap />
+      </div>
     </div>
   );
 };

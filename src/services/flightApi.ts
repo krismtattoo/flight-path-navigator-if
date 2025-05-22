@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // API key
@@ -70,13 +69,21 @@ export async function getServers(): Promise<ServerInfo[]> {
       console.log("Processing servers:", servers);
       
       // Map server names to IDs for easier lookup
+      serverIdMap = {}; // Reset the map
+      
       servers.forEach((server: any) => {
-        if (server.name.includes("Casual")) {
-          serverIdMap["casual"] = server.id;
-        } else if (server.name.includes("Training")) {
-          serverIdMap["training"] = server.id;
-        } else if (server.name.includes("Expert")) {
-          serverIdMap["expert"] = server.id;
+        if (server.name && server.id) {
+          // Direktes Mapping von vollem Namen zu ID
+          if (server.name.includes("Casual")) {
+            serverIdMap["casual"] = server.id;
+            serverIdMap[SERVER_TYPES.CASUAL.toLowerCase()] = server.id;
+          } else if (server.name.includes("Training")) {
+            serverIdMap["training"] = server.id;
+            serverIdMap[SERVER_TYPES.TRAINING.toLowerCase()] = server.id;
+          } else if (server.name.includes("Expert")) {
+            serverIdMap["expert"] = server.id;
+            serverIdMap[SERVER_TYPES.EXPERT.toLowerCase()] = server.id;
+          }
         }
       });
       
@@ -94,11 +101,24 @@ export async function getServers(): Promise<ServerInfo[]> {
 
 // Get the actual server ID for a named server type
 function getServerIdByName(serverName: string): string {
+  // Versuche es erst mit dem genauen Namen
   const serverId = serverIdMap[serverName.toLowerCase()];
+  
   if (!serverId) {
+    // Wenn nicht gefunden, versuche alternativ Matchings
+    if (serverName.toLowerCase().includes("casual")) {
+      return serverIdMap["casual"] || "";
+    } else if (serverName.toLowerCase().includes("training")) {
+      return serverIdMap["training"] || "";
+    } else if (serverName.toLowerCase().includes("expert")) {
+      return serverIdMap["expert"] || "";
+    }
+    
     console.error(`No ID found for server: ${serverName}. Current mapping:`, serverIdMap);
+    return "";
   }
-  return serverId || "";
+  
+  return serverId;
 }
 
 // Get all flights for a specific server
