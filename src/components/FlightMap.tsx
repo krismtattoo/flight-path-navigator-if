@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getFlights, getFlightRoute, getUserDetails, SERVER_TYPES, Flight, FlightTrackPoint } from '@/services/flightApi';
+import { getFlights, getFlightRoute, getUserDetails, getServers, SERVER_TYPES, Flight, FlightTrackPoint, ServerInfo } from '@/services/flightApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Map, Plane } from 'lucide-react';
 
@@ -121,7 +121,7 @@ const FlightMap: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
-  const routeRef = useRef<mapboxgl.Source | null>(null);
+  const routeRef = useRef<mapboxgl.GeoJSONSource | null>(null);
   
   const [activeServer, setActiveServer] = useState<Server | null>(null);
   const [servers, setServers] = useState<Server[]>([
@@ -129,8 +129,10 @@ const FlightMap: React.FC = () => {
     { id: "training", name: SERVER_TYPES.TRAINING },
     { id: "expert", name: SERVER_TYPES.EXPERT }
   ]);
+  const [availableServers, setAvailableServers] = useState<ServerInfo[]>([]);
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flightRoute, setFlightRoute] = useState<FlightTrackPoint[]>([]);
   
@@ -207,6 +209,30 @@ const FlightMap: React.FC = () => {
         map.current = null;
       }
     };
+  }, []);
+
+  // Load available servers on mount
+  useEffect(() => {
+    const fetchAvailableServers = async () => {
+      setInitializing(true);
+      try {
+        const serverData = await getServers();
+        setAvailableServers(serverData);
+        
+        // Set default server once we have server data
+        if (serverData.length > 0) {
+          const casualServer = serverData.find(s => s.name.includes("Casual")) || serverData[0];
+          setActiveServer({ id: "casual", name: SERVER_TYPES.CASUAL });
+        }
+      } catch (error) {
+        console.error("Failed to fetch available servers", error);
+        toast.error("Failed to connect to Infinite Flight API.");
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    fetchAvailableServers();
   }, []);
 
   // Load flights for active server
@@ -402,12 +428,12 @@ const FlightMap: React.FC = () => {
       </div>
       
       {/* Loading indicator */}
-      {loading && (
+      {(loading || initializing) && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
           <Card className="shadow-md bg-white/90 backdrop-blur-sm px-4 py-2">
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-flight-dark-blue"></div>
-              <p>Loading flights...</p>
+              <p>{initializing ? "Connecting to Infinite Flight..." : "Loading flights..."}</p>
             </div>
           </Card>
         </div>
