@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFlights, getFlightRoute, getUserDetails, SERVER_TYPES, Flight, FlightTrackPoint } from '@/services/flightApi';
 import { Skeleton } from '@/components/ui/skeleton';
-import { map, airplane } from 'lucide-react';
+import { Map, Plane } from 'lucide-react';
 
 // For mapbox
 import mapboxgl from 'mapbox-gl';
@@ -430,7 +430,7 @@ const FlightMap: React.FC = () => {
         <Card className="shadow-md bg-white/90 backdrop-blur-sm px-3 py-2">
           <p className="text-sm flex items-center gap-2">
             <span className="text-flight-light-blue">
-              <airplane className="h-4 w-4" />
+              <Plane className="h-4 w-4" />
             </span>
             <span>{flights.length} aircraft online</span>
           </p>
@@ -441,11 +441,11 @@ const FlightMap: React.FC = () => {
       <div ref={mapContainer} className="absolute inset-0" />
       
       {/* CSS for marker animation */}
-      <style jsx>{`
-        .aircraft-marker {
+      <style>
+        {`.aircraft-marker {
           transition: transform 0.5s ease;
-        }
-      `}</style>
+        }`}
+      </style>
     </div>
   );
 };
