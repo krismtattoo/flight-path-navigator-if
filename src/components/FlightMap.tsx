@@ -332,7 +332,12 @@ const FlightMap: React.FC = () => {
     if (!activeServer) return;
     
     try {
+      // Log debug information
+      console.log(`Fetching route for flight ${flight.flightId} on server ${activeServer.id}`);
+      
       const routeData = await getFlightRoute(activeServer.id, flight.flightId);
+      console.log(`Retrieved flight route data:`, routeData);
+      
       setFlightRoute(routeData);
       
       // Update route on map
@@ -347,23 +352,29 @@ const FlightMap: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error("Failed to fetch flight route", error);
+      console.error("Failed to fetch flight route:", error);
       toast.error("Failed to load flight route.");
     }
   };
 
   // Update route display on map
   const updateRouteOnMap = (routePoints: FlightTrackPoint[]) => {
-    if (!map.current || !routeRef.current) return;
+    if (!map.current || !routeRef.current) {
+      console.log("Map or route reference not ready yet");
+      return;
+    }
     
     if (routePoints.length === 0) {
       // Clear the route
+      console.log("No route points, clearing route");
       routeRef.current.setData({
         type: 'FeatureCollection',
         features: []
       });
       return;
     }
+    
+    console.log(`Updating route with ${routePoints.length} points`);
     
     // Find current position in route
     let currentPositionIndex = 0;
@@ -395,6 +406,8 @@ const FlightMap: React.FC = () => {
     const remainingCoords = routePoints
       .slice(currentPositionIndex)
       .map(p => [p.longitude, p.latitude]);
+    
+    console.log(`Route split: ${traveledCoords.length} traveled points, ${remainingCoords.length} remaining points`);
     
     // Update the route source
     routeRef.current.setData({

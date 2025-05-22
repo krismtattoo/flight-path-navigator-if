@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // API key
@@ -183,7 +184,10 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
       return [];
     }
     
-    const response = await fetch(`${BASE_URL}/flights/${serverId}/${flightId}/route`, {
+    console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
+    
+    // Update the API endpoint to match the expected format
+    const response = await fetch(`${BASE_URL}/flights/${serverId}/${flightId}/track`, {
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
         "Accept": "application/json"
@@ -191,14 +195,20 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error ${response.status}: ${errorText}`);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log("Flight route API response:", data);
+    
     if (data && data.result && Array.isArray(data.result)) {
+      console.log(`Found ${data.result.length} track points`);
       return data.result;
     }
     
+    console.log("No track points found in API response");
     return [];
   } catch (error) {
     console.error("Failed to fetch flight route:", error);
