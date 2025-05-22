@@ -11,8 +11,8 @@ import { Map, Plane } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Mapbox token - would be better in env variable but for demo purposes
-mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+// Mapbox token - ein besserer öffentlicher Token für Demo-Zwecke
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNqZ3VncXdoMzAwMnYyd24xZnlvcHkweXkifQ.edXFEKrFmGIlvGT7HMiKHA';
 
 interface Server {
   id: string;
@@ -141,68 +141,73 @@ const FlightMap: React.FC = () => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
     
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [0, 30], // Center on Atlantic for global view
-      zoom: 2,
-      minZoom: 1.5,
-    });
-    
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    // Add route source and layers
-    map.current.on('load', () => {
-      if (!map.current) return;
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [0, 30], // Center on Atlantic for global view
+        zoom: 2,
+        minZoom: 1.5,
+      });
       
-      map.current.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: []
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      
+      // Add route source and layers
+      map.current.on('load', () => {
+        if (!map.current) return;
+        
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: []
+            }
           }
-        }
-      });
-      
-      map.current.addLayer({
-        id: 'route-traveled',
-        type: 'line',
-        source: 'route',
-        filter: ['==', 'type', 'traveled'],
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#2271B3',
-          'line-width': 4,
-          'line-opacity': 0.8
-        }
-      });
+        });
+        
+        map.current.addLayer({
+          id: 'route-traveled',
+          type: 'line',
+          source: 'route',
+          filter: ['==', 'type', 'traveled'],
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#2271B3',
+            'line-width': 4,
+            'line-opacity': 0.8
+          }
+        });
 
-      map.current.addLayer({
-        id: 'route-remaining',
-        type: 'line',
-        source: 'route',
-        filter: ['==', 'type', 'remaining'],
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#5DADEC',
-          'line-width': 4,
-          'line-opacity': 0.6,
-          'line-dasharray': [0, 2, 2]
-        }
+        map.current.addLayer({
+          id: 'route-remaining',
+          type: 'line',
+          source: 'route',
+          filter: ['==', 'type', 'remaining'],
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#5DADEC',
+            'line-width': 4,
+            'line-opacity': 0.6,
+            'line-dasharray': [0, 2, 2]
+          }
+        });
+        
+        routeRef.current = map.current.getSource('route') as mapboxgl.GeoJSONSource;
       });
-      
-      routeRef.current = map.current.getSource('route') as mapboxgl.GeoJSONSource;
-    });
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+      toast.error("Failed to initialize map. Please refresh the page.");
+    }
 
     return () => {
       if (map.current) {
@@ -417,8 +422,8 @@ const FlightMap: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full">
-      {/* Server Selection Tabs */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+      {/* Server Selection Tabs - Positioned below header */}
+      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-10">
         <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
           <Tabs 
             defaultValue="casual" 
@@ -442,7 +447,7 @@ const FlightMap: React.FC = () => {
       
       {/* Loading indicator */}
       {(loading || initializing) && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="absolute top-32 left-1/2 transform -translate-x-1/2 z-10">
           <Card className="shadow-md bg-white/90 backdrop-blur-sm px-4 py-2">
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-flight-dark-blue"></div>

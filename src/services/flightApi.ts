@@ -64,19 +64,27 @@ export async function getServers(): Promise<ServerInfo[]> {
     const data = await response.json();
     console.log("Available servers:", data);
     
-    // Map server names to IDs for easier lookup
-    data.forEach((server: ServerInfo) => {
-      if (server.name.includes("Casual")) {
-        serverIdMap["casual"] = server.id;
-      } else if (server.name.includes("Training")) {
-        serverIdMap["training"] = server.id;
-      } else if (server.name.includes("Expert")) {
-        serverIdMap["expert"] = server.id;
-      }
-    });
+    if (data && data.result && Array.isArray(data.result)) {
+      // Die Server-Daten sind in einem result-Feld
+      const servers = data.result;
+      console.log("Processing servers:", servers);
+      
+      // Map server names to IDs for easier lookup
+      servers.forEach((server: any) => {
+        if (server.name.includes("Casual")) {
+          serverIdMap["casual"] = server.id;
+        } else if (server.name.includes("Training")) {
+          serverIdMap["training"] = server.id;
+        } else if (server.name.includes("Expert")) {
+          serverIdMap["expert"] = server.id;
+        }
+      });
+      
+      console.log("Server ID mapping:", serverIdMap);
+      return servers;
+    }
     
-    console.log("Server ID mapping:", serverIdMap);
-    return data;
+    return [];
   } catch (error) {
     console.error("Failed to fetch servers:", error);
     toast.error("Failed to load server list. Please try again.");
@@ -124,8 +132,12 @@ export async function getFlights(serverName: string): Promise<Flight[]> {
     }
 
     const data = await response.json();
-    console.log(`Found ${data.length} flights`);
-    return data;
+    if (data && data.result && Array.isArray(data.result)) {
+      console.log(`Found ${data.result.length} flights`);
+      return data.result;
+    }
+    
+    return [];
   } catch (error) {
     console.error("Failed to fetch flights:", error);
     toast.error("Failed to load flights. Please try again.");
@@ -163,7 +175,11 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     }
 
     const data = await response.json();
-    return data;
+    if (data && data.result && Array.isArray(data.result)) {
+      return data.result;
+    }
+    
+    return [];
   } catch (error) {
     console.error("Failed to fetch flight route:", error);
     toast.error("Failed to load flight route. Please try again.");
@@ -201,7 +217,11 @@ export async function getUserDetails(serverName: string, userId: string) {
     }
 
     const data = await response.json();
-    return data;
+    if (data && data.result) {
+      return data.result;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Failed to fetch user details:", error);
     toast.error("Failed to load user details. Please try again.");
