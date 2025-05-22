@@ -84,22 +84,6 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
       const routeGeoJSON = createRouteGeoJSON(validRoutePoints, currentPositionIndex);
       console.log("Route GeoJSON features count:", routeGeoJSON.features.length);
       
-      // Debug the features to ensure we have both path types
-      const traveledFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'traveled');
-      const remainingFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'remaining');
-      console.log(`Path segments: traveled=${traveledFeatures.length}, remaining=${remainingFeatures.length}`);
-      
-      // Log each feature's coordinates length
-      traveledFeatures.forEach((feature, index) => {
-        // @ts-ignore - we know it's a LineString
-        console.log(`Traveled path ${index} has ${feature.geometry.coordinates.length} coordinates`);
-      });
-      
-      remainingFeatures.forEach((feature, index) => {
-        // @ts-ignore - we know it's a LineString
-        console.log(`Remaining path ${index} has ${feature.geometry.coordinates.length} coordinates`);
-      });
-      
       routeRef.current.setData(routeGeoJSON);
       
     } catch (error) {

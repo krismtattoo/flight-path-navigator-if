@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { Flight } from '@/services/flight/types';
+import { Flight } from '@/services/flight';
 
 interface AircraftMarkerProps {
   map: mapboxgl.Map;
@@ -11,6 +11,7 @@ interface AircraftMarkerProps {
 
 const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightSelect }) => {
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const selectedMarkerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Make sure map is fully loaded before adding markers
@@ -76,6 +77,21 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
             
             // Add click handler
             marker.getElement().addEventListener('click', () => {
+              // Remove highlight from previously selected marker
+              if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
+                const prevEl = markersRef.current[selectedMarkerIdRef.current].getElement();
+                prevEl.style.zIndex = '0';
+                prevEl.style.filter = 'none';
+              }
+              
+              // Highlight the selected marker
+              el.style.zIndex = '1000';
+              el.style.filter = 'drop-shadow(0 0 6px rgba(255, 255, 255, 0.8))';
+              
+              // Track the selected marker
+              selectedMarkerIdRef.current = flight.flightId;
+              
+              // Call the selection handler
               onFlightSelect(flight);
             });
           }
