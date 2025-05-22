@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
@@ -35,11 +35,25 @@ const FlightMap: React.FC = () => {
   } = useFlightData();
   
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flightRoute, setFlightRoute] = useState<FlightTrackPoint[]>([]);
   
   const handleMapInit = useCallback((initializedMap: mapboxgl.Map) => {
+    console.log("Map initialized in FlightMap component");
     setMap(initializedMap);
+    
+    // Set mapLoaded to true when the map is fully loaded
+    if (initializedMap.loaded()) {
+      console.log("Map already loaded on init");
+      setMapLoaded(true);
+    } else {
+      console.log("Waiting for map to load");
+      initializedMap.once('load', () => {
+        console.log("Map load event fired");
+        setMapLoaded(true);
+      });
+    }
   }, []);
 
   // Handle flight selection
@@ -80,9 +94,11 @@ const FlightMap: React.FC = () => {
       />
       
       {/* Loading indicator */}
-      {(loading || initializing) && (
+      {(loading || initializing || !mapLoaded) && (
         <LoadingIndicator 
-          message={initializing ? "Connecting to Infinite Flight..." : "Loading flights..."} 
+          message={initializing ? "Connecting to Infinite Flight..." : 
+                  !mapLoaded ? "Loading map..." : 
+                  "Loading flights..."} 
         />
       )}
       
@@ -104,8 +120,8 @@ const FlightMap: React.FC = () => {
       {/* Map Container */}
       <MapContainer onMapInit={handleMapInit} />
       
-      {/* Aircraft Markers */}
-      {map && (
+      {/* Aircraft Markers and Flight Route - only render when map is loaded */}
+      {map && mapLoaded && (
         <>
           <AircraftMarker 
             map={map} 

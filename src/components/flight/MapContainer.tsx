@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ interface MapContainerProps {
 const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
   
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -90,6 +91,8 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
       // When the map is loaded, call the onMapInit callback
       map.current.on('load', () => {
         if (map.current) {
+          console.log("Map fully loaded and initialized");
+          setMapInitialized(true);
           onMapInit(map.current);
         }
       });
