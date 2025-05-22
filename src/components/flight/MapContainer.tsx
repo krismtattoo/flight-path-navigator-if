@@ -26,16 +26,28 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
         renderWorldCopies: true, // Show multiple copies of the world
         trackResize: true, // Automatically resize when window resizes
         pitchWithRotate: false, // Disable pitch with rotate for smoother experience
+        bearingSnap: 0, // Disable snapping to north during rotation
+        dragRotate: false, // Disable rotation to prevent disorientation
+        preserveDrawingBuffer: true, // Improve rendering consistency
       });
       
       // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current.addControl(new mapboxgl.NavigationControl({
+        showCompass: false, // Hide compass since we disabled rotation
+      }), 'top-right');
+
+      // Disable map rotation using keyboard and touch rotation
+      map.current.keyboard.disableRotation();
+      map.current.touchZoomRotate.disableRotation();
 
       // Improve rendering performance
       map.current.on('movestart', () => {
         if (map.current) {
           // Optimize rendering during map movement
           map.current.getCanvas().style.willChange = 'transform';
+          
+          // Pause marker updates during movement for better performance
+          map.current.getCanvas().classList.add('moving');
         }
       });
       
@@ -43,6 +55,9 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
         if (map.current) {
           // Reset optimization after movement ends
           map.current.getCanvas().style.willChange = 'auto';
+          
+          // Resume marker updates after movement
+          map.current.getCanvas().classList.remove('moving');
         }
       });
 

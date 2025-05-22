@@ -35,13 +35,13 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       el.style.cursor = 'pointer';
       el.classList.add('animate-pulse-subtle');
       
-      // Create and add the marker to the map
+      // Create and add the marker to the map with fixed settings to prevent movement
       const marker = new mapboxgl.Marker({
         element: el,
         rotation: flight.heading,
         anchor: 'center',
-        pitchAlignment: 'map', // Align marker with map pitch
-        rotationAlignment: 'map' // Align rotation with map
+        rotationAlignment: 'viewport', // Changed to viewport to keep orientation fixed
+        pitchAlignment: 'viewport',    // Changed to viewport to keep orientation fixed
       })
         .setLngLat([flight.longitude, flight.latitude])
         .addTo(map);
