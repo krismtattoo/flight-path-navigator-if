@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from "sonner";
@@ -292,12 +293,14 @@ const FlightMap: React.FC = () => {
       // Create a custom HTML element for the marker
       const el = document.createElement('div');
       el.className = 'aircraft-marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
+      el.style.width = '32px';
+      el.style.height = '32px';
       
-      // Use an airplane SVG instead of a phone icon
-      el.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%234BB4E6\' stroke=\'%23FFFFFF\' stroke-width=\'1\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M22 12a1.5 1.5 0 0 0-1-1.5L7 7.8V5l3 .2c.5 0 1-.4 1-1s-.5-1-1-1L6 3h-.5C5 3 4 3.2 4 5v2.8L1 7.3c-.6.2-1 .8-1 1.4s.4 1.2 1 1.3L4 9v3l-3-.5C.4 11.4 0 12 0 12.5s.4 1 1 1.2l3 1.2v2.3c0 1 .3 2 2 2h1c.6 0 1-.4 1-1v-2l12.5-2.8c.5-.2 1-.7 1-1.2z\'/%3E%3C/svg%3E")';
-      el.style.backgroundSize = 'cover';
+      // Use the uploaded plane icon image
+      el.style.backgroundImage = 'url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png")';
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.backgroundPosition = 'center';
       el.style.transform = `rotate(${flight.heading}deg)`;
       el.style.transformOrigin = 'center';
       el.style.cursor = 'pointer';
@@ -489,6 +492,14 @@ const FlightMap: React.FC = () => {
       <style>
         {`.aircraft-marker {
           transition: transform 0.5s ease;
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 2s infinite;
+        }
+        @keyframes pulse-subtle {
+          0% { opacity: 0.8; }
+          50% { opacity: 1; }
+          100% { opacity: 0.8; }
         }`}
       </style>
     </div>
