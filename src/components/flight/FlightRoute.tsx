@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flightApi';
+import { toast } from 'sonner';
 
 interface FlightRouteProps {
   map: mapboxgl.Map;
@@ -92,8 +93,7 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
     
     // Clean up markers when component unmounts
     return () => {
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
+      clearMarkers();
     };
   }, [map]);
   
@@ -102,6 +102,11 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
     updateRoute();
   }, [routePoints, selectedFlight]);
   
+  const clearMarkers = () => {
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+  };
+  
   const updateRoute = () => {
     if (!routeRef.current) {
       console.log("Route reference not ready yet");
@@ -109,10 +114,9 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
     }
     
     // Clear existing waypoint markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    clearMarkers();
     
-    if (routePoints.length === 0) {
+    if (!routePoints || routePoints.length === 0) {
       // Clear the route
       console.log("No route points, clearing route");
       routeRef.current.setData({
@@ -122,7 +126,24 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
       return;
     }
     
-    console.log(`Updating route with ${routePoints.length} points`);
+    // Check for valid data in routePoints
+    const validRoutePoints = routePoints.filter(point => 
+      typeof point.latitude === 'number' && 
+      typeof point.longitude === 'number' && 
+      !isNaN(point.latitude) && 
+      !isNaN(point.longitude)
+    );
+    
+    if (validRoutePoints.length === 0) {
+      console.log("No valid route points found, clearing route");
+      routeRef.current.setData({
+        type: 'FeatureCollection',
+        features: []
+      });
+      return;
+    }
+    
+    console.log(`Updating route with ${validRoutePoints.length} valid points`);
     
     // Find current position in route
     let currentPositionIndex = 0;
@@ -134,7 +155,7 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
       };
       
       let minDist = Number.MAX_VALUE;
-      routePoints.forEach((point, idx) => {
+      validRoutePoints.forEach((point, idx) => {
         const dist = Math.sqrt(
           Math.pow(point.latitude - currentPos.lat, 2) + 
           Math.pow(point.longitude - currentPos.lng, 2)
@@ -146,93 +167,104 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
       });
     }
     
-    // Create GeoJSON for traveled and remaining route
-    const traveledCoords = routePoints
-      .slice(0, currentPositionIndex + 1)
-      .map(p => [p.longitude, p.latitude]);
-    
-    const remainingCoords = routePoints
-      .slice(currentPositionIndex)
-      .map(p => [p.longitude, p.latitude]);
-    
-    console.log(`Route split: ${traveledCoords.length} traveled points, ${remainingCoords.length} remaining points`);
-    
-    // Create waypoints features
-    const waypointFeatures = routePoints.map((point, index) => ({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        index: index,
-        altitude: point.altitude,
-        timestamp: point.timestamp
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [point.longitude, point.latitude]
-      }
-    }));
-    
-    // Update the route source with lines and waypoints
-    routeRef.current.setData({
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: {
-            type: 'traveled'
-          },
-          geometry: {
-            type: 'LineString',
-            coordinates: traveledCoords
-          }
-        },
-        {
-          type: 'Feature',
-          properties: {
-            type: 'remaining'
-          },
-          geometry: {
-            type: 'LineString',
-            coordinates: remainingCoords
-          }
-        },
-        ...waypointFeatures
-      ]
-    });
-    
-    // Only add detailed tooltips for significant waypoints to avoid cluttering
-    // For now, pick evenly spaced points
-    const maxTooltips = 10;
-    const step = Math.max(1, Math.floor(routePoints.length / maxTooltips));
-    
-    for (let i = 0; i < routePoints.length; i += step) {
-      const point = routePoints[i];
+    try {
+      // Create GeoJSON for traveled and remaining route
+      const traveledCoords = validRoutePoints
+        .slice(0, currentPositionIndex + 1)
+        .map(p => [p.longitude, p.latitude]);
       
-      // Add popup with waypoint information
-      const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        offset: 25,
-        className: 'waypoint-popup'
+      const remainingCoords = validRoutePoints
+        .slice(currentPositionIndex)
+        .map(p => [p.longitude, p.latitude]);
+      
+      console.log(`Route split: ${traveledCoords.length} traveled points, ${remainingCoords.length} remaining points`);
+      
+      // Create waypoints features
+      const waypointFeatures = validRoutePoints.map((point, index) => ({
+        type: 'Feature' as const,
+        properties: {
+          type: 'waypoint',
+          index: index,
+          altitude: point.altitude,
+          timestamp: point.timestamp
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [point.longitude, point.latitude]
+        }
+      }));
+      
+      // Update the route source with lines and waypoints
+      routeRef.current.setData({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            properties: {
+              type: 'traveled'
+            },
+            geometry: {
+              type: 'LineString',
+              coordinates: traveledCoords
+            }
+          },
+          {
+            type: 'Feature',
+            properties: {
+              type: 'remaining'
+            },
+            geometry: {
+              type: 'LineString',
+              coordinates: remainingCoords
+            }
+          },
+          ...waypointFeatures
+        ]
       });
       
-      const timestamp = new Date(point.timestamp).toLocaleTimeString();
-      popup.setHTML(`
-        <div class="font-medium">Waypoint ${i+1}/${routePoints.length}</div>
-        <div>Altitude: ${Math.round(point.altitude).toLocaleString()} ft</div>
-        <div>Time: ${timestamp}</div>
-      `);
+      // Only add detailed tooltips for significant waypoints to avoid cluttering
+      // For now, pick evenly spaced points
+      const maxTooltips = 10;
+      const step = Math.max(1, Math.floor(validRoutePoints.length / maxTooltips));
       
-      // Create a transparent marker to hold the popup
-      const marker = new mapboxgl.Marker({
-        color: 'rgba(0,0,0,0)',
-        scale: 0.5
-      })
-      .setLngLat([point.longitude, point.latitude])
-      .setPopup(popup)
-      .addTo(map);
+      for (let i = 0; i < validRoutePoints.length; i += step) {
+        const point = validRoutePoints[i];
+        
+        // Add popup with waypoint information
+        const popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          offset: 25,
+          className: 'waypoint-popup'
+        });
+        
+        const timestamp = new Date(point.timestamp).toLocaleTimeString();
+        popup.setHTML(`
+          <div class="font-medium">Waypoint ${i+1}/${validRoutePoints.length}</div>
+          <div>Altitude: ${Math.round(point.altitude).toLocaleString()} ft</div>
+          <div>Time: ${timestamp}</div>
+        `);
+        
+        // Create a transparent marker to hold the popup
+        const marker = new mapboxgl.Marker({
+          color: 'rgba(0,0,0,0)',
+          scale: 0.5
+        })
+        .setLngLat([point.longitude, point.latitude])
+        .setPopup(popup)
+        .addTo(map);
+        
+        markersRef.current.push(marker);
+      }
+    } catch (error) {
+      console.error("Error rendering flight route:", error);
+      toast.error("Error displaying flight route. Some data may be invalid.");
       
-      markersRef.current.push(marker);
+      // Clear the route on error
+      routeRef.current.setData({
+        type: 'FeatureCollection',
+        features: []
+      });
     }
   };
   

@@ -65,7 +65,7 @@ export async function getServers(): Promise<ServerInfo[]> {
     console.log("Available servers:", data);
     
     if (data && data.result && Array.isArray(data.result)) {
-      // Die Server-Daten sind in einem result-Feld
+      // Server data is in the result field
       const servers = data.result;
       console.log("Processing servers:", servers);
       
@@ -74,7 +74,7 @@ export async function getServers(): Promise<ServerInfo[]> {
       
       servers.forEach((server: any) => {
         if (server.name && server.id) {
-          // Direktes Mapping von vollem Namen zu ID
+          // Direct mapping from full name to ID
           if (server.name.includes("Casual")) {
             serverIdMap["casual"] = server.id;
             serverIdMap[SERVER_TYPES.CASUAL.toLowerCase()] = server.id;
@@ -102,11 +102,11 @@ export async function getServers(): Promise<ServerInfo[]> {
 
 // Get the actual server ID for a named server type
 function getServerIdByName(serverName: string): string {
-  // Versuche es erst mit dem genauen Namen
+  // Try first with the exact name
   const serverId = serverIdMap[serverName.toLowerCase()];
   
   if (!serverId) {
-    // Wenn nicht gefunden, versuche alternativ Matchings
+    // If not found, try alternative matches
     if (serverName.toLowerCase().includes("casual")) {
       return serverIdMap["casual"] || "";
     } else if (serverName.toLowerCase().includes("training")) {
@@ -166,7 +166,7 @@ export async function getFlights(serverName: string): Promise<Flight[]> {
   }
 }
 
-// Get flight route for a specific flight
+// Get flight route for a specific flight - try multiple endpoint patterns
 export async function getFlightRoute(serverName: string, flightId: string): Promise<FlightTrackPoint[]> {
   try {
     // Ensure we have server IDs
@@ -186,67 +186,46 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
     
-    // FIX: Use the correct API endpoint structure for track data
-    const response = await fetch(`${BASE_URL}/flights/${serverId}/${flightId}/route`, {
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Accept": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API error ${response.status}: ${errorText}`);
-      
-      // Let's try the alternative endpoint if the first one fails
-      console.log("Trying alternative endpoint for flight route");
-      const altResponse = await fetch(`${BASE_URL}/flights/${serverId}/route/${flightId}`, {
-        headers: {
-          "Authorization": `Bearer ${API_KEY}`,
-          "Accept": "application/json"
+    // Define all possible endpoint patterns to try
+    const endpointPatterns = [
+      `${BASE_URL}/flights/${serverId}/${flightId}/route`,
+      `${BASE_URL}/flights/${serverId}/route/${flightId}`,
+      `${BASE_URL}/flights/${serverId}/${flightId}/track`,
+      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/route`,
+      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/track`
+    ];
+    
+    // Try each endpoint pattern in sequence
+    for (const endpoint of endpointPatterns) {
+      try {
+        console.log(`Attempting to fetch from endpoint: ${endpoint}`);
+        const response = await fetch(endpoint, {
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Accept": "application/json"
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Flight route API response from ${endpoint}:`, data);
+          
+          if (data && data.result && Array.isArray(data.result)) {
+            console.log(`Found ${data.result.length} track points from ${endpoint}`);
+            return data.result;
+          }
+        } else {
+          console.log(`Endpoint ${endpoint} returned status ${response.status}`);
         }
-      });
-      
-      if (!altResponse.ok) {
-        console.error(`Alternative API endpoint also failed with ${altResponse.status}`);
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const altData = await altResponse.json();
-      console.log("Flight route API response from alternative endpoint:", altData);
-      
-      if (altData && altData.result && Array.isArray(altData.result)) {
-        console.log(`Found ${altData.result.length} track points`);
-        return altData.result;
-      }
-    } else {
-      const data = await response.json();
-      console.log("Flight route API response:", data);
-      
-      if (data && data.result && Array.isArray(data.result)) {
-        console.log(`Found ${data.result.length} track points`);
-        return data.result;
+      } catch (endpointError) {
+        console.error(`Error trying endpoint ${endpoint}:`, endpointError);
+        // Continue to try next endpoint
       }
     }
     
-    // If we reach here, try a third endpoint format as a last resort
-    console.log("Trying final endpoint format for flight route");
-    const finalResponse = await fetch(`${BASE_URL}/sessions/${serverId}/flights/${flightId}/route`, {
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Accept": "application/json"
-      }
-    });
-    
-    if (finalResponse.ok) {
-      const finalData = await finalResponse.json();
-      if (finalData && finalData.result && Array.isArray(finalData.result)) {
-        console.log(`Found ${finalData.result.length} track points with final endpoint`);
-        return finalData.result;
-      }
-    }
-    
-    console.log("No track points found in API response");
+    // If we reach here, none of the endpoints worked
+    console.log("All endpoints failed to retrieve flight route data");
+    toast.error("Could not load flight route data. The flight may not have track data available.");
     return [];
   } catch (error) {
     console.error("Failed to fetch flight route:", error);
@@ -273,22 +252,38 @@ export async function getUserDetails(serverName: string, userId: string) {
       return null;
     }
     
-    const response = await fetch(`${BASE_URL}/users/${serverId}/${userId}`, {
-      headers: {
-        "Authorization": `Bearer ${API_KEY}`,
-        "Accept": "application/json"
+    // Try multiple endpoint patterns for user details too
+    const userEndpoints = [
+      `${BASE_URL}/users/${serverId}/${userId}`,
+      `${BASE_URL}/sessions/${serverId}/users/${userId}`
+    ];
+    
+    for (const endpoint of userEndpoints) {
+      try {
+        console.log(`Attempting to fetch user details from: ${endpoint}`);
+        const response = await fetch(endpoint, {
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Accept": "application/json"
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.result) {
+            console.log("User details retrieved successfully");
+            return data.result;
+          }
+        } else {
+          console.log(`User endpoint ${endpoint} returned status ${response.status}`);
+        }
+      } catch (endpointError) {
+        console.error(`Error trying user endpoint ${endpoint}:`, endpointError);
+        // Continue to try next endpoint
       }
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (data && data.result) {
-      return data.result;
     }
     
+    console.log("Failed to retrieve user details from all endpoints");
     return null;
   } catch (error) {
     console.error("Failed to fetch user details:", error);
