@@ -16,20 +16,17 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
         map.addSource('route', {
           type: 'geojson',
           data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: []
-            }
+            type: 'FeatureCollection',
+            features: []
           }
         });
         
+        // Add route traveled line - dark blue
         map.addLayer({
           id: 'route-traveled',
           type: 'line',
           source: 'route',
-          filter: ['==', 'type', 'traveled'],
+          filter: ['==', ['get', 'type'], 'traveled'],
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
@@ -41,11 +38,12 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           }
         });
 
+        // Add route remaining line - light blue
         map.addLayer({
           id: 'route-remaining',
           type: 'line',
           source: 'route',
-          filter: ['==', 'type', 'remaining'],
+          filter: ['==', ['get', 'type'], 'remaining'],
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
@@ -53,17 +51,16 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           paint: {
             'line-color': '#5DADEC',
             'line-width': 4,
-            'line-opacity': 0.6,
-            'line-dasharray': [0, 2, 2]
+            'line-opacity': 0.6
           }
         });
         
-        // Add waypoints layer
+        // Add a more subtle waypoints layer - only important points
         map.addLayer({
-          id: 'waypoints',
+          id: 'route-waypoints',
           type: 'circle',
           source: 'route',
-          filter: ['==', 'type', 'waypoint'],
+          filter: ['==', ['get', 'type'], 'waypoint'],
           paint: {
             'circle-radius': 4,
             'circle-color': '#2271B3',

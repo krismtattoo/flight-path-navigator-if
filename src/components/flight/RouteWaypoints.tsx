@@ -32,13 +32,27 @@ const RouteWaypoints: React.FC<RouteWaypointsProps> = ({ map, validRoutePoints }
       return;
     }
     
-    // Only add detailed tooltips for significant waypoints to avoid cluttering
-    // Pick evenly spaced points
-    const maxTooltips = 10;
-    const step = Math.max(1, Math.floor(validRoutePoints.length / maxTooltips));
+    // Only add markers for the start, end, and a few key points
+    const pointsToShow = [];
     
-    for (let i = 0; i < validRoutePoints.length; i += step) {
-      const point = validRoutePoints[i];
+    // Always show start point
+    if (validRoutePoints.length > 0) {
+      pointsToShow.push(0);
+    }
+    
+    // Show middle point if route is long enough
+    if (validRoutePoints.length > 20) {
+      pointsToShow.push(Math.floor(validRoutePoints.length / 2));
+    }
+    
+    // Always show end point if available
+    if (validRoutePoints.length > 1) {
+      pointsToShow.push(validRoutePoints.length - 1);
+    }
+    
+    // Create markers only for the selected points
+    pointsToShow.forEach(index => {
+      const point = validRoutePoints[index];
       
       // Add popup with waypoint information
       const popup = new mapboxgl.Popup({
@@ -48,24 +62,29 @@ const RouteWaypoints: React.FC<RouteWaypointsProps> = ({ map, validRoutePoints }
         className: 'waypoint-popup'
       });
       
+      const pointType = index === 0 ? 'Departure' : 
+                        index === validRoutePoints.length - 1 ? 'Arrival' : 'Waypoint';
+      
       const timestamp = new Date(point.timestamp).toLocaleTimeString();
       popup.setHTML(`
-        <div class="font-medium">Waypoint ${i+1}/${validRoutePoints.length}</div>
+        <div class="font-medium">${pointType}</div>
         <div>Altitude: ${Math.round(point.altitude).toLocaleString()} ft</div>
         <div>Time: ${timestamp}</div>
       `);
       
-      // Create a transparent marker to hold the popup
+      // Create marker with proper color based on point type
       const marker = new mapboxgl.Marker({
-        color: 'rgba(0,0,0,0)',
-        scale: 0.5
+        color: index === 0 ? '#22c55e' : // Green for departure
+               index === validRoutePoints.length - 1 ? '#ef4444' : // Red for arrival
+               '#2271B3', // Blue for waypoints
+        scale: 0.7
       })
       .setLngLat([point.longitude, point.latitude])
       .setPopup(popup)
       .addTo(map);
       
       markersRef.current.push(marker);
-    }
+    });
   }, [map, validRoutePoints]);
   
   return null; // This component doesn't render anything itself
