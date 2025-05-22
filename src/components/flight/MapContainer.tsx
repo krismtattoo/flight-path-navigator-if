@@ -23,10 +23,28 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
         zoom: 2,
         minZoom: 1.5,
         projection: 'mercator', // Explicitly set to mercator for flat map
+        renderWorldCopies: true, // Show multiple copies of the world
+        trackResize: true, // Automatically resize when window resizes
+        pitchWithRotate: false, // Disable pitch with rotate for smoother experience
       });
       
       // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Improve rendering performance
+      map.current.on('movestart', () => {
+        if (map.current) {
+          // Optimize rendering during map movement
+          map.current.getCanvas().style.willChange = 'transform';
+        }
+      });
+      
+      map.current.on('moveend', () => {
+        if (map.current) {
+          // Reset optimization after movement ends
+          map.current.getCanvas().style.willChange = 'auto';
+        }
+      });
 
       // When the map is loaded, call the onMapInit callback
       map.current.on('load', () => {

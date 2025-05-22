@@ -39,7 +39,9 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       const marker = new mapboxgl.Marker({
         element: el,
         rotation: flight.heading,
-        anchor: 'center'
+        anchor: 'center',
+        pitchAlignment: 'map', // Align marker with map pitch
+        rotationAlignment: 'map' // Align rotation with map
       })
         .setLngLat([flight.longitude, flight.latitude])
         .addTo(map);
