@@ -186,8 +186,8 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
     
-    // Update the API endpoint to match the expected format
-    const response = await fetch(`${BASE_URL}/flights/${serverId}/${flightId}/track`, {
+    // FIX: Use the correct API endpoint structure for track data
+    const response = await fetch(`${BASE_URL}/flights/${serverId}/${flightId}/route`, {
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
         "Accept": "application/json"
@@ -197,15 +197,53 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`API error ${response.status}: ${errorText}`);
-      throw new Error(`API error: ${response.status}`);
+      
+      // Let's try the alternative endpoint if the first one fails
+      console.log("Trying alternative endpoint for flight route");
+      const altResponse = await fetch(`${BASE_URL}/flights/${serverId}/route/${flightId}`, {
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Accept": "application/json"
+        }
+      });
+      
+      if (!altResponse.ok) {
+        console.error(`Alternative API endpoint also failed with ${altResponse.status}`);
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const altData = await altResponse.json();
+      console.log("Flight route API response from alternative endpoint:", altData);
+      
+      if (altData && altData.result && Array.isArray(altData.result)) {
+        console.log(`Found ${altData.result.length} track points`);
+        return altData.result;
+      }
+    } else {
+      const data = await response.json();
+      console.log("Flight route API response:", data);
+      
+      if (data && data.result && Array.isArray(data.result)) {
+        console.log(`Found ${data.result.length} track points`);
+        return data.result;
+      }
     }
-
-    const data = await response.json();
-    console.log("Flight route API response:", data);
     
-    if (data && data.result && Array.isArray(data.result)) {
-      console.log(`Found ${data.result.length} track points`);
-      return data.result;
+    // If we reach here, try a third endpoint format as a last resort
+    console.log("Trying final endpoint format for flight route");
+    const finalResponse = await fetch(`${BASE_URL}/sessions/${serverId}/flights/${flightId}/route`, {
+      headers: {
+        "Authorization": `Bearer ${API_KEY}`,
+        "Accept": "application/json"
+      }
+    });
+    
+    if (finalResponse.ok) {
+      const finalData = await finalResponse.json();
+      if (finalData && finalData.result && Array.isArray(finalData.result)) {
+        console.log(`Found ${finalData.result.length} track points with final endpoint`);
+        return finalData.result;
+      }
     }
     
     console.log("No track points found in API response");
