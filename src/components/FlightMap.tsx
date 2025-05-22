@@ -10,8 +10,8 @@ import { Map, Plane } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Mapbox token - ein besserer öffentlicher Token
-mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+// Mapbox token - updating to user's token
+mapboxgl.accessToken = 'pk.eyJ1Ijoia3Jpc210YXR0b28iLCJhIjoiY2x0bGh2cjAxMTl2MzJtcDY2cTR1aXY4dCJ9.qG3BOVZeFRKcmNgtiMd9uw';
 
 interface Server {
   id: string;
@@ -143,7 +143,7 @@ const FlightMap: React.FC = () => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: 'mapbox://styles/mapbox/light-v11', // Light style for a bright map
         center: [0, 30], // Center on Atlantic for global view
         zoom: 2,
         minZoom: 1.5,
@@ -294,7 +294,9 @@ const FlightMap: React.FC = () => {
       el.className = 'aircraft-marker';
       el.style.width = '24px';
       el.style.height = '24px';
-      el.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%234BB4E6\' stroke=\'%23FFFFFF\' stroke-width=\'1\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\'/%3E%3C/svg%3E")';
+      
+      // Use an airplane SVG instead of a phone icon
+      el.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%234BB4E6\' stroke=\'%23FFFFFF\' stroke-width=\'1\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M22 12a1.5 1.5 0 0 0-1-1.5L7 7.8V5l3 .2c.5 0 1-.4 1-1s-.5-1-1-1L6 3h-.5C5 3 4 3.2 4 5v2.8L1 7.3c-.6.2-1 .8-1 1.4s.4 1.2 1 1.3L4 9v3l-3-.5C.4 11.4 0 12 0 12.5s.4 1 1 1.2l3 1.2v2.3c0 1 .3 2 2 2h1c.6 0 1-.4 1-1v-2l12.5-2.8c.5-.2 1-.7 1-1.2z\'/%3E%3C/svg%3E")';
       el.style.backgroundSize = 'cover';
       el.style.transform = `rotate(${flight.heading}deg)`;
       el.style.transformOrigin = 'center';
@@ -421,8 +423,8 @@ const FlightMap: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full">
-      {/* Server Selection Tabs - Positioned below header */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-10">
+      {/* Server Selection Tabs */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
         <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
           <Tabs 
             defaultValue="casual" 
