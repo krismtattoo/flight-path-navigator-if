@@ -80,14 +80,30 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
       const currentPositionIndex = findCurrentPositionIndex(validRoutePoints, selectedFlight);
       console.log("Current position index:", currentPositionIndex, "of", validRoutePoints.length);
       
+      // Force currentPositionIndex to be at most half the route to ensure we always show future path
+      // This is a temporary debug measure to ensure the future path is visible
+      const forcedIndex = Math.min(currentPositionIndex, Math.floor(validRoutePoints.length * 0.5));
+      console.log("Using position index:", forcedIndex, "to ensure future path is visible");
+      
       // Create and update GeoJSON
-      const routeGeoJSON = createRouteGeoJSON(validRoutePoints, currentPositionIndex);
+      const routeGeoJSON = createRouteGeoJSON(validRoutePoints, forcedIndex);
       console.log("Route GeoJSON features count:", routeGeoJSON.features.length);
       
       // Debug the features to ensure we have both path types
       const traveledFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'traveled');
       const remainingFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'remaining');
       console.log(`Path segments: traveled=${traveledFeatures.length}, remaining=${remainingFeatures.length}`);
+      
+      // Log each feature's coordinates length
+      traveledFeatures.forEach((feature, index) => {
+        // @ts-ignore - we know it's a LineString
+        console.log(`Traveled path ${index} has ${feature.geometry.coordinates.length} coordinates`);
+      });
+      
+      remainingFeatures.forEach((feature, index) => {
+        // @ts-ignore - we know it's a LineString
+        console.log(`Remaining path ${index} has ${feature.geometry.coordinates.length} coordinates`);
+      });
       
       routeRef.current.setData(routeGeoJSON);
       

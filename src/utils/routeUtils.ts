@@ -45,6 +45,11 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
     return validPoints; // Not enough points for a route
   }
   
+  // Ensure points are sorted by timestamp if available
+  if (validPoints.length > 0 && validPoints[0].timestamp) {
+    return [...validPoints].sort((a, b) => a.timestamp - b.timestamp);
+  }
+  
   // If we have too many points, reduce their number for smoother rendering
   // But always keep start and end points
   if (validPoints.length > 300) {
@@ -86,7 +91,6 @@ export function createRouteGeoJSON(
     .slice(0, safeIndex + 1)
     .map(p => [p.longitude, p.latitude]);
   
-  // Important fix: Make sure remaining coords includes ALL points from current position to the end
   const remainingCoords = validRoutePoints
     .slice(safeIndex)
     .map(p => [p.longitude, p.latitude]);
@@ -120,57 +124,6 @@ export function createRouteGeoJSON(
       geometry: {
         type: 'LineString' as const,
         coordinates: remainingCoords
-      }
-    });
-  }
-  
-  // Add waypoint markers (start, current position, end)
-  if (validRoutePoints.length > 0) {
-    // Start waypoint
-    const startPoint = validRoutePoints[0];
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        waypointType: 'start',
-        altitude: startPoint.altitude,
-        timestamp: startPoint.timestamp
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [startPoint.longitude, startPoint.latitude]
-      }
-    });
-    
-    // Current position waypoint
-    const currentPoint = validRoutePoints[safeIndex];
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        waypointType: 'current',
-        altitude: currentPoint.altitude,
-        timestamp: currentPoint.timestamp
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [currentPoint.longitude, currentPoint.latitude]
-      }
-    });
-    
-    // End waypoint (always include the last point)
-    const endPoint = validRoutePoints[validRoutePoints.length - 1];
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        waypointType: 'end',
-        altitude: endPoint.altitude,
-        timestamp: endPoint.timestamp
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [endPoint.longitude, endPoint.latitude]
       }
     });
   }
