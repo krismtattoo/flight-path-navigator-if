@@ -22,6 +22,7 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
         center: [0, 30], // Center on Atlantic for global view
         zoom: 2,
         minZoom: 1.5,
+        projection: 'mercator', // Explicitly set to mercator for flat map
       });
       
       // Add navigation controls
