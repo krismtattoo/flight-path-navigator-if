@@ -87,11 +87,14 @@ export function createRouteGeoJSON(
   // Ensure currentPositionIndex is within bounds
   const safeIndex = Math.max(0, Math.min(currentPositionIndex, validRoutePoints.length - 1));
   
-  // Create GeoJSON for traveled and remaining route - always include all points
+  // Always split the route into traveled and remaining parts, even if current position is at the end
+  // This ensures we always show a complete route
   const traveledCoords = validRoutePoints
     .slice(0, safeIndex + 1)
     .map(p => [p.longitude, p.latitude]);
   
+  // Always include remaining coordinates from current position to end
+  // If we're at the end, this will be empty but that's handled below
   const remainingCoords = validRoutePoints
     .slice(safeIndex)
     .map(p => [p.longitude, p.latitude]);
@@ -134,7 +137,7 @@ export function createRouteGeoJSON(
     const startPoint = validRoutePoints[0];
     const endPoint = validRoutePoints[validRoutePoints.length - 1];
     
-    // Add departure waypoint
+    // Add departure waypoint (green)
     features.push({
       type: 'Feature' as const,
       properties: {
@@ -147,7 +150,7 @@ export function createRouteGeoJSON(
       }
     });
     
-    // Add destination waypoint
+    // Add destination waypoint (red)
     features.push({
       type: 'Feature' as const,
       properties: {
@@ -159,6 +162,22 @@ export function createRouteGeoJSON(
         coordinates: [endPoint.longitude, endPoint.latitude]
       }
     });
+    
+    // Add current position waypoint (blue circle) if not at the end
+    if (safeIndex > 0 && safeIndex < validRoutePoints.length - 1) {
+      const currentPoint = validRoutePoints[safeIndex];
+      features.push({
+        type: 'Feature' as const,
+        properties: {
+          type: 'waypoint',
+          waypointType: 'current'
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [currentPoint.longitude, currentPoint.latitude]
+        }
+      });
+    }
   }
   
   return {
