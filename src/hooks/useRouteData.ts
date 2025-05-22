@@ -1,5 +1,5 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 import { filterValidRoutePoints, findCurrentPositionIndex, createRouteGeoJSON } from '@/utils/routeUtils';
@@ -13,12 +13,32 @@ interface UseRouteDataProps {
 export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps) {
   const routeRef = useRef<mapboxgl.GeoJSONSource | null>(null);
   const validRoutePointsRef = useRef<FlightTrackPoint[]>([]);
+  const [isRouteComplete, setIsRouteComplete] = useState(false);
   
   // Register the route source reference
   const handleSourceReady = useCallback((source: mapboxgl.GeoJSONSource) => {
     routeRef.current = source;
     updateRoute();
   }, []);
+  
+  // Effect to check if route is complete (has start and end points)
+  useEffect(() => {
+    if (routePoints && routePoints.length > 0) {
+      const firstPoint = routePoints[0];
+      const lastPoint = routePoints[routePoints.length - 1];
+      
+      // Check if we have distinct start and end points
+      if (firstPoint && lastPoint && 
+          (firstPoint.latitude !== lastPoint.latitude || 
+           firstPoint.longitude !== lastPoint.longitude)) {
+        setIsRouteComplete(true);
+      } else {
+        setIsRouteComplete(false);
+      }
+    } else {
+      setIsRouteComplete(false);
+    }
+  }, [routePoints]);
   
   // Update route data
   const updateRoute = useCallback(() => {
@@ -52,6 +72,8 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
     }
     
     console.log(`Updating route with ${validRoutePoints.length} valid points`);
+    console.log(`First point: ${validRoutePoints[0].latitude},${validRoutePoints[0].longitude}`);
+    console.log(`Last point: ${validRoutePoints[validRoutePoints.length-1].latitude},${validRoutePoints[validRoutePoints.length-1].longitude}`);
     
     try {
       // Find current position in route
@@ -83,6 +105,7 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
 
   return {
     validRoutePoints: validRoutePointsRef.current,
+    isRouteComplete,
     handleSourceReady,
     updateRoute
   };

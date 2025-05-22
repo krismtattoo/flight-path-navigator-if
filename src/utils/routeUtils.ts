@@ -1,4 +1,3 @@
-
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
@@ -33,7 +32,7 @@ export function findCurrentPositionIndex(
 
 // Filter valid route points
 export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightTrackPoint[] {
-  // Filter valid points and apply smoothing by reducing the number of points
+  // Filter valid points and remove duplicates
   const validPoints = routePoints.filter(point => 
     typeof point.latitude === 'number' && 
     typeof point.longitude === 'number' && 
@@ -41,10 +40,27 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
     !isNaN(point.longitude)
   );
   
+  // Make sure start and end points are included by keeping first and last points
+  if (validPoints.length < 2) {
+    return validPoints; // Not enough points for a route
+  }
+  
   // If we have too many points, reduce their number for smoother rendering
+  // But always keep start and end points
   if (validPoints.length > 300) {
-    const samplingRate = Math.ceil(validPoints.length / 300);
-    return validPoints.filter((_, index) => index % samplingRate === 0 || index === validPoints.length - 1);
+    const startPoint = validPoints[0];
+    const endPoint = validPoints[validPoints.length - 1];
+    
+    // Keep approximately 300 points including start and end
+    const samplingRate = Math.ceil((validPoints.length - 2) / 298);
+    
+    // Filter middle points
+    const middlePoints = validPoints
+      .slice(1, validPoints.length - 1)
+      .filter((_, index) => index % samplingRate === 0);
+    
+    // Return combined array with start, sampled middle points, and end
+    return [startPoint, ...middlePoints, endPoint];
   }
   
   return validPoints;
@@ -62,15 +78,20 @@ export function createRouteGeoJSON(
     };
   }
   
+  // Ensure currentPositionIndex is within bounds
+  const safeIndex = Math.max(0, Math.min(currentPositionIndex, validRoutePoints.length - 1));
+  
   // Create GeoJSON for traveled and remaining route
   const traveledCoords = validRoutePoints
-    .slice(0, currentPositionIndex + 1)
+    .slice(0, safeIndex + 1)
     .map(p => [p.longitude, p.latitude]);
   
   // Important fix: Make sure remaining coords includes ALL points from current position to the end
   const remainingCoords = validRoutePoints
-    .slice(currentPositionIndex)
+    .slice(safeIndex)
     .map(p => [p.longitude, p.latitude]);
+  
+  console.log(`Creating GeoJSON with traveled=${traveledCoords.length} and remaining=${remainingCoords.length} points`);
   
   // Create features array
   const features = [];
@@ -122,7 +143,7 @@ export function createRouteGeoJSON(
     });
     
     // Current position waypoint
-    const currentPoint = validRoutePoints[currentPositionIndex];
+    const currentPoint = validRoutePoints[safeIndex];
     features.push({
       type: 'Feature' as const,
       properties: {
@@ -137,7 +158,7 @@ export function createRouteGeoJSON(
       }
     });
     
-    // End waypoint
+    // End waypoint (always include the last point)
     const endPoint = validRoutePoints[validRoutePoints.length - 1];
     features.push({
       type: 'Feature' as const,
@@ -153,10 +174,6 @@ export function createRouteGeoJSON(
       }
     });
   }
-  
-  console.log("Creating route GeoJSON with features:", features.length);
-  console.log("Traveled path points:", traveledCoords.length);
-  console.log("Remaining path points:", remainingCoords.length);
   
   return {
     type: 'FeatureCollection' as const,

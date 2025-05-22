@@ -14,10 +14,25 @@ interface FlightRouteProps {
 
 const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFlight }) => {
   // Use the custom hook to manage route data
-  const { validRoutePoints, handleSourceReady, updateRoute } = useRouteData({
+  const { validRoutePoints, isRouteComplete, handleSourceReady, updateRoute } = useRouteData({
     routePoints,
     selectedFlight
   });
+  
+  // Debug route information
+  useEffect(() => {
+    if (routePoints.length > 0) {
+      console.log(`Route has ${routePoints.length} total points, ${validRoutePoints.length} valid points`);
+      console.log(`Route complete: ${isRouteComplete}`);
+      
+      if (routePoints.length >= 2) {
+        const firstPoint = routePoints[0];
+        const lastPoint = routePoints[routePoints.length - 1];
+        console.log("Route start:", firstPoint.latitude, firstPoint.longitude);
+        console.log("Route end:", lastPoint.latitude, lastPoint.longitude);
+      }
+    }
+  }, [routePoints, validRoutePoints, isRouteComplete]);
   
   // Update route when dependencies change
   useEffect(() => {

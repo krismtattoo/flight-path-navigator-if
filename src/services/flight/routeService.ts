@@ -24,14 +24,21 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
     
-    // Define all possible endpoint patterns to try
+    // Define all possible endpoint patterns to try - expanded with more potential endpoints
     const endpointPatterns = [
       `${BASE_URL}/flights/${serverId}/${flightId}/route`,
       `${BASE_URL}/flights/${serverId}/route/${flightId}`,
       `${BASE_URL}/flights/${serverId}/${flightId}/track`,
       `${BASE_URL}/sessions/${serverId}/flights/${flightId}/route`,
-      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/track`
+      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/track`,
+      `${BASE_URL}/flights/${serverId}/${flightId}/flightplan`,
+      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/flightplan`,
+      `${BASE_URL}/flights/${serverId}/${flightId}/path`,
+      `${BASE_URL}/sessions/${serverId}/flights/${flightId}/path`
     ];
+    
+    // Array to store all collected points
+    let allPoints: FlightTrackPoint[] = [];
     
     // Try each endpoint pattern in sequence
     for (const endpoint of endpointPatterns) {
@@ -56,7 +63,14 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
               data.result.sort((a: FlightTrackPoint, b: FlightTrackPoint) => a.timestamp - b.timestamp);
             }
             
-            return data.result;
+            // If we already have points and this endpoint returned more
+            if (data.result.length > allPoints.length) {
+              console.log(`Using longer route data from ${endpoint} with ${data.result.length} points`);
+              allPoints = data.result;
+            } else if (allPoints.length === 0) {
+              // If this is the first successful endpoint
+              allPoints = data.result;
+            }
           }
         } else {
           console.log(`Endpoint ${endpoint} returned status ${response.status}`);
@@ -65,6 +79,12 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
         console.error(`Error trying endpoint ${endpoint}:`, endpointError);
         // Continue to try next endpoint
       }
+    }
+    
+    // After trying all endpoints, check if we have any points
+    if (allPoints.length > 0) {
+      console.log(`Total route points collected: ${allPoints.length}`);
+      return allPoints;
     }
     
     // If we reach here, none of the endpoints worked
