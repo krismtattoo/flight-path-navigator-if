@@ -32,9 +32,22 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
         console.log("Route start:", firstPoint.latitude, firstPoint.longitude);
         console.log("Route end:", lastPoint.latitude, lastPoint.longitude);
         
-        // Show timestamps to see if they're chronological
-        console.log("First point timestamp:", new Date(firstPoint.timestamp).toISOString());
-        console.log("Last point timestamp:", new Date(lastPoint.timestamp).toISOString());
+        // Show timestamps to see if they're chronological - with validation to prevent Invalid Date error
+        try {
+          if (firstPoint.timestamp && !isNaN(firstPoint.timestamp)) {
+            console.log("First point timestamp:", new Date(firstPoint.timestamp).toISOString());
+          } else {
+            console.log("First point has invalid timestamp:", firstPoint.timestamp);
+          }
+          
+          if (lastPoint.timestamp && !isNaN(lastPoint.timestamp)) {
+            console.log("Last point timestamp:", new Date(lastPoint.timestamp).toISOString());
+          } else {
+            console.log("Last point has invalid timestamp:", lastPoint.timestamp);
+          }
+        } catch (error) {
+          console.error("Error processing timestamps:", error);
+        }
         
         // Log some middle points to check the data quality
         if (routePoints.length > 10) {
