@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SERVER_TYPES } from '@/services/flightApi';
+import { SERVER_TYPES } from '@/services/flight';
 
 interface Server {
   id: string;

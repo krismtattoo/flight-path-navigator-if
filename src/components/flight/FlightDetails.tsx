@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Flight } from '@/services/flightApi';
-import { getUserDetails } from '@/services/flightApi';
+import { Flight } from '@/services/flight';
+import { getUserDetails } from '@/services/flight';
 
 interface FlightDetailsProps {
   flight: Flight | null;

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { FlightTrackPoint, Flight } from '@/services/flightApi';
+import { FlightTrackPoint, Flight } from '@/services/flight';
 import { toast } from 'sonner';
 
 interface FlightRouteProps {

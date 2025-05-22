@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from "sonner";
-import { getFlights, getFlightRoute, getServers, SERVER_TYPES, Flight, FlightTrackPoint, ServerInfo } from '@/services/flightApi';
+import { getFlights, getFlightRoute, getServers, SERVER_TYPES, Flight, FlightTrackPoint, ServerInfo } from '@/services/flight';
 
 // For mapbox
 import mapboxgl from 'mapbox-gl';
