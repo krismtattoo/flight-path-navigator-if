@@ -11,6 +11,7 @@ interface FlightRouteProps {
 
 const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFlight }) => {
   const routeRef = useRef<mapboxgl.GeoJSONSource | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   // Initialize route source and layers when component mounts
   useEffect(() => {
@@ -63,6 +64,20 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
             'line-dasharray': [0, 2, 2]
           }
         });
+        
+        // Add waypoints layer
+        map.addLayer({
+          id: 'waypoints',
+          type: 'circle',
+          source: 'route',
+          filter: ['==', 'type', 'waypoint'],
+          paint: {
+            'circle-radius': 4,
+            'circle-color': '#2271B3',
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+          }
+        });
       }
       
       routeRef.current = map.getSource('route') as mapboxgl.GeoJSONSource;
@@ -74,6 +89,12 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
       routeRef.current = map.getSource('route') as mapboxgl.GeoJSONSource;
       updateRoute();
     }
+    
+    // Clean up markers when component unmounts
+    return () => {
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+    };
   }, [map]);
   
   // Update route when routePoints or selectedFlight changes
@@ -86,6 +107,10 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
       console.log("Route reference not ready yet");
       return;
     }
+    
+    // Clear existing waypoint markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
     
     if (routePoints.length === 0) {
       // Clear the route
@@ -132,7 +157,22 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
     
     console.log(`Route split: ${traveledCoords.length} traveled points, ${remainingCoords.length} remaining points`);
     
-    // Update the route source
+    // Create waypoints features
+    const waypointFeatures = routePoints.map((point, index) => ({
+      type: 'Feature' as const,
+      properties: {
+        type: 'waypoint',
+        index: index,
+        altitude: point.altitude,
+        timestamp: point.timestamp
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [point.longitude, point.latitude]
+      }
+    }));
+    
+    // Update the route source with lines and waypoints
     routeRef.current.setData({
       type: 'FeatureCollection',
       features: [
@@ -155,9 +195,45 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, routePoints, selectedFli
             type: 'LineString',
             coordinates: remainingCoords
           }
-        }
+        },
+        ...waypointFeatures
       ]
     });
+    
+    // Only add detailed tooltips for significant waypoints to avoid cluttering
+    // For now, pick evenly spaced points
+    const maxTooltips = 10;
+    const step = Math.max(1, Math.floor(routePoints.length / maxTooltips));
+    
+    for (let i = 0; i < routePoints.length; i += step) {
+      const point = routePoints[i];
+      
+      // Add popup with waypoint information
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 25,
+        className: 'waypoint-popup'
+      });
+      
+      const timestamp = new Date(point.timestamp).toLocaleTimeString();
+      popup.setHTML(`
+        <div class="font-medium">Waypoint ${i+1}/${routePoints.length}</div>
+        <div>Altitude: ${Math.round(point.altitude).toLocaleString()} ft</div>
+        <div>Time: ${timestamp}</div>
+      `);
+      
+      // Create a transparent marker to hold the popup
+      const marker = new mapboxgl.Marker({
+        color: 'rgba(0,0,0,0)',
+        scale: 0.5
+      })
+      .setLngLat([point.longitude, point.latitude])
+      .setPopup(popup)
+      .addTo(map);
+      
+      markersRef.current.push(marker);
+    }
   };
   
   return null; // This component doesn't render anything itself
