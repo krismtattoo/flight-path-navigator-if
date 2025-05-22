@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { Flight } from '@/services/flightApi';
+import { Flight } from '@/services/flight/types';
 
 interface AircraftMarkerProps {
   map: mapboxgl.Map;

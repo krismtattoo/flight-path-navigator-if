@@ -1,6 +1,6 @@
 
 import { toast } from "sonner";
-import { API_KEY, BASE_URL, Flight } from "./types";
+import { API_KEY, BASE_URL, Flight, serverIdMap } from "./types";
 import { getServers, getServerIdByName } from "./serverService";
 
 // Get all flights for a specific server
@@ -104,6 +104,3 @@ export async function getUserDetails(serverName: string, userId: string) {
     return null;
   }
 }
-
-// Access to the server ID mapping from types.ts
-import { serverIdMap } from "./types";

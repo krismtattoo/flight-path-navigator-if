@@ -24,8 +24,10 @@ export async function getServers(): Promise<ServerInfo[]> {
       const servers = data.result;
       console.log("Processing servers:", servers);
       
-      // Map server names to IDs for easier lookup
-      serverIdMap = {}; // Reset the map
+      // Clear the existing map
+      Object.keys(serverIdMap).forEach(key => {
+        delete serverIdMap[key];
+      });
       
       servers.forEach((server: any) => {
         if (server.name && server.id) {

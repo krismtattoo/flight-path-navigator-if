@@ -42,5 +42,5 @@ export interface ServerInfo {
   userCount: number;
 }
 
-// Shared server ID mapping
+// Shared server ID mapping - using a let variable that can be modified
 export let serverIdMap: Record<string, string> = {};
