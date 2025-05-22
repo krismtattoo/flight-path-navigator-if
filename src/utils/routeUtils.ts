@@ -153,6 +153,10 @@ export function createRouteGeoJSON(
     });
   }
   
+  console.log("Creating route GeoJSON with features:", features.length);
+  console.log("Traveled path points:", traveledCoords.length);
+  console.log("Remaining path points:", remainingCoords.length);
+  
   return {
     type: 'FeatureCollection' as const,
     features: features

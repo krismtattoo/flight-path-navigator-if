@@ -56,9 +56,17 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
     try {
       // Find current position in route
       const currentPositionIndex = findCurrentPositionIndex(validRoutePoints, selectedFlight);
+      console.log("Current position index:", currentPositionIndex, "of", validRoutePoints.length);
       
       // Create and update GeoJSON
       const routeGeoJSON = createRouteGeoJSON(validRoutePoints, currentPositionIndex);
+      console.log("Route GeoJSON features count:", routeGeoJSON.features.length);
+      
+      // Debug the features to ensure we have both path types
+      const traveledFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'traveled');
+      const remainingFeatures = routeGeoJSON.features.filter(f => f.properties.type === 'remaining');
+      console.log(`Path segments: traveled=${traveledFeatures.length}, remaining=${remainingFeatures.length}`);
+      
       routeRef.current.setData(routeGeoJSON);
       
     } catch (error) {

@@ -11,8 +11,12 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
     if (!map) return;
     
     const initializeRouteLayers = () => {
+      console.log("Initializing route layers");
+      
       // Check if source already exists to prevent duplicate sources
       if (!map.getSource('route')) {
+        console.log("Adding route source and layers");
+        
         map.addSource('route', {
           type: 'geojson',
           data: {
@@ -71,16 +75,24 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
       }
       
       const routeSource = map.getSource('route') as mapboxgl.GeoJSONSource;
+      console.log("Route source initialized, calling onSourceReady");
       onSourceReady(routeSource);
     };
 
     // If map is already loaded, initialize layers
     if (map.loaded()) {
+      console.log("Map already loaded, initializing layers");
       initializeRouteLayers();
+    } else {
+      // Otherwise, wait for the load event
+      console.log("Map not loaded yet, waiting for load event");
+      map.on('load', initializeRouteLayers);
     }
     
-    // Otherwise, wait for the load event
-    map.on('load', initializeRouteLayers);
+    // Cleanup function
+    return () => {
+      map.off('load', initializeRouteLayers);
+    };
     
   }, [map, onSourceReady]);
   
