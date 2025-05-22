@@ -18,7 +18,28 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11', // Light style for a bright map
+        style: {
+          version: 8,
+          sources: {
+            'osm-tiles': {
+              type: 'raster',
+              tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '© OpenStreetMap contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm-tiles',
+              type: 'raster',
+              source: 'osm-tiles',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
+        },
         center: [0, 30], // Center on Atlantic for global view
         zoom: 2,
         minZoom: 1.5,
@@ -35,6 +56,11 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
       map.current.addControl(new mapboxgl.NavigationControl({
         showCompass: false, // Hide compass since we disabled rotation
       }), 'top-right');
+
+      // Add attribution control
+      map.current.addControl(new mapboxgl.AttributionControl({
+        customAttribution: '© OpenStreetMap contributors'
+      }));
 
       // Disable map rotation using keyboard and touch rotation
       map.current.keyboard.disableRotation();
