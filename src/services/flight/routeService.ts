@@ -50,6 +50,12 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
           
           if (data && data.result && Array.isArray(data.result)) {
             console.log(`Found ${data.result.length} track points from ${endpoint}`);
+            
+            // Make sure the points are sorted by timestamp
+            if (data.result.length > 0 && data.result[0].timestamp) {
+              data.result.sort((a: FlightTrackPoint, b: FlightTrackPoint) => a.timestamp - b.timestamp);
+            }
+            
             return data.result;
           }
         } else {

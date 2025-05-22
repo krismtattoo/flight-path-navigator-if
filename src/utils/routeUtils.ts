@@ -67,6 +67,7 @@ export function createRouteGeoJSON(
     .slice(0, currentPositionIndex + 1)
     .map(p => [p.longitude, p.latitude]);
   
+  // Important fix: Make sure remaining coords includes ALL points from current position to the end
   const remainingCoords = validRoutePoints
     .slice(currentPositionIndex)
     .map(p => [p.longitude, p.latitude]);
