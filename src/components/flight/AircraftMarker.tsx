@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -25,13 +24,13 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     
     if (isSelected) {
       return onGround 
-        ? 'brightness(1.8) saturate(0) contrast(1.5)' // Highlighted gray for selected ground aircraft
-        : 'brightness(1.8) hue-rotate(200deg) saturate(2)'; // Highlighted light blue for selected airborne aircraft
+        ? 'brightness(0) saturate(0) invert(0.5) contrast(2)' // Highlighted gray for selected ground aircraft
+        : 'brightness(0) saturate(0) invert(0.7) sepia(1) hue-rotate(180deg) saturate(3)'; // Highlighted light blue for selected airborne aircraft
     }
     
     return onGround 
-      ? 'brightness(0.8) saturate(0) contrast(1.2)' // Gray for ground aircraft
-      : 'brightness(1.2) hue-rotate(200deg) saturate(1.5)'; // Light blue for airborne aircraft
+      ? 'brightness(0) saturate(0) invert(0.4) contrast(1.5)' // Gray for ground aircraft
+      : 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(180deg) saturate(2)'; // Light blue for airborne aircraft
   };
 
   useEffect(() => {
