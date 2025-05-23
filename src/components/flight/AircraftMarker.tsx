@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -24,13 +25,13 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     
     if (isSelected) {
       return onGround 
-        ? 'brightness(0) saturate(0) invert(0.5) contrast(2)' // Highlighted gray for selected ground aircraft
-        : 'brightness(0) saturate(0) invert(0.7) sepia(1) hue-rotate(180deg) saturate(3)'; // Highlighted light blue for selected airborne aircraft
+        ? 'brightness(0) saturate(0) invert(0.8) contrast(2) drop-shadow(0 0 8px rgba(255,255,255,0.8))' // Highlighted gray for selected ground aircraft
+        : 'brightness(0) saturate(0) invert(0.7) sepia(1) hue-rotate(180deg) saturate(3) drop-shadow(0 0 8px rgba(91,173,236,0.8))'; // Highlighted light blue for selected airborne aircraft
     }
     
     return onGround 
-      ? 'brightness(0) saturate(0) invert(0.4) contrast(1.5)' // Gray for ground aircraft
-      : 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(180deg) saturate(2)'; // Light blue for airborne aircraft
+      ? 'brightness(0) saturate(0) invert(0.4) contrast(1.5) drop-shadow(0 2px 4px rgba(0,0,0,0.3))' // Gray for ground aircraft with shadow
+      : 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(180deg) saturate(2) drop-shadow(0 2px 4px rgba(0,0,0,0.3))'; // Light blue for airborne aircraft with shadow
   };
 
   useEffect(() => {
@@ -75,6 +76,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           el.style.transform = `rotate(${flight.heading}deg)`;
           el.style.transformOrigin = 'center';
           el.style.cursor = 'pointer';
+          el.style.transition = 'all 0.3s ease';
           
           // Create the marker with fixed settings to prevent movement
           const marker = new mapboxgl.Marker({
@@ -105,6 +107,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                 if (prevFlight) {
                   prevEl.style.zIndex = '0';
                   prevEl.style.filter = getAircraftFilter(prevFlight);
+                  prevEl.style.transform = `rotate(${prevFlight.heading}deg) scale(1)`;
                   prevEl.classList.remove('animate-pulse-subtle');
                 }
               }
@@ -112,6 +115,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
               // Highlight the selected marker
               el.style.zIndex = '1000';
               el.style.filter = getAircraftFilter(flight, true);
+              el.style.transform = `rotate(${flight.heading}deg) scale(1.2)`;
               el.classList.add('animate-pulse-subtle');
               
               // Track the selected marker

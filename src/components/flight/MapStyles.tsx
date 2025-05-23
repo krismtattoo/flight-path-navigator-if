@@ -9,22 +9,29 @@ const MapStyles = () => {
       }
       
       .aircraft-marker {
-        transition: filter 0.3s ease;
+        transition: all 0.3s ease;
+      }
+      
+      .aircraft-marker:hover {
+        transform: scale(1.1) !important;
       }
       
       .animate-pulse-subtle {
-        animation: pulse 2s infinite;
+        animation: pulse-highlight 2s infinite;
       }
       
-      @keyframes pulse {
+      @keyframes pulse-highlight {
         0% {
-          transform: scale(1);
+          transform: scale(1.2);
+          opacity: 1;
         }
         50% {
-          transform: scale(1.05);
+          transform: scale(1.3);
+          opacity: 0.9;
         }
         100% {
-          transform: scale(1);
+          transform: scale(1.2);
+          opacity: 1;
         }
       }
     `}</style>
