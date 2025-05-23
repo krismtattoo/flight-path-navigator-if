@@ -13,6 +13,27 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const selectedMarkerIdRef = useRef<string | null>(null);
 
+  // Function to determine if aircraft is on ground
+  const isOnGround = (flight: Flight): boolean => {
+    // Aircraft is considered on ground if altitude is very low and speed is low
+    return flight.altitude < 100 && flight.speed < 50;
+  };
+
+  // Function to get aircraft color filter based on status
+  const getAircraftFilter = (flight: Flight, isSelected: boolean = false): string => {
+    const onGround = isOnGround(flight);
+    
+    if (isSelected) {
+      return onGround 
+        ? 'brightness(1.8) saturate(0) contrast(1.5)' // Highlighted gray for selected ground aircraft
+        : 'brightness(1.8) hue-rotate(200deg) saturate(2)'; // Highlighted light blue for selected airborne aircraft
+    }
+    
+    return onGround 
+      ? 'brightness(0.8) saturate(0) contrast(1.2)' // Gray for ground aircraft
+      : 'brightness(1.2) hue-rotate(200deg) saturate(1.5)'; // Light blue for airborne aircraft
+  };
+
   useEffect(() => {
     // Make sure map is fully loaded before adding markers
     if (!map || !map.loaded()) {
@@ -46,12 +67,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           el.style.width = '28px';
           el.style.height = '28px';
           
-          // Hellblaues Flugzeug-Icon
+          // Aircraft icon
           el.style.backgroundImage = 'url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png")';
           el.style.backgroundSize = 'contain';
           el.style.backgroundRepeat = 'no-repeat';
           el.style.backgroundPosition = 'center';
-          el.style.filter = 'brightness(1.2) hue-rotate(180deg) saturate(1.5)'; // Hellblauer Farbton
+          el.style.filter = getAircraftFilter(flight);
           el.style.transform = `rotate(${flight.heading}deg)`;
           el.style.transformOrigin = 'center';
           el.style.cursor = 'pointer';
@@ -79,15 +100,19 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
             marker.getElement().addEventListener('click', () => {
               // Remove highlight from previously selected marker
               if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
-                const prevEl = markersRef.current[selectedMarkerIdRef.current].getElement();
-                prevEl.style.zIndex = '0';
-                prevEl.style.filter = 'brightness(1.2) hue-rotate(180deg) saturate(1.5)';
-                prevEl.classList.remove('animate-pulse-subtle');
+                const prevMarker = markersRef.current[selectedMarkerIdRef.current];
+                const prevEl = prevMarker.getElement();
+                const prevFlight = flights.find(f => f.flightId === selectedMarkerIdRef.current);
+                if (prevFlight) {
+                  prevEl.style.zIndex = '0';
+                  prevEl.style.filter = getAircraftFilter(prevFlight);
+                  prevEl.classList.remove('animate-pulse-subtle');
+                }
               }
               
               // Highlight the selected marker
               el.style.zIndex = '1000';
-              el.style.filter = 'brightness(1.8) hue-rotate(180deg) saturate(2)';
+              el.style.filter = getAircraftFilter(flight, true);
               el.classList.add('animate-pulse-subtle');
               
               // Track the selected marker

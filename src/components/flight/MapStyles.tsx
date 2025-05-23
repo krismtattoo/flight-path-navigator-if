@@ -9,7 +9,7 @@ const MapStyles = () => {
       }
       
       .aircraft-marker {
-        filter: brightness(1.2) hue-rotate(180deg) saturate(1.5);
+        transition: filter 0.3s ease;
       }
       
       .animate-pulse-subtle {
