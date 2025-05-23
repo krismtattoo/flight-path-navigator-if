@@ -9,35 +9,26 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      password_tags: {
+      categories: {
         Row: {
-          password_id: string
-          tag_id: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
         }
         Insert: {
-          password_id: string
-          tag_id: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
         }
         Update: {
-          password_id?: string
-          tag_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "password_tags_password_id_fkey"
-            columns: ["password_id"]
-            isOneToOne: false
-            referencedRelation: "passwords"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "password_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       passwords: {
         Row: {
@@ -93,30 +84,6 @@ export type Database = {
           created_at?: string
           id?: string
           username?: string | null
-        }
-        Relationships: []
-      }
-      tags: {
-        Row: {
-          color: string
-          created_at: string
-          id: string
-          name: string
-          user_id: string
-        }
-        Insert: {
-          color: string
-          created_at?: string
-          id?: string
-          name: string
-          user_id: string
-        }
-        Update: {
-          color?: string
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string
         }
         Relationships: []
       }

@@ -5,11 +5,11 @@ const MapStyles = () => {
   return (
     <style>{`
       .mapboxgl-map {
-        background-color: #0a0e1a;
+        background-color: #f8fafc;
       }
       
       .aircraft-marker {
-        filter: brightness(1.5) hue-rotate(15deg);
+        filter: brightness(1.2) hue-rotate(180deg) saturate(1.5);
       }
       
       .animate-pulse-subtle {

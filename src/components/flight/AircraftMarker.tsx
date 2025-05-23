@@ -46,12 +46,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           el.style.width = '28px';
           el.style.height = '28px';
           
-          // Goldenes Flugzeug-Icon wie im Screenshot
+          // Hellblaues Flugzeug-Icon
           el.style.backgroundImage = 'url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png")';
           el.style.backgroundSize = 'contain';
           el.style.backgroundRepeat = 'no-repeat';
           el.style.backgroundPosition = 'center';
-          el.style.filter = 'brightness(1.5) hue-rotate(15deg)'; // Goldener Farbton
+          el.style.filter = 'brightness(1.2) hue-rotate(180deg) saturate(1.5)'; // Hellblauer Farbton
           el.style.transform = `rotate(${flight.heading}deg)`;
           el.style.transformOrigin = 'center';
           el.style.cursor = 'pointer';
@@ -81,13 +81,13 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
               if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
                 const prevEl = markersRef.current[selectedMarkerIdRef.current].getElement();
                 prevEl.style.zIndex = '0';
-                prevEl.style.filter = 'brightness(1.5) hue-rotate(15deg)';
+                prevEl.style.filter = 'brightness(1.2) hue-rotate(180deg) saturate(1.5)';
                 prevEl.classList.remove('animate-pulse-subtle');
               }
               
               // Highlight the selected marker
               el.style.zIndex = '1000';
-              el.style.filter = 'brightness(2) hue-rotate(15deg)';
+              el.style.filter = 'brightness(1.8) hue-rotate(180deg) saturate(2)';
               el.classList.add('animate-pulse-subtle');
               
               // Track the selected marker
