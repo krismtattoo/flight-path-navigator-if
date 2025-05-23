@@ -1,62 +1,72 @@
+
 import { FlightTrackPoint } from "./types";
 
 // Process different route data formats into consistent FlightTrackPoint array
 export const parseRouteData = (data: any): FlightTrackPoint[] => {
   let processedPoints: FlightTrackPoint[] = [];
   
-  // Handle array responses (route points)
+  // Handle flight route API response (actual flown route)
   if (Array.isArray(data.result)) {
-    console.log(`Found ${data.result.length} points in array format`);
+    console.log(`Found ${data.result.length} route points from flight route API`);
     
-    // Convert to standard track point format if needed
-    processedPoints = data.result;
-    
-    // If this doesn't have lat/long but has coordinates format, transform
-    if (data.result.length > 0 && !data.result[0].latitude && data.result[0].coordinates) {
-      processedPoints = data.result.map((point: any) => ({
-        latitude: point.coordinates.latitude || point.coordinates.lat,
-        longitude: point.coordinates.longitude || point.coordinates.lng,
-        altitude: point.altitude || point.coordinates.altitude || 0,
-        timestamp: point.timestamp || Date.now() // Use timestamp or current time as fallback
-      }));
-    }
-  } 
-  // Handle object with route property
-  else if (data.result.route && Array.isArray(data.result.route)) {
-    console.log(`Found route property with ${data.result.route.length} points`);
-    
-    processedPoints = data.result.route.map((point: any) => ({
-      latitude: point.latitude || (point.coordinates ? point.coordinates.latitude : 0),
-      longitude: point.longitude || (point.coordinates ? point.coordinates.longitude : 0),
-      altitude: point.altitude || (point.coordinates ? point.coordinates.altitude : 0),
-      timestamp: point.timestamp || Date.now()
+    processedPoints = data.result.map((point: any) => ({
+      latitude: point.latitude,
+      longitude: point.longitude,
+      altitude: point.altitude || 0,
+      timestamp: new Date(point.lastReport).getTime()
     }));
   }
-  // Handle object with waypoints
-  else if (data.result.waypoints && Array.isArray(data.result.waypoints)) {
-    console.log(`Found waypoints with ${data.result.waypoints.length} points`);
+  // Handle flight plan API response (planned route)
+  else if (data.result && data.result.waypoints && Array.isArray(data.result.waypoints)) {
+    console.log(`Found flight plan with ${data.result.waypoints.length} waypoints`);
     
     let waypointTimestampBase = Date.now();
-    processedPoints = data.result.waypoints.map((point: any, index: number) => ({
-      latitude: point.latitude || (point.coordinates ? point.coordinates.latitude : 0),
-      longitude: point.longitude || (point.coordinates ? point.coordinates.longitude : 0),
-      altitude: point.altitude || (point.coordinates ? point.coordinates.altitude : 0),
+    processedPoints = data.result.waypoints.map((waypoint: any, index: number) => ({
+      latitude: waypoint.location.latitude,
+      longitude: waypoint.location.longitude,
+      altitude: waypoint.altitude || 0,
       timestamp: waypointTimestampBase + (index * 60000) // Fake timestamps spaced 1 minute apart
     }));
   }
-  // Handle flight plan formats
-  else if (data.result.departure && data.result.destination) {
-    console.log(`Found flight plan with departure ${data.result.departure} and destination ${data.result.destination}`);
+  // Handle case where we have departure and destination info
+  else if (data.result && data.result.departure && data.result.destination) {
+    console.log(`Found flight plan with departure and destination`);
     
-    // Extract route points from waypoints array if available
-    if (data.result.waypoints && Array.isArray(data.result.waypoints)) {
-      processedPoints = data.result.waypoints.map((point: any, index: number) => ({
-        latitude: point.latitude || (point.coordinates ? point.coordinates.latitude : 0),
-        longitude: point.longitude || (point.coordinates ? point.coordinates.longitude : 0),
-        altitude: point.altitude || (point.coordinates ? point.coordinates.altitude : 0),
-        timestamp: Date.now() + (index * 60000) // Fake timestamps spaced 1 minute apart
-      }));
+    const points = [];
+    
+    // Add departure point
+    if (data.result.departure.location) {
+      points.push({
+        latitude: data.result.departure.location.latitude,
+        longitude: data.result.departure.location.longitude,
+        altitude: 0,
+        timestamp: Date.now()
+      });
     }
+    
+    // Add waypoints if available
+    if (data.result.waypoints && Array.isArray(data.result.waypoints)) {
+      data.result.waypoints.forEach((waypoint: any, index: number) => {
+        points.push({
+          latitude: waypoint.location.latitude,
+          longitude: waypoint.location.longitude,
+          altitude: waypoint.altitude || 0,
+          timestamp: Date.now() + ((index + 1) * 60000)
+        });
+      });
+    }
+    
+    // Add destination point
+    if (data.result.destination.location) {
+      points.push({
+        latitude: data.result.destination.location.latitude,
+        longitude: data.result.destination.location.longitude,
+        altitude: 0,
+        timestamp: Date.now() + (points.length * 60000)
+      });
+    }
+    
+    processedPoints = points;
   }
   
   // Sort points by timestamp if available
@@ -74,39 +84,40 @@ export const mergeRoutePoints = (
 ): FlightTrackPoint[] => {
   
   if (historicalPoints.length > 0 && plannedPoints.length > 0) {
+    // If we have both historical (flown) and planned route data
+    // Use historical data as primary and extend with remaining planned waypoints
+    console.log("Merging historical route with flight plan data");
+    
     // Sort both by timestamp
     historicalPoints.sort((a, b) => a.timestamp - b.timestamp);
     plannedPoints.sort((a, b) => a.timestamp - b.timestamp);
     
-    // If historical points already include more points than planned route, use that
-    if (historicalPoints.length > plannedPoints.length) {
-      console.log("Historical route includes more points than planned route");
-      return historicalPoints;
-    } 
-    
-    // Otherwise combine them, making sure to avoid duplicates
     // Get the last historical point
     const lastHistorical = historicalPoints[historicalPoints.length - 1];
     
     // Filter planned points to only include those beyond the last historical point
-    // Use a small threshold for position comparison
-    const threshold = 0.0001; // Approximately 11 meters at the equator
+    const threshold = 0.01; // Approximately 1km at the equator
     const futurePoints = plannedPoints.filter(point => {
-      return Math.abs(point.latitude - lastHistorical.latitude) > threshold || 
-             Math.abs(point.longitude - lastHistorical.longitude) > threshold;
+      const distance = Math.sqrt(
+        Math.pow(point.latitude - lastHistorical.latitude, 2) + 
+        Math.pow(point.longitude - lastHistorical.longitude, 2)
+      );
+      return distance > threshold;
     });
     
-    console.log(`Found ${futurePoints.length} future points beyond current position`);
+    console.log(`Found ${futurePoints.length} remaining waypoints beyond current position`);
     
     // Combine historical and future points
     return [...historicalPoints, ...futurePoints];
   } 
-  // If we only have historical data
+  // If we only have historical data (actual flown route)
   else if (historicalPoints.length > 0) {
+    console.log("Using historical route data only");
     return historicalPoints;
   }
-  // If we only have planned data
+  // If we only have planned data (flight plan)
   else if (plannedPoints.length > 0) {
+    console.log("Using flight plan data only");
     return plannedPoints;
   }
   

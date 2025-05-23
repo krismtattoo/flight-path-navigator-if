@@ -7,7 +7,7 @@ import { getRouteEndpointPatterns } from "./routeEndpoints";
 import { fetchFromEndpoint } from "./routeFetcher";
 import { mergeRoutePoints } from "./routeParser";
 
-// Get flight route for a specific flight - try multiple endpoint patterns
+// Get flight route for a specific flight - try the official API endpoints
 export async function getFlightRoute(serverName: string, flightId: string): Promise<FlightTrackPoint[]> {
   try {
     // Ensure we have server IDs
@@ -27,42 +27,35 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
     
-    // Get all potential endpoint patterns
+    // Get the official endpoint patterns
     const endpointPatterns = getRouteEndpointPatterns(serverId, flightId);
     
-    // Arrays to store collected points
-    let historicalPoints: FlightTrackPoint[] = [];
-    let plannedPoints: FlightTrackPoint[] = [];
+    let actualRoutePoints: FlightTrackPoint[] = [];
+    let flightPlanPoints: FlightTrackPoint[] = [];
     
-    // Try each endpoint pattern in sequence
-    for (const endpoint of endpointPatterns) {
-      const points = await fetchFromEndpoint(endpoint);
-      
-      if (points.length > 0) {
-        // Determine if this is likely historical or planned data based on the endpoint
-        if (endpoint.includes('route') || endpoint.includes('track')) {
-          historicalPoints = points.length > historicalPoints.length ? points : historicalPoints;
-        } else {
-          plannedPoints = points.length > plannedPoints.length ? points : plannedPoints;
-        }
-      }
-    }
+    // Try route endpoint first (actual flown route)
+    const routeEndpoint = endpointPatterns[0];
+    console.log(`Trying route endpoint: ${routeEndpoint}`);
+    actualRoutePoints = await fetchFromEndpoint(routeEndpoint);
     
-    // After trying all endpoints, combine historical and planned points
-    console.log(`Historical points: ${historicalPoints.length}, Planned points: ${plannedPoints.length}`);
+    // Try flight plan endpoint (planned route)
+    const flightPlanEndpoint = endpointPatterns[1];
+    console.log(`Trying flight plan endpoint: ${flightPlanEndpoint}`);
+    flightPlanPoints = await fetchFromEndpoint(flightPlanEndpoint);
     
-    // Merge points from both sources
-    const allPoints = mergeRoutePoints(historicalPoints, plannedPoints);
+    console.log(`Route points: ${actualRoutePoints.length}, Flight plan points: ${flightPlanPoints.length}`);
     
-    // After processing, check if we have any points
+    // Merge the data - prioritize actual route if available
+    const allPoints = mergeRoutePoints(actualRoutePoints, flightPlanPoints);
+    
     if (allPoints.length > 0) {
       console.log(`Total route points collected: ${allPoints.length}`);
       return allPoints;
     }
     
-    // If we reach here, none of the endpoints worked
-    console.log("All endpoints failed to retrieve flight route data");
-    toast.error("Could not load flight route data. The flight may not have track data available.");
+    // If no data is available
+    console.log("No route or flight plan data available for this flight");
+    toast.error("No route data available for this flight. The flight may not have filed a flight plan or track data may be unavailable.");
     return [];
   } catch (error) {
     console.error("Failed to fetch flight route:", error);

@@ -3,13 +3,13 @@ import React from 'react';
 
 const MapStyles = () => {
   return (
-    <style jsx global>{`
+    <style>{`
       .mapboxgl-map {
-        background-color: #151920;
+        background-color: #0a0e1a;
       }
       
       .aircraft-marker {
-        filter: brightness(1.2);
+        filter: brightness(1.5) hue-rotate(15deg);
       }
       
       .animate-pulse-subtle {
