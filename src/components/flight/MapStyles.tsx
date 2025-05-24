@@ -9,30 +9,23 @@ const MapStyles = () => {
       }
       
       .aircraft-marker {
-        transition: all 0.3s ease;
+        /* Removed problematic transitions and hover effects */
+        will-change: transform;
+        backface-visibility: hidden;
+        transform-style: preserve-3d;
       }
       
-      .aircraft-marker:hover {
-        transform: scale(1.1) !important;
+      .aircraft-marker-selected {
+        z-index: 1000 !important;
       }
       
-      .animate-pulse-subtle {
-        animation: pulse-highlight 2s infinite;
+      /* Prevent marker from interfering with map interactions */
+      .mapboxgl-marker {
+        pointer-events: auto;
       }
       
-      @keyframes pulse-highlight {
-        0% {
-          transform: scale(1.2);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.3);
-          opacity: 0.9;
-        }
-        100% {
-          transform: scale(1.2);
-          opacity: 1;
-        }
+      .mapboxgl-marker .aircraft-marker {
+        pointer-events: auto;
       }
     `}</style>
   );

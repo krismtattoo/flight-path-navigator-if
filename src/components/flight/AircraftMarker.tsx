@@ -78,9 +78,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           const el = existingMarker.getElement();
           const isSelected = selectedMarkerIdRef.current === flight.flightId;
           el.style.filter = getAircraftFilter(flight, isSelected);
-          el.style.transform = isSelected 
-            ? `rotate(${flight.heading}deg) scale(1.2)` 
-            : `rotate(${flight.heading}deg)`;
+          // Fixed transform to prevent conflicts with Mapbox positioning
+          el.style.transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
         } else {
           // Create new marker
           try {
@@ -99,15 +98,17 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
             el.style.transform = `rotate(${flight.heading}deg)`;
             el.style.transformOrigin = 'center';
             el.style.cursor = 'pointer';
-            el.style.transition = 'all 0.3s ease';
+            // Removed transition to prevent glitching
+            el.style.pointerEvents = 'auto';
             
-            // Create the marker with fixed settings to prevent movement during map interactions
+            // Create the marker with proper settings to prevent movement during map interactions
             const marker = new mapboxgl.Marker({
               element: el,
               anchor: 'center',
               draggable: false,
-              rotationAlignment: 'map',
-              pitchAlignment: 'map',
+              // Fixed: Use 'map' instead of 'auto' to prevent rotation issues
+              rotationAlignment: 'viewport',
+              pitchAlignment: 'viewport',
             });
             
             // Set position and add to map
@@ -121,7 +122,9 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
               markersRef.current[flight.flightId] = marker;
               
               // Add click handler
-              marker.getElement().addEventListener('click', () => {
+              marker.getElement().addEventListener('click', (e) => {
+                e.stopPropagation();
+                
                 // Remove highlight from previously selected marker
                 if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
                   const prevMarker = markersRef.current[selectedMarkerIdRef.current];
@@ -130,8 +133,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                   if (prevFlight) {
                     prevEl.style.zIndex = '0';
                     prevEl.style.filter = getAircraftFilter(prevFlight);
-                    prevEl.style.transform = `rotate(${prevFlight.heading}deg) scale(1)`;
-                    prevEl.classList.remove('animate-pulse-subtle');
+                    prevEl.style.transform = `rotate(${prevFlight.heading}deg)`;
+                    prevEl.classList.remove('aircraft-marker-selected');
                   }
                 }
                 
@@ -139,7 +142,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                 el.style.zIndex = '1000';
                 el.style.filter = getAircraftFilter(flight, true);
                 el.style.transform = `rotate(${flight.heading}deg) scale(1.2)`;
-                el.classList.add('animate-pulse-subtle');
+                el.classList.add('aircraft-marker-selected');
                 
                 // Track the selected marker
                 selectedMarkerIdRef.current = flight.flightId;
