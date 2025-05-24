@@ -52,7 +52,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return onGround ? filterStyles.onGroundNormal : filterStyles.airborneNormal;
   }, [isOnGround, filterStyles]);
 
-  // Optimized marker creation function
+  // Optimized marker creation function with new airplane image
   const createMarkerElement = useCallback((flight: Flight): HTMLDivElement => {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
@@ -61,7 +61,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     el.style.cssText = `
       width: 28px !important;
       height: 28px !important;
-      background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png") !important;
+      background-image: url("/lovable-uploads/4bd963af-f3b0-485c-86a7-ec298112211d.png") !important;
       background-size: contain !important;
       background-repeat: no-repeat !important;
       background-position: center !important;
