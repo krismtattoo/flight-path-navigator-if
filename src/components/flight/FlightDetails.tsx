@@ -19,10 +19,20 @@ interface FlightPlanData {
     longitude: number;
     altitude?: number;
   }>;
-  departure?: string;
-  arrival?: string;
-  estimatedDepartureTime?: string;
-  estimatedArrivalTime?: string;
+  departure?: {
+    name: string;
+    icao: string;
+    latitude: number;
+    longitude: number;
+  };
+  destination?: {
+    name: string;
+    icao: string;
+    latitude: number;
+    longitude: number;
+  };
+  cruisingAltitude?: number;
+  flightPlanId?: string;
 }
 
 const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
@@ -54,55 +64,72 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       console.log(`Loading flight plan for flight ${flight.flightId} on server ${serverID}`);
       const routeData = await getFlightRoute(serverID, flight.flightId);
       
-      console.log('Route data received:', routeData);
+      console.log('Flight plan route data received:', routeData);
       
       if (routeData.flightPlan && routeData.flightPlan.length > 0) {
-        // Convert flight plan points to waypoints format
-        const waypoints = routeData.flightPlan.map((point, index) => ({
+        const flightPlanPoints = routeData.flightPlan;
+        
+        // Extract waypoints
+        const waypoints = flightPlanPoints.map((point, index) => ({
           name: (point as any).waypointName || `WP${index + 1}`,
           latitude: point.latitude,
           longitude: point.longitude,
-          altitude: point.altitude
+          altitude: point.altitude || 0
         }));
 
-        // Create departure and arrival info based on waypoints
-        let departure = 'N/A';
-        let arrival = 'N/A';
+        // Determine departure and destination
+        let departure, destination;
         
         if (waypoints.length > 0) {
           const firstWaypoint = waypoints[0];
-          departure = firstWaypoint.name !== `WP1` ? firstWaypoint.name : `${firstWaypoint.latitude.toFixed(4)}, ${firstWaypoint.longitude.toFixed(4)}`;
+          departure = {
+            name: firstWaypoint.name.includes('WP') ? 'Departure' : firstWaypoint.name,
+            icao: firstWaypoint.name.length === 4 ? firstWaypoint.name : 'N/A',
+            latitude: firstWaypoint.latitude,
+            longitude: firstWaypoint.longitude
+          };
         }
         
         if (waypoints.length > 1) {
           const lastWaypoint = waypoints[waypoints.length - 1];
-          arrival = lastWaypoint.name !== `WP${waypoints.length}` ? lastWaypoint.name : `${lastWaypoint.latitude.toFixed(4)}, ${lastWaypoint.longitude.toFixed(4)}`;
+          destination = {
+            name: lastWaypoint.name.includes('WP') ? 'Destination' : lastWaypoint.name,
+            icao: lastWaypoint.name.length === 4 ? lastWaypoint.name : 'N/A',
+            latitude: lastWaypoint.latitude,
+            longitude: lastWaypoint.longitude
+          };
         }
+
+        // Calculate cruising altitude (highest altitude in flight plan)
+        const cruisingAltitude = Math.max(...waypoints.map(wp => wp.altitude || 0));
 
         setFlightPlanData({
           waypoints,
           departure,
-          arrival,
-          estimatedDepartureTime: 'N/A',
-          estimatedArrivalTime: 'N/A'
+          destination,
+          cruisingAltitude: cruisingAltitude > 0 ? cruisingAltitude : undefined,
+          flightPlanId: flight.flightId
         });
         
         console.log(`Successfully loaded flight plan with ${waypoints.length} waypoints`);
+        toast.success(`Flight plan loaded with ${waypoints.length} waypoints`);
       } else {
         console.log('No flight plan data available for this flight');
         setFlightPlanData({
           waypoints: [],
-          departure: 'N/A',
-          arrival: 'N/A'
+          departure: undefined,
+          destination: undefined
         });
+        toast.info('No flight plan filed for this aircraft');
       }
     } catch (error) {
       console.error('Failed to load flight plan:', error);
       setFlightPlanData({
         waypoints: [],
-        departure: 'N/A',
-        arrival: 'N/A'
+        departure: undefined,
+        destination: undefined
       });
+      toast.error('Failed to load flight plan data');
     } finally {
       setLoadingFlightPlan(false);
     }
@@ -138,54 +165,89 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         <div className="text-center text-gray-400 py-8">
           <MapPin size={48} className="mx-auto mb-2" />
           <p>No flight plan available</p>
-          <p className="text-sm">This flight may not have filed a flight plan</p>
+          <p className="text-sm">This aircraft has not filed a flight plan</p>
         </div>
       );
     }
 
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Departure</h4>
-            <div className="space-y-1">
-              <div className="text-lg font-bold">{flightPlanData.departure || 'N/A'}</div>
-              <div className="text-sm text-gray-400">Takeoff</div>
-              <div className="text-sm font-medium">{flightPlanData.estimatedDepartureTime || 'N/A'}</div>
-            </div>
+        {/* Flight Plan Header Info */}
+        <div className="bg-gray-800 p-3 rounded-lg">
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            {flightPlanData.departure && (
+              <div>
+                <h4 className="text-sm font-medium text-green-400 mb-1">Departure</h4>
+                <div className="text-lg font-bold">{flightPlanData.departure.icao}</div>
+                <div className="text-xs text-gray-400">{flightPlanData.departure.name}</div>
+                <div className="text-xs text-gray-500">
+                  {flightPlanData.departure.latitude.toFixed(4)}, {flightPlanData.departure.longitude.toFixed(4)}
+                </div>
+              </div>
+            )}
+            {flightPlanData.destination && (
+              <div>
+                <h4 className="text-sm font-medium text-red-400 mb-1">Destination</h4>
+                <div className="text-lg font-bold">{flightPlanData.destination.icao}</div>
+                <div className="text-xs text-gray-400">{flightPlanData.destination.name}</div>
+                <div className="text-xs text-gray-500">
+                  {flightPlanData.destination.latitude.toFixed(4)}, {flightPlanData.destination.longitude.toFixed(4)}
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Arrival</h4>
-            <div className="space-y-1">
-              <div className="text-lg font-bold">{flightPlanData.arrival || 'N/A'}</div>
-              <div className="text-sm text-gray-400">ETA</div>
-              <div className="text-sm font-medium">{flightPlanData.estimatedArrivalTime || 'N/A'}</div>
+          
+          {flightPlanData.cruisingAltitude && (
+            <div className="text-center pt-2 border-t border-gray-600">
+              <span className="text-xs text-gray-400">Cruising Altitude: </span>
+              <span className="text-sm font-medium text-blue-400">{Math.round(flightPlanData.cruisingAltitude)} ft</span>
             </div>
-          </div>
+          )}
         </div>
         
         <Separator className="bg-gray-600" />
         
+        {/* Complete Flight Plan Route */}
         <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-3">Flight Plan Route ({flightPlanData.waypoints.length} waypoints)</h4>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
+            <Plane size={16} className="mr-2" />
+            Complete Flight Plan ({flightPlanData.waypoints.length} waypoints)
+          </h4>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {flightPlanData.waypoints.map((waypoint, index) => (
-              <div key={index} className="flex items-center justify-between py-1">
-                <span className="font-medium">{waypoint.name}</span>
+              <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    index === 0 ? 'bg-green-500' : 
+                    index === flightPlanData.waypoints.length - 1 ? 'bg-red-500' : 
+                    'bg-blue-500'
+                  }`}></div>
+                  <div>
+                    <span className="font-medium text-white">{waypoint.name}</span>
+                    <div className="text-xs text-gray-400">
+                      {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500">#{index + 1}</span>
                   {waypoint.altitude && waypoint.altitude > 0 && (
                     <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
-                      @{Math.round(waypoint.altitude)}ft
+                      {Math.round(waypoint.altitude)}ft
                     </span>
                   )}
-                  <div className="text-xs text-gray-400">
-                    {waypoint.latitude.toFixed(3)}, {waypoint.longitude.toFixed(3)}
-                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Flight Plan ID */}
+        {flightPlanData.flightPlanId && (
+          <div className="text-center pt-2">
+            <span className="text-xs text-gray-500">Flight Plan ID: {flightPlanData.flightPlanId}</span>
+          </div>
+        )}
       </div>
     );
   };
