@@ -506,16 +506,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </Card>
         </div>
 
-        {/* Performance Chart with ScrollArea */}
-        <ScrollArea className="h-96 w-full">
-          <div className="pr-4">
-            <PerformanceChart 
-              data={performanceData}
-              currentAltitude={flight.altitude}
-              currentSpeed={flight.speed}
-            />
-          </div>
-        </ScrollArea>
+        {/* Performance Chart */}
+        <PerformanceChart 
+          data={performanceData}
+          currentAltitude={flight.altitude}
+          currentSpeed={flight.speed}
+        />
         
         {/* Flight Status Card */}
         <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
