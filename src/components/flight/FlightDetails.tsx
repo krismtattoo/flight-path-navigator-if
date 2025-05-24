@@ -8,6 +8,7 @@ import { Separator } from '../ui/separator';
 import { getFlightRoute } from '@/services/flight/routeService';
 import { toast } from "sonner";
 import PerformanceChart from './PerformanceChart';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface FlightDetailsProps {
   flight: Flight;
@@ -411,7 +412,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </Card>
         )}
 
-        {/* Waypoints List */}
+        {/* Waypoints List with Custom ScrollArea */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
@@ -420,35 +421,37 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {flightPlanData.waypoints.map((waypoint, index) => {
-                const typeStyle = getWaypointTypeStyle(waypoint.type || 'waypoint');
-                
-                return (
-                  <div key={index} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{typeStyle.icon}</span>
-                        <Badge className={`${typeStyle.bg} text-white text-xs`}>
-                          {typeStyle.text}
+            <ScrollArea className="h-80 w-full">
+              <div className="space-y-3 pr-4">
+                {flightPlanData.waypoints.map((waypoint, index) => {
+                  const typeStyle = getWaypointTypeStyle(waypoint.type || 'waypoint');
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{typeStyle.icon}</span>
+                          <Badge className={`${typeStyle.bg} text-white text-xs`}>
+                            {typeStyle.text}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">{waypoint.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                          </p>
+                        </div>
+                      </div>
+                      {waypoint.altitude && waypoint.altitude > 0 && (
+                        <Badge variant="outline" className="text-blue-400 border-blue-400">
+                          {Math.round(waypoint.altitude)}ft
                         </Badge>
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold">{waypoint.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
-                        </p>
-                      </div>
+                      )}
                     </div>
-                    {waypoint.altitude && waypoint.altitude > 0 && (
-                      <Badge variant="outline" className="text-blue-400 border-blue-400">
-                        {Math.round(waypoint.altitude)}ft
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
@@ -459,45 +462,79 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     const performanceData = generatePerformanceData();
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Enhanced Performance Metrics Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Zap className="w-5 h-5 text-blue-400" />
+              </div>
+              <p className="text-xl font-bold text-white">{Math.round(flight.speed)}</p>
+              <p className="text-xs text-blue-200">Geschwindigkeit (kts)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Gauge className="w-5 h-5 text-green-400" />
+              </div>
+              <p className="text-xl font-bold text-white">{Math.round(flight.altitude)}</p>
+              <p className="text-xs text-green-200">Höhe (ft)</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-900/50 to-orange-800/50 border-orange-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Navigation className="w-5 h-5 text-orange-400" />
+              </div>
+              <p className="text-xl font-bold text-white">{Math.round(flight.heading)}°</p>
+              <p className="text-xs text-orange-200">Kurs</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/50 border-purple-700/50 backdrop-blur-sm">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Clock className="w-5 h-5 text-purple-400" />
+              </div>
+              <p className="text-xl font-bold text-white">{formatTime(flight.lastReportTime)}</p>
+              <p className="text-xs text-purple-200">Letztes Update</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Performance Chart */}
         <PerformanceChart 
           data={performanceData}
           currentAltitude={flight.altitude}
           currentSpeed={flight.speed}
         />
         
-        {/* Additional Performance Metrics */}
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Zusätzliche Metriken
+        {/* Flight Status Card */}
+        <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-sm">
+              <BarChart3 className="w-4 h-4" />
+              Flugstatus
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
-                  <span className="text-gray-300">Kurs</span>
-                  <span className="text-white font-semibold">{Math.round(flight.heading)}°</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
-                  <span className="text-gray-300">Letztes Update</span>
-                  <span className="text-white font-semibold">{formatTime(flight.lastReportTime)}</span>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
-                  <span className="text-gray-300">Flugstatus</span>
-                  <Badge variant={isOnGround ? "secondary" : "default"} className={isOnGround ? "bg-yellow-600" : "bg-green-600"}>
-                    {isOnGround ? "Am Boden" : "In der Luft"}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
-                  <span className="text-gray-300">Flugzeugtyp</span>
-                  <span className="text-white font-semibold">{flight.aircraft}</span>
-                </div>
-              </div>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+              <span className="text-gray-300 text-sm">Status</span>
+              <Badge variant={isOnGround ? "secondary" : "default"} className={`text-xs ${isOnGround ? "bg-yellow-600" : "bg-green-600"}`}>
+                {isOnGround ? "Am Boden" : "In der Luft"}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+              <span className="text-gray-300 text-sm">Flugzeugtyp</span>
+              <span className="text-white font-semibold text-sm">{flight.aircraft}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+              <span className="text-gray-300 text-sm">Livery</span>
+              <span className="text-white font-semibold text-sm">{flight.livery}</span>
             </div>
           </CardContent>
         </Card>

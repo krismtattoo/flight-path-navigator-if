@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -33,12 +32,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return flight.altitude < 100 && flight.speed < 50;
   }, []);
 
-  // Updated filter styles for purple airborne and light gray ground aircraft
+  // Updated filter styles with pink color (#e84393)
   const filterStyles = useMemo(() => ({
-    onGroundNormal: 'brightness(0) saturate(0) invert(0.8) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-    airborneNormal: 'brightness(0) saturate(0) invert(0.4) sepia(1) hue-rotate(240deg) saturate(2) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-    onGroundSelected: 'brightness(0) saturate(0) invert(0.8) drop-shadow(0 0 8px rgba(255,255,255,0.8))',
-    airborneSelected: 'brightness(0) saturate(0) invert(0.4) sepia(1) hue-rotate(240deg) saturate(2) drop-shadow(0 0 8px rgba(255,255,255,0.8))'
+    onGroundNormal: 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(320deg) saturate(3) brightness(0.9) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+    airborneNormal: 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(320deg) saturate(3) brightness(0.9) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+    onGroundSelected: 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(320deg) saturate(3) brightness(0.9) drop-shadow(0 0 8px rgba(255,255,255,0.8))',
+    airborneSelected: 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(320deg) saturate(3) brightness(0.9) drop-shadow(0 0 8px rgba(255,255,255,0.8))'
   }), []);
 
   // SVG Template für Flugzeug-Icon - zeigt standardmäßig nach Norden (0°)
