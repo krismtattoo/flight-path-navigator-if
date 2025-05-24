@@ -1,4 +1,3 @@
-
 // API key - Ensure this is always available
 export const API_KEY = "r8hxd0a54uoxrgj51ag5usiba3uls8ii";
 
@@ -42,6 +41,7 @@ export interface FlightTrackPoint {
   longitude: number;
   altitude: number;
   timestamp: number;
+  waypointName?: string; // Optional waypoint name for flight plan points
 }
 
 export interface ServerInfo {
