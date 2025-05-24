@@ -7,14 +7,15 @@ import { useRouteCompletionStatus } from './useRouteCompletionStatus';
 import { useRouteUpdater } from './useRouteUpdater';
 
 interface UseRouteDataProps {
-  routePoints: FlightTrackPoint[];
+  flownRoute: FlightTrackPoint[];
+  flightPlan: FlightTrackPoint[];
   selectedFlight: Flight | null;
 }
 
-export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps) {
+export function useRouteData({ flownRoute, flightPlan, selectedFlight }: UseRouteDataProps) {
   const { routeRef, handleSourceReady } = useRouteSource();
-  const { isRouteComplete } = useRouteCompletionStatus(routePoints);
-  const { validRoutePoints, updateRoute: updateRouteImpl } = useRouteUpdater(routePoints, selectedFlight);
+  const { isRouteComplete } = useRouteCompletionStatus([...flownRoute, ...flightPlan]);
+  const { validFlownRoute, validFlightPlan, updateRoute: updateRouteImpl } = useRouteUpdater(flownRoute, flightPlan, selectedFlight);
   
   // Create a wrapper for updateRoute that uses our routeRef
   const updateRoute = useCallback(() => {
@@ -27,7 +28,8 @@ export function useRouteData({ routePoints, selectedFlight }: UseRouteDataProps)
   }, [updateRoute]);
 
   return {
-    validRoutePoints,
+    validFlownRoute,
+    validFlightPlan,
     isRouteComplete,
     handleSourceReady,
     updateRoute

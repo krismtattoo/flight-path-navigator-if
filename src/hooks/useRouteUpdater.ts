@@ -2,11 +2,16 @@
 import { useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
-import { filterValidRoutePoints, findCurrentPositionIndex, createRouteGeoJSON } from '@/utils/routeUtils';
+import { filterValidRoutePoints, createRouteGeoJSON } from '@/utils/routeUtils';
 import { toast } from 'sonner';
 
-export function useRouteUpdater(routePoints: FlightTrackPoint[], selectedFlight: Flight | null) {
-  const validRoutePointsRef = useRef<FlightTrackPoint[]>([]);
+export function useRouteUpdater(
+  flownRoute: FlightTrackPoint[], 
+  flightPlan: FlightTrackPoint[], 
+  selectedFlight: Flight | null
+) {
+  const validFlownRouteRef = useRef<FlightTrackPoint[]>([]);
+  const validFlightPlanRef = useRef<FlightTrackPoint[]>([]);
   
   const updateRoute = useCallback((routeRef: React.MutableRefObject<mapboxgl.GeoJSONSource | null>) => {
     if (!routeRef.current) {
@@ -14,41 +19,38 @@ export function useRouteUpdater(routePoints: FlightTrackPoint[], selectedFlight:
       return;
     }
     
-    if (!routePoints || routePoints.length === 0) {
+    if ((!flownRoute || flownRoute.length === 0) && (!flightPlan || flightPlan.length === 0)) {
       // Clear the route
       console.log("No route points, clearing route");
       routeRef.current.setData({
         type: 'FeatureCollection',
         features: []
       });
-      validRoutePointsRef.current = [];
+      validFlownRouteRef.current = [];
+      validFlightPlanRef.current = [];
       return;
     }
     
-    // Check for valid data in routePoints
-    const validRoutePoints = filterValidRoutePoints(routePoints);
-    validRoutePointsRef.current = validRoutePoints;
+    // Process both route types
+    const validFlownRoute = filterValidRoutePoints(flownRoute || []);
+    const validFlightPlan = filterValidRoutePoints(flightPlan || []);
     
-    if (validRoutePoints.length === 0) {
-      console.log("No valid route points found, clearing route");
-      routeRef.current.setData({
-        type: 'FeatureCollection',
-        features: []
-      });
-      return;
+    validFlownRouteRef.current = validFlownRoute;
+    validFlightPlanRef.current = validFlightPlan;
+    
+    console.log(`Updating route with flown=${validFlownRoute.length} and flight plan=${validFlightPlan.length} points`);
+    
+    if (validFlownRoute.length > 0) {
+      console.log(`Flown route: ${validFlownRoute[0].latitude},${validFlownRoute[0].longitude} to ${validFlownRoute[validFlownRoute.length-1].latitude},${validFlownRoute[validFlownRoute.length-1].longitude}`);
     }
     
-    console.log(`Updating route with ${validRoutePoints.length} valid points`);
-    console.log(`First point: ${validRoutePoints[0].latitude},${validRoutePoints[0].longitude}`);
-    console.log(`Last point: ${validRoutePoints[validRoutePoints.length-1].latitude},${validRoutePoints[validRoutePoints.length-1].longitude}`);
+    if (validFlightPlan.length > 0) {
+      console.log(`Flight plan: ${validFlightPlan[0].latitude},${validFlightPlan[0].longitude} to ${validFlightPlan[validFlightPlan.length-1].latitude},${validFlightPlan[validFlightPlan.length-1].longitude}`);
+    }
     
     try {
-      // Find current position in route
-      const currentPositionIndex = findCurrentPositionIndex(validRoutePoints, selectedFlight);
-      console.log("Current position index:", currentPositionIndex, "of", validRoutePoints.length);
-      
-      // Create and update GeoJSON - we'll use the actual position index now
-      const routeGeoJSON = createRouteGeoJSON(validRoutePoints, currentPositionIndex);
+      // Create and update GeoJSON with both route types
+      const routeGeoJSON = createRouteGeoJSON(validFlownRoute, validFlightPlan);
       console.log("Route GeoJSON features count:", routeGeoJSON.features.length);
       
       routeRef.current.setData(routeGeoJSON);
@@ -63,10 +65,11 @@ export function useRouteUpdater(routePoints: FlightTrackPoint[], selectedFlight:
         features: []
       });
     }
-  }, [routePoints, selectedFlight]);
+  }, [flownRoute, flightPlan, selectedFlight]);
 
   return {
-    validRoutePoints: validRoutePointsRef.current,
+    validFlownRoute: validFlownRouteRef.current,
+    validFlightPlan: validFlightPlanRef.current,
     updateRoute
   };
 }

@@ -26,41 +26,42 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           }
         });
         
-        // Add route traveled line - hellgrün wie im Bild
+        // Add flight plan line (white, like in the reference image)
         map.addLayer({
-          id: 'route-traveled',
+          id: 'route-flightplan',
           type: 'line',
           source: 'route',
-          filter: ['==', ['get', 'type'], 'traveled'],
+          filter: ['==', ['get', 'type'], 'flightplan'],
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#4CAF50', // Grün wie im Bild
+            'line-color': '#ffffff',
             'line-width': 3,
-            'line-opacity': 0.9
+            'line-opacity': 0.8,
+            'line-dasharray': [2, 2] // Dashed white line for flight plan
           }
         });
 
-        // Add route remaining line - hellblau/grün für zukünftige Strecke
+        // Add flown route line (colored, like in the reference image)
         map.addLayer({
-          id: 'route-remaining',
+          id: 'route-flown',
           type: 'line',
           source: 'route',
-          filter: ['==', ['get', 'type'], 'remaining'],
+          filter: ['==', ['get', 'type'], 'flown'],
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#8BC34A', // Helleres Grün für die verbleibende Strecke
-            'line-width': 3,
-            'line-opacity': 0.7
+            'line-color': '#00ff88', // Bright green for flown route
+            'line-width': 4,
+            'line-opacity': 0.9
           }
         });
         
-        // Departure waypoint (grün)
+        // Departure waypoint (green)
         map.addLayer({
           id: 'route-waypoint-departure',
           type: 'circle',
@@ -70,14 +71,14 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
             ['==', ['get', 'waypointType'], 'departure']
           ],
           paint: {
-            'circle-radius': 5,
+            'circle-radius': 6,
             'circle-color': '#4CAF50',
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }
         });
         
-        // Destination waypoint (rot)
+        // Destination waypoint (red)
         map.addLayer({
           id: 'route-waypoint-destination',
           type: 'circle',
@@ -87,14 +88,14 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
             ['==', ['get', 'waypointType'], 'destination']
           ],
           paint: {
-            'circle-radius': 5,
+            'circle-radius': 6,
             'circle-color': '#F44336',
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }
         });
         
-        // Current position waypoint (blau)
+        // Current position waypoint (blue)
         map.addLayer({
           id: 'route-waypoint-current',
           type: 'circle',
@@ -104,10 +105,27 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
             ['==', ['get', 'waypointType'], 'current']
           ],
           paint: {
-            'circle-radius': 4,
+            'circle-radius': 5,
             'circle-color': '#2196F3',
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
+          }
+        });
+
+        // Intermediate waypoints (small white circles)
+        map.addLayer({
+          id: 'route-waypoint-intermediate',
+          type: 'circle',
+          source: 'route',
+          filter: ['all', 
+            ['==', ['get', 'type'], 'waypoint'],
+            ['==', ['get', 'waypointType'], 'intermediate']
+          ],
+          paint: {
+            'circle-radius': 3,
+            'circle-color': '#ffffff',
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#666666'
           }
         });
       }

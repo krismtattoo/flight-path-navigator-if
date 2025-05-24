@@ -37,7 +37,8 @@ const FlightMap: React.FC = () => {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
-  const [flightRoute, setFlightRoute] = useState<FlightTrackPoint[]>([]);
+  const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
+  const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
   
   const handleMapInit = useCallback((initializedMap: mapboxgl.Map) => {
     console.log("Map initialized in FlightMap component");
@@ -69,7 +70,8 @@ const FlightMap: React.FC = () => {
       const routeData = await getFlightRoute(activeServer.id, flight.flightId);
       console.log(`Retrieved flight route data:`, routeData);
       
-      setFlightRoute(routeData);
+      setFlownRoute(routeData.flownRoute);
+      setFlightPlan(routeData.flightPlan);
       
       // Center and zoom to the flight
       if (map && flight) {
@@ -109,7 +111,8 @@ const FlightMap: React.FC = () => {
           serverID={activeServer.id} 
           onClose={() => {
             setSelectedFlight(null);
-            setFlightRoute([]);
+            setFlownRoute([]);
+            setFlightPlan([]);
           }} 
         />
       )}
@@ -130,7 +133,8 @@ const FlightMap: React.FC = () => {
           />
           <FlightRoute 
             map={map} 
-            routePoints={flightRoute} 
+            flownRoute={flownRoute}
+            flightPlan={flightPlan}
             selectedFlight={selectedFlight} 
           />
         </>

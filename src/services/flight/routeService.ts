@@ -8,7 +8,10 @@ import { fetchFromEndpoint } from "./routeFetcher";
 import { mergeRoutePoints } from "./routeParser";
 
 // Get flight route for a specific flight - try all available API endpoints
-export async function getFlightRoute(serverName: string, flightId: string): Promise<FlightTrackPoint[]> {
+export async function getFlightRoute(serverName: string, flightId: string): Promise<{
+  flownRoute: FlightTrackPoint[],
+  flightPlan: FlightTrackPoint[]
+}> {
   try {
     // Ensure we have server IDs
     if (Object.keys(serverIdMap).length === 0) {
@@ -22,7 +25,7 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     if (!serverId) {
       console.error(`No ID found for server: ${serverName}`);
       toast.error(`Server information not available for ${serverName}. Try refreshing the page.`);
-      return [];
+      return { flownRoute: [], flightPlan: [] };
     }
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
@@ -30,7 +33,7 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     // Get all available endpoint patterns
     const endpointPatterns = getRouteEndpointPatterns(serverId, flightId);
     
-    let actualRoutePoints: FlightTrackPoint[] = [];
+    let flownRoutePoints: FlightTrackPoint[] = [];
     let flightPlanPoints: FlightTrackPoint[] = [];
     
     // Try each endpoint pattern until we find data
@@ -45,36 +48,27 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
         
         // Categorize the data based on endpoint type
         if (endpoint.includes('/route') || endpoint.includes('/track')) {
-          actualRoutePoints = points;
+          flownRoutePoints = points;
         } else if (endpoint.includes('/flightplan')) {
           flightPlanPoints = points;
-        }
-        
-        // If we found route data, continue looking for flight plan data
-        // If we found flight plan data and don't have route data yet, continue
-        if (actualRoutePoints.length > 0 && flightPlanPoints.length > 0) {
-          break; // We have both types of data
         }
       }
     }
     
-    console.log(`Route points: ${actualRoutePoints.length}, Flight plan points: ${flightPlanPoints.length}`);
+    console.log(`Flown route points: ${flownRoutePoints.length}, Flight plan points: ${flightPlanPoints.length}`);
     
-    // Merge the data - prioritize actual route if available
-    const allPoints = mergeRoutePoints(actualRoutePoints, flightPlanPoints);
-    
-    if (allPoints.length > 0) {
-      console.log(`Total route points collected: ${allPoints.length}`);
-      return allPoints;
+    if (flownRoutePoints.length === 0 && flightPlanPoints.length === 0) {
+      console.log("No route or flight plan data available for this flight from any API endpoint");
+      toast.error("No route data available for this flight. The pilot may not have filed a flight plan, or the flight data is not yet available.");
     }
     
-    // If no data is available from any endpoint
-    console.log("No route or flight plan data available for this flight from any API endpoint");
-    toast.error("No route data available for this flight. The pilot may not have filed a flight plan, or the flight data is not yet available.");
-    return [];
+    return {
+      flownRoute: flownRoutePoints,
+      flightPlan: flightPlanPoints
+    };
   } catch (error) {
     console.error("Failed to fetch flight route:", error);
     toast.error("Failed to load flight route. Please try again.");
-    return [];
+    return { flownRoute: [], flightPlan: [] };
   }
 }

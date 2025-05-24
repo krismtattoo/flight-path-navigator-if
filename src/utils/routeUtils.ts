@@ -1,4 +1,3 @@
-
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
@@ -72,70 +71,49 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
   return validPoints;
 }
 
-// Create GeoJSON for the route
+// Create GeoJSON for both flight plan and flown route
 export function createRouteGeoJSON(
-  validRoutePoints: FlightTrackPoint[], 
-  currentPositionIndex: number
+  flownRoute: FlightTrackPoint[], 
+  flightPlan: FlightTrackPoint[]
 ) {
-  if (validRoutePoints.length === 0) {
-    return {
-      type: 'FeatureCollection' as const,
-      features: []
-    };
-  }
-  
-  // Ensure currentPositionIndex is within bounds
-  const safeIndex = Math.max(0, Math.min(currentPositionIndex, validRoutePoints.length - 1));
-  
-  // Always split the route into traveled and remaining parts, even if current position is at the end
-  // This ensures we always show a complete route
-  const traveledCoords = validRoutePoints
-    .slice(0, safeIndex + 1)
-    .map(p => [p.longitude, p.latitude]);
-  
-  // Always include remaining coordinates from current position to end
-  // If we're at the end, this will be empty but that's handled below
-  const remainingCoords = validRoutePoints
-    .slice(safeIndex)
-    .map(p => [p.longitude, p.latitude]);
-  
-  console.log(`Creating GeoJSON with traveled=${traveledCoords.length} and remaining=${remainingCoords.length} points`);
-  
-  // Create features array
   const features = [];
   
-  // Add traveled path if it exists
-  if (traveledCoords.length > 1) {
+  console.log(`Creating GeoJSON with flown route=${flownRoute.length} and flight plan=${flightPlan.length} points`);
+  
+  // Add flight plan line (white dashed line)
+  if (flightPlan.length > 1) {
+    const flightPlanCoords = flightPlan.map(p => [p.longitude, p.latitude]);
     features.push({
       type: 'Feature' as const,
       properties: {
-        type: 'traveled'
+        type: 'flightplan'
       },
       geometry: {
         type: 'LineString' as const,
-        coordinates: traveledCoords
+        coordinates: flightPlanCoords
       }
     });
   }
   
-  // Add remaining path if it exists
-  if (remainingCoords.length > 1) {
+  // Add flown route line (colored solid line)
+  if (flownRoute.length > 1) {
+    const flownRouteCoords = flownRoute.map(p => [p.longitude, p.latitude]);
     features.push({
       type: 'Feature' as const,
       properties: {
-        type: 'remaining'
+        type: 'flown'
       },
       geometry: {
         type: 'LineString' as const,
-        coordinates: remainingCoords
+        coordinates: flownRouteCoords
       }
     });
   }
   
-  // Add waypoints at start and end of route
-  if (validRoutePoints.length >= 2) {
-    const startPoint = validRoutePoints[0];
-    const endPoint = validRoutePoints[validRoutePoints.length - 1];
+  // Add waypoints from flight plan
+  if (flightPlan.length >= 2) {
+    const startPoint = flightPlan[0];
+    const endPoint = flightPlan[flightPlan.length - 1];
     
     // Add departure waypoint (green)
     features.push({
@@ -163,21 +141,38 @@ export function createRouteGeoJSON(
       }
     });
     
-    // Add current position waypoint (blue circle) if not at the end
-    if (safeIndex > 0 && safeIndex < validRoutePoints.length - 1) {
-      const currentPoint = validRoutePoints[safeIndex];
-      features.push({
-        type: 'Feature' as const,
-        properties: {
-          type: 'waypoint',
-          waypointType: 'current'
-        },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [currentPoint.longitude, currentPoint.latitude]
-        }
+    // Add intermediate waypoints (small white circles)
+    if (flightPlan.length > 2) {
+      flightPlan.slice(1, -1).forEach(point => {
+        features.push({
+          type: 'Feature' as const,
+          properties: {
+            type: 'waypoint',
+            waypointType: 'intermediate'
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [point.longitude, point.latitude]
+          }
+        });
       });
     }
+  }
+  
+  // Add current position from flown route if available
+  if (flownRoute.length > 0) {
+    const currentPoint = flownRoute[flownRoute.length - 1];
+    features.push({
+      type: 'Feature' as const,
+      properties: {
+        type: 'waypoint',
+        waypointType: 'current'
+      },
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [currentPoint.longitude, currentPoint.latitude]
+      }
+    });
   }
   
   return {
