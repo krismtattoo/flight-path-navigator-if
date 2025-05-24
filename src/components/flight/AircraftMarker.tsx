@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -70,22 +69,30 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       backface-visibility: hidden;
     `;
     
+    console.log(`🛩️ Creating marker for flight ${flight.flightId} with heading ${flight.heading}°`);
+    
     return el;
   }, []);
 
-  // Optimized update marker function with corrected heading rotation
+  // Optimized update marker function with proper heading rotation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
     isSelected: boolean
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
-    // Korrigiere die Rotation: Das SVG zeigt standardmäßig nach oben (0°), 
-    // aber Flugrichtung 0° ist Norden. Wir müssen das SVG um 90° korrigieren,
-    // damit die Nase in die richtige Richtung zeigt.
+    
+    // Berechne die korrekte Rotation basierend auf dem Heading
+    // Das SVG zeigt standardmäßig nach oben (0°), Flugrichtung 0° ist Norden
+    // Daher müssen wir um 90° korrigieren, damit die Flugzeugnase in die richtige Richtung zeigt
     const normalizedHeading = ((flight.heading % 360) + 360) % 360;
-    const correctedRotation = normalizedHeading - 90; // SVG-Korrektur: -90° damit Nase richtig zeigt
-    const transform = `rotate(${correctedRotation}deg)${isSelected ? ' scale(1.2)' : ''}`;
+    const rotationAngle = normalizedHeading;
+    const scaleValue = isSelected ? 1.2 : 1.0;
+    
+    // Erstelle die vollständige Transform-Eigenschaft
+    const transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
+    
+    console.log(`🔄 Updating aircraft ${flight.flightId}: heading=${flight.heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}°`);
     
     // Batch DOM updates to avoid layout thrashing
     if (element.style.filter !== filter) {
@@ -93,6 +100,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     }
     if (element.style.transform !== transform) {
       element.style.transform = transform;
+      console.log(`✅ Applied transform: ${transform} to flight ${flight.flightId}`);
     }
     if (isSelected) {
       element.style.zIndex = '1000';
