@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 
@@ -80,24 +79,7 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           }
         });
         
-        // Departure waypoint (green)
-        map.addLayer({
-          id: 'route-waypoint-departure',
-          type: 'circle',
-          source: 'route',
-          filter: ['all', 
-            ['==', ['get', 'type'], 'waypoint'],
-            ['==', ['get', 'waypointType'], 'departure']
-          ],
-          paint: {
-            'circle-radius': 6,
-            'circle-color': '#4CAF50',
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-          }
-        });
-        
-        // Destination waypoint (red)
+        // Only keep destination waypoint (red)
         map.addLayer({
           id: 'route-waypoint-destination',
           type: 'circle',
@@ -109,23 +91,6 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           paint: {
             'circle-radius': 6,
             'circle-color': '#F44336',
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-          }
-        });
-        
-        // Current position waypoint (blue)
-        map.addLayer({
-          id: 'route-waypoint-current',
-          type: 'circle',
-          source: 'route',
-          filter: ['all', 
-            ['==', ['get', 'type'], 'waypoint'],
-            ['==', ['get', 'waypointType'], 'current']
-          ],
-          paint: {
-            'circle-radius': 5,
-            'circle-color': '#2196F3',
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }

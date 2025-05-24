@@ -1,4 +1,3 @@
-
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
@@ -130,23 +129,9 @@ export function createRouteGeoJSON(
     features.push(...altitudeSegments);
   }
   
-  // Add waypoints from flight plan
+  // Add waypoints from flight plan (only destination and intermediate)
   if (flightPlan.length >= 2) {
-    const startPoint = flightPlan[0];
     const endPoint = flightPlan[flightPlan.length - 1];
-    
-    // Add departure waypoint (green)
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        waypointType: 'departure'
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [startPoint.longitude, startPoint.latitude]
-      }
-    });
     
     // Add destination waypoint (red)
     features.push({
@@ -177,22 +162,6 @@ export function createRouteGeoJSON(
         });
       });
     }
-  }
-  
-  // Add current position from flown route if available
-  if (flownRoute.length > 0) {
-    const currentPoint = flownRoute[flownRoute.length - 1];
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'waypoint',
-        waypointType: 'current'
-      },
-      geometry: {
-        type: 'Point' as const,
-        coordinates: [currentPoint.longitude, currentPoint.latitude]
-      }
-    });
   }
   
   return {
