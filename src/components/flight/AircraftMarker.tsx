@@ -35,11 +35,15 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   };
 
   useEffect(() => {
+    console.log(`🛩️ AircraftMarker effect triggered - Flights: ${flights.length}, Map loaded: ${map?.loaded()}`);
+    console.log(`📍 Current markers count: ${Object.keys(markersRef.current).length}`);
+    
     // Make sure map is fully loaded before adding markers
     if (!map || !map.loaded()) {
-      console.log("Map not fully loaded yet, waiting...");
+      console.log("🔄 Map not fully loaded yet, waiting...");
       
       const onMapLoad = () => {
+        console.log("✅ Map loaded event fired, updating markers");
         updateMarkers();
         // Remove the load event listener after it's fired
         map.off('load', onMapLoad);
@@ -54,19 +58,30 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     updateMarkers();
     
     function updateMarkers() {
+      console.log(`🔄 Updating markers - Processing ${flights.length} flights`);
+      
       // Update existing markers or create new ones
       const currentFlightIds = new Set(flights.map(f => f.flightId));
+      const existingMarkerIds = Object.keys(markersRef.current);
+      
+      console.log(`📊 Current flight IDs: ${Array.from(currentFlightIds).slice(0, 5)}... (showing first 5)`);
+      console.log(`📊 Existing marker IDs: ${existingMarkerIds.slice(0, 5)}... (showing first 5)`);
       
       // Remove markers for flights that no longer exist
-      Object.keys(markersRef.current).forEach(flightId => {
+      existingMarkerIds.forEach(flightId => {
         if (!currentFlightIds.has(flightId)) {
+          console.log(`🗑️ Removing marker for flight ${flightId} (flight no longer exists)`);
           markersRef.current[flightId].remove();
           delete markersRef.current[flightId];
           if (selectedMarkerIdRef.current === flightId) {
             selectedMarkerIdRef.current = null;
+            console.log(`🎯 Cleared selected marker reference for ${flightId}`);
           }
         }
       });
+      
+      let updatedCount = 0;
+      let createdCount = 0;
       
       // Update or create markers for current flights
       flights.forEach(flight => {
@@ -80,9 +95,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           el.style.filter = getAircraftFilter(flight, isSelected);
           // Fixed transform to prevent conflicts with Mapbox positioning
           el.style.transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
+          updatedCount++;
         } else {
           // Create new marker
           try {
+            console.log(`➕ Creating new marker for flight ${flight.flightId}`);
+            
             // Create a custom HTML element for the marker
             const el = document.createElement('div');
             el.className = 'aircraft-marker';
@@ -98,7 +116,6 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
             el.style.transform = `rotate(${flight.heading}deg)`;
             el.style.transformOrigin = 'center';
             el.style.cursor = 'pointer';
-            // Removed transition to prevent glitching
             el.style.pointerEvents = 'auto';
             
             // Create the marker with proper settings to prevent movement during map interactions
@@ -106,7 +123,6 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
               element: el,
               anchor: 'center',
               draggable: false,
-              // Fixed: Use 'map' instead of 'auto' to prevent rotation issues
               rotationAlignment: 'viewport',
               pitchAlignment: 'viewport',
             });
@@ -120,10 +136,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
               
               // Store reference to marker
               markersRef.current[flight.flightId] = marker;
+              createdCount++;
               
               // Add click handler
               marker.getElement().addEventListener('click', (e) => {
                 e.stopPropagation();
+                console.log(`🎯 Flight clicked: ${flight.flightId}`);
                 
                 // Remove highlight from previously selected marker
                 if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
@@ -131,6 +149,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                   const prevEl = prevMarker.getElement();
                   const prevFlight = flights.find(f => f.flightId === selectedMarkerIdRef.current);
                   if (prevFlight) {
+                    console.log(`🔄 Removing highlight from previous flight: ${selectedMarkerIdRef.current}`);
                     prevEl.style.zIndex = '0';
                     prevEl.style.filter = getAircraftFilter(prevFlight);
                     prevEl.style.transform = `rotate(${prevFlight.heading}deg)`;
@@ -146,23 +165,32 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                 
                 // Track the selected marker
                 selectedMarkerIdRef.current = flight.flightId;
+                console.log(`✅ Selected marker set to: ${flight.flightId}`);
                 
                 // Call the selection handler
                 onFlightSelect(flight);
               });
+            } else {
+              console.error(`❌ Cannot add marker for flight ${flight.flightId} - invalid map`);
             }
           } catch (err) {
-            console.error(`Error creating marker for flight ${flight.flightId}:`, err);
+            console.error(`❌ Error creating marker for flight ${flight.flightId}:`, err);
           }
         }
       });
+      
+      console.log(`✅ Markers update complete - Updated: ${updatedCount}, Created: ${createdCount}, Total: ${Object.keys(markersRef.current).length}`);
     }
     
+    // Cleanup function
     return () => {
-      // Clean up markers on unmount
+      console.log(`🧹 AircraftMarker cleanup - removing ${Object.keys(markersRef.current).length} markers`);
       Object.values(markersRef.current).forEach(marker => marker.remove());
     };
   }, [flights, map, onFlightSelect]);
+
+  // Debug log when component re-renders
+  console.log(`🔄 AircraftMarker render - ${flights.length} flights, selected: ${selectedMarkerIdRef.current}`);
 
   return null; // This component doesn't render anything itself
 };
