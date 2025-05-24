@@ -56,19 +56,22 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
     
-    // Setze CSS-Eigenschaften explizit ohne externe CSS-Interferenz
-    el.style.cssText = `
-      width: 28px !important;
-      height: 28px !important;
-      background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png") !important;
-      background-size: contain !important;
-      background-repeat: no-repeat !important;
-      background-position: center !important;
-      cursor: pointer !important;
-      pointer-events: auto !important;
-      position: absolute !important;
-      transform-origin: center center !important;
-    `;
+    // WICHTIG: Setze alle Styles explizit und verwende !important um CSS-Konflikte zu vermeiden
+    const baseStyles = [
+      'width: 28px !important',
+      'height: 28px !important',
+      'background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png") !important',
+      'background-size: contain !important',
+      'background-repeat: no-repeat !important',
+      'background-position: center !important',
+      'cursor: pointer !important',
+      'pointer-events: auto !important',
+      'position: absolute !important',
+      'transform-origin: center center !important',
+      'will-change: transform !important'
+    ].join('; ');
+    
+    el.style.cssText = baseStyles;
     
     console.log(`🛩️ Creating marker for flight ${flight.flightId} with heading ${flight.heading}°`);
     
@@ -90,34 +93,39 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     // Normalisiere Heading auf 0-360 Grad
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // WICHTIG: plane.png zeigt standardmäßig nach Norden (0°)
-    // Das bedeutet:
-    // - 0° = Norden (kein Rotation nötig)
-    // - 90° = Osten (90° Rotation im Uhrzeigersinn)
-    // - 180° = Süden (180° Rotation)
-    // - 270° = Westen (270° Rotation)
-    // Die Rotation entspricht EXAKT dem normalisierten Heading
+    // KRITISCH: plane.png zeigt standardmäßig nach Norden (0°)
+    // Jedes Flugzeug MUSS individuell rotiert werden basierend auf seinem Heading
     const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
-    console.log(`🧭 Flight ${flight.flightId}: Raw heading=${rawHeading}°, Normalized=${normalizedHeading}°, Rotation=${rotationAngle}°`);
+    console.log(`🧭 Flight ${flight.flightId}: Raw=${rawHeading}°, Normalized=${normalizedHeading}°, Rotating to=${rotationAngle}°`);
+    
+    // ENTSCHEIDEND: Setze Transform-Eigenschaften explizit und ohne Interferenz
+    const transformValue = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
+    
+    // Entferne alle vorherigen Transform-Werte vollständig
+    element.style.removeProperty('transform');
+    element.style.removeProperty('-webkit-transform');
+    element.style.removeProperty('-moz-transform');
+    element.style.removeProperty('-ms-transform');
+    
+    // Setze neue Transform-Werte mit !important
+    element.style.setProperty('transform', transformValue, 'important');
+    element.style.setProperty('-webkit-transform', transformValue, 'important');
+    element.style.setProperty('transform-origin', 'center center', 'important');
+    element.style.setProperty('filter', filter, 'important');
+    
+    // Debugging: Überprüfe ob Transform tatsächlich angewendet wurde
+    const computedTransform = window.getComputedStyle(element).transform;
+    console.log(`✅ Flight ${flight.flightId} Transform applied: ${transformValue}`);
+    console.log(`🔍 Computed transform: ${computedTransform}`);
     console.log(`✈️ Direction: ${getDirectionName(normalizedHeading)}`);
     
-    // Setze alle CSS-Eigenschaften direkt und explizit
-    element.style.filter = filter;
-    element.style.transformOrigin = 'center center';
-    element.style.transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
-    
-    // Webkit-Präfix für bessere Browser-Kompatibilität
-    element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
-    
-    console.log(`✅ Applied ${rotationAngle}° rotation to flight ${flight.flightId} - aircraft now pointing ${getDirectionName(normalizedHeading)}`);
-    
     if (isSelected) {
-      element.style.zIndex = '1000';
+      element.style.setProperty('z-index', '1000', 'important');
       element.classList.add('aircraft-marker-selected');
     } else {
-      element.style.zIndex = '0';
+      element.style.setProperty('z-index', '0', 'important');
       element.classList.remove('aircraft-marker-selected');
     }
   }, [getAircraftFilter]);
