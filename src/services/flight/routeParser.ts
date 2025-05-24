@@ -7,17 +7,19 @@ export const parseFlownRouteData = (data: any): FlightTrackPoint[] => {
   try {
     console.log('Raw flown route data:', data);
     
-    // Handle flight route API response (actual flown route from /route endpoint)
+    // Handle flight route API response according to documentation
     if (data?.result && Array.isArray(data.result)) {
       console.log(`Found ${data.result.length} flown route points from flight route API`);
       
       processedPoints = data.result
-        .filter((point: any) => point && typeof point.latitude === 'number' && typeof point.longitude === 'number')
+        .filter((point: any) => point && 
+                 typeof point.latitude === 'number' && 
+                 typeof point.longitude === 'number')
         .map((point: any) => ({
           latitude: point.latitude,
           longitude: point.longitude,
           altitude: point.altitude || 0,
-          timestamp: point.lastReport ? new Date(point.lastReport).getTime() : Date.now()
+          timestamp: point.date ? new Date(point.date).getTime() : Date.now()
         }));
     }
     

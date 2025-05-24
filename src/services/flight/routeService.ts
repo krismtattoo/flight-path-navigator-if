@@ -18,19 +18,19 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
       await getServers();
     }
     
-    // Get the actual server ID
-    const serverId = getServerIdByName(serverName);
+    // Get the actual server ID (this is actually the sessionId)
+    const sessionId = getServerIdByName(serverName);
     
-    if (!serverId) {
+    if (!sessionId) {
       console.error(`No ID found for server: ${serverName}`);
       toast.error(`Server information not available for ${serverName}. Try refreshing the page.`);
       return { flownRoute: [], flightPlan: [] };
     }
     
-    console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
+    console.log(`Fetching flight route for flight ${flightId} on session ${sessionId}`);
     
     // Get endpoint patterns for both route types
-    const endpointPatterns = getRouteEndpointPatterns(serverId, flightId);
+    const endpointPatterns = getRouteEndpointPatterns(sessionId, flightId);
     
     let flownRoutePoints: FlightTrackPoint[] = [];
     let flightPlanPoints: FlightTrackPoint[] = [];
