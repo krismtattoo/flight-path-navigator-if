@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -75,7 +74,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function - das Icon zeigt standardmäßig nach Norden (0°)
+  // Korrigierte update marker function - das neue Flugzeug-Icon zeigt nach oben (Norden)
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -87,7 +86,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     const heading = typeof flight.heading === 'number' && !isNaN(flight.heading) ? flight.heading : 0;
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // Das Flugzeug-Icon zeigt standardmäßig nach Norden (0°), verwende Heading direkt
+    // Das neue Flugzeug-Icon zeigt nach oben (Norden = 0°), verwende Heading direkt
+    // Da die Nase bereits nach Norden zeigt, entspricht die Rotation direkt dem Heading
     const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
@@ -98,10 +98,10 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     element.style.transformOrigin = 'center center';
     element.style.transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    // Webkit-Präfix für bessere Browser-Kompatibilität (ohne MS-Transform)
+    // Webkit-Präfix für bessere Browser-Kompatibilität
     element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId}`);
+    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId} (nose pointing to heading direction)`);
     
     if (isSelected) {
       element.style.zIndex = '1000';
