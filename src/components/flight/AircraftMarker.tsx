@@ -73,16 +73,19 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Optimized update marker function with proper heading rotation
+  // Optimized update marker function with corrected heading rotation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
     isSelected: boolean
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
-    // Ensure heading is properly applied - convert to 0-360 range and apply rotation
+    // Korrigiere die Rotation: Das SVG zeigt standardmäßig nach oben (0°), 
+    // aber Flugrichtung 0° ist Norden. Wir müssen das SVG um 90° korrigieren,
+    // damit die Nase in die richtige Richtung zeigt.
     const normalizedHeading = ((flight.heading % 360) + 360) % 360;
-    const transform = `rotate(${normalizedHeading}deg)${isSelected ? ' scale(1.2)' : ''}`;
+    const correctedRotation = normalizedHeading - 90; // SVG-Korrektur: -90° damit Nase richtig zeigt
+    const transform = `rotate(${correctedRotation}deg)${isSelected ? ' scale(1.2)' : ''}`;
     
     // Batch DOM updates to avoid layout thrashing
     if (element.style.filter !== filter) {
@@ -198,8 +201,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                 element,
                 anchor: 'center',
                 draggable: false,
-                rotationAlignment: 'map', // Changed to 'map' for proper rotation
-                pitchAlignment: 'map', // Changed to 'map' for proper rotation
+                rotationAlignment: 'map',
+                pitchAlignment: 'map',
               });
               
               marker.setLngLat([flight.longitude, flight.latitude]);
