@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
@@ -39,6 +39,8 @@ const FlightMap: React.FC = () => {
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
+  const [isTrackingMode, setIsTrackingMode] = useState(false);
+  const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const handleMapInit = useCallback((initializedMap: mapboxgl.Map) => {
     console.log("Map initialized in FlightMap component");
@@ -54,6 +56,55 @@ const FlightMap: React.FC = () => {
         console.log("Map load event fired");
         setMapLoaded(true);
       });
+    }
+
+    // Add event listeners for user interaction to exit tracking mode
+    const exitTrackingMode = () => {
+      if (isTrackingMode) {
+        setIsTrackingMode(false);
+        if (trackingIntervalRef.current) {
+          clearInterval(trackingIntervalRef.current);
+          trackingIntervalRef.current = null;
+        }
+        console.log("Exited tracking mode due to user interaction");
+      }
+    };
+
+    initializedMap.on('dragstart', exitTrackingMode);
+    initializedMap.on('zoomstart', exitTrackingMode);
+    initializedMap.on('rotatestart', exitTrackingMode);
+  }, [isTrackingMode]);
+
+  // Start tracking mode for selected flight
+  const startTrackingMode = useCallback((flight: Flight) => {
+    if (!map) return;
+    
+    setIsTrackingMode(true);
+    console.log(`Starting tracking mode for flight ${flight.flightId}`);
+    
+    // Clear any existing tracking interval
+    if (trackingIntervalRef.current) {
+      clearInterval(trackingIntervalRef.current);
+    }
+    
+    // Update aircraft position every 2 seconds while in tracking mode
+    trackingIntervalRef.current = setInterval(() => {
+      const currentFlight = flights.find(f => f.flightId === flight.flightId);
+      if (currentFlight && map) {
+        map.easeTo({
+          center: [currentFlight.longitude, currentFlight.latitude],
+          duration: 1500
+        });
+      }
+    }, 2000);
+  }, [map, flights]);
+
+  // Stop tracking mode
+  const stopTrackingMode = useCallback(() => {
+    setIsTrackingMode(false);
+    if (trackingIntervalRef.current) {
+      clearInterval(trackingIntervalRef.current);
+      trackingIntervalRef.current = null;
     }
   }, []);
 
@@ -73,19 +124,33 @@ const FlightMap: React.FC = () => {
       setFlownRoute(routeData.flownRoute);
       setFlightPlan(routeData.flightPlan);
       
-      // Center and zoom to the flight
+      // Focus on the flight with closer zoom and start tracking
       if (map && flight) {
         map.flyTo({
           center: [flight.longitude, flight.latitude],
-          zoom: 7,
+          zoom: 9, // Closer zoom instead of 7
           speed: 1.2
         });
+        
+        // Start tracking mode after a short delay to allow the flyTo to complete
+        setTimeout(() => {
+          startTrackingMode(flight);
+        }, 1500);
       }
     } catch (error) {
       console.error("Failed to fetch flight route:", error);
       toast.error("Failed to load flight route.");
     }
   };
+
+  // Cleanup tracking mode on unmount
+  useEffect(() => {
+    return () => {
+      if (trackingIntervalRef.current) {
+        clearInterval(trackingIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative h-screen w-full bg-[#151920]">
@@ -113,12 +178,29 @@ const FlightMap: React.FC = () => {
             setSelectedFlight(null);
             setFlownRoute([]);
             setFlightPlan([]);
+            stopTrackingMode();
           }} 
         />
       )}
       
       {/* Flight Count */}
       <FlightCount count={flights.length} />
+      
+      {/* Tracking Mode Indicator */}
+      {isTrackingMode && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Verfolgungsmodus aktiv</span>
+            <button 
+              onClick={stopTrackingMode}
+              className="ml-2 text-white hover:text-gray-300"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Map Container */}
       <MapContainer onMapInit={handleMapInit} />

@@ -30,31 +30,8 @@ const FlightRoute: React.FC<FlightRouteProps> = ({ map, flownRoute, flightPlan, 
     }
   }, [flownRoute, flightPlan, validFlownRoute, validFlightPlan, isRouteComplete]);
   
-  // When a flight is selected, fit the map view to display the complete route
-  useEffect(() => {
-    if (map && (validFlownRoute.length > 1 || validFlightPlan.length > 1) && selectedFlight) {
-      try {
-        // Create bounds that include all route points
-        const bounds = new mapboxgl.LngLatBounds();
-        
-        // Add all points to bounds
-        [...validFlownRoute, ...validFlightPlan].forEach(point => {
-          bounds.extend([point.longitude, point.latitude]);
-        });
-        
-        // Fit map to these bounds with padding
-        map.fitBounds(bounds, {
-          padding: { top: 100, bottom: 100, left: 100, right: 100 },
-          maxZoom: 10, // Limit max zoom level
-          duration: 1000
-        });
-        
-        console.log("Map view adjusted to fit complete route");
-      } catch (error) {
-        console.error("Error fitting bounds:", error);
-      }
-    }
-  }, [map, validFlownRoute, validFlightPlan, selectedFlight]);
+  // Remove the automatic map fitting to preserve tracking mode
+  // The route will be visible but won't interfere with aircraft tracking
   
   // Update route when dependencies change
   useEffect(() => {
