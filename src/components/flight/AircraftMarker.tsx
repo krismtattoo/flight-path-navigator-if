@@ -63,7 +63,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
-      transform-origin: center;
+      transform-origin: center center;
       cursor: pointer;
       pointer-events: auto;
       will-change: transform;
@@ -73,14 +73,16 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Optimized update marker function
+  // Optimized update marker function with proper heading rotation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
     isSelected: boolean
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
-    const transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
+    // Ensure heading is properly applied - convert to 0-360 range and apply rotation
+    const normalizedHeading = ((flight.heading % 360) + 360) % 360;
+    const transform = `rotate(${normalizedHeading}deg)${isSelected ? ' scale(1.2)' : ''}`;
     
     // Batch DOM updates to avoid layout thrashing
     if (element.style.filter !== filter) {
@@ -196,8 +198,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
                 element,
                 anchor: 'center',
                 draggable: false,
-                rotationAlignment: 'viewport',
-                pitchAlignment: 'viewport',
+                rotationAlignment: 'map', // Changed to 'map' for proper rotation
+                pitchAlignment: 'map', // Changed to 'map' for proper rotation
               });
               
               marker.setLngLat([flight.longitude, flight.latitude]);
