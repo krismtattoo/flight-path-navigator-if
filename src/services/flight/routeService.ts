@@ -4,10 +4,9 @@ import { FlightTrackPoint } from "./types";
 import { getServers, getServerIdByName } from "./serverService";
 import { serverIdMap } from "./types";
 import { getRouteEndpointPatterns } from "./routeEndpoints";
-import { fetchFromEndpoint } from "./routeFetcher";
-import { mergeRoutePoints } from "./routeParser";
+import { fetchFlownRouteFromEndpoint, fetchFlightPlanFromEndpoint } from "./routeFetcher";
 
-// Get flight route for a specific flight - try all available API endpoints
+// Get flight route for a specific flight - fetch both flown route and flight plan separately
 export async function getFlightRoute(serverName: string, flightId: string): Promise<{
   flownRoute: FlightTrackPoint[],
   flightPlan: FlightTrackPoint[]
@@ -30,36 +29,48 @@ export async function getFlightRoute(serverName: string, flightId: string): Prom
     
     console.log(`Fetching flight route for flight ${flightId} on server ${serverId}`);
     
-    // Get all available endpoint patterns
+    // Get endpoint patterns for both route types
     const endpointPatterns = getRouteEndpointPatterns(serverId, flightId);
     
     let flownRoutePoints: FlightTrackPoint[] = [];
     let flightPlanPoints: FlightTrackPoint[] = [];
     
-    // Try each endpoint pattern until we find data
-    for (let i = 0; i < endpointPatterns.length; i++) {
-      const endpoint = endpointPatterns[i];
-      console.log(`Trying endpoint ${i + 1}/${endpointPatterns.length}: ${endpoint}`);
-      
-      const points = await fetchFromEndpoint(endpoint);
+    // Try to fetch flown route (bunte Linie)
+    console.log("Fetching flown route data...");
+    for (const endpoint of endpointPatterns.flownRoute) {
+      console.log(`Trying flown route endpoint: ${endpoint}`);
+      const points = await fetchFlownRouteFromEndpoint(endpoint);
       
       if (points.length > 0) {
-        console.log(`Found ${points.length} points from endpoint: ${endpoint}`);
-        
-        // Categorize the data based on endpoint type
-        if (endpoint.includes('/route') || endpoint.includes('/track')) {
-          flownRoutePoints = points;
-        } else if (endpoint.includes('/flightplan')) {
-          flightPlanPoints = points;
-        }
+        console.log(`Found ${points.length} flown route points from endpoint: ${endpoint}`);
+        flownRoutePoints = points;
+        break; // Use first successful endpoint
       }
     }
     
-    console.log(`Flown route points: ${flownRoutePoints.length}, Flight plan points: ${flightPlanPoints.length}`);
+    // Try to fetch flight plan (weiße Linie)
+    console.log("Fetching flight plan data...");
+    for (const endpoint of endpointPatterns.flightPlan) {
+      console.log(`Trying flight plan endpoint: ${endpoint}`);
+      const points = await fetchFlightPlanFromEndpoint(endpoint);
+      
+      if (points.length > 0) {
+        console.log(`Found ${points.length} flight plan points from endpoint: ${endpoint}`);
+        flightPlanPoints = points;
+        break; // Use first successful endpoint
+      }
+    }
+    
+    console.log(`Final result - Flown route points: ${flownRoutePoints.length}, Flight plan points: ${flightPlanPoints.length}`);
     
     if (flownRoutePoints.length === 0 && flightPlanPoints.length === 0) {
       console.log("No route or flight plan data available for this flight from any API endpoint");
       toast.error("No route data available for this flight. The pilot may not have filed a flight plan, or the flight data is not yet available.");
+    } else {
+      const routeInfo = [];
+      if (flownRoutePoints.length > 0) routeInfo.push(`${flownRoutePoints.length} flown route points`);
+      if (flightPlanPoints.length > 0) routeInfo.push(`${flightPlanPoints.length} flight plan points`);
+      console.log(`Successfully loaded: ${routeInfo.join(', ')}`);
     }
     
     return {
