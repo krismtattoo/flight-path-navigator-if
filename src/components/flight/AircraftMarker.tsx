@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -76,7 +77,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function - plane.png Ausrichtung berücksichtigen
+  // Korrigierte update marker function - plane.png zeigt standardmäßig nach Norden (0°)
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -88,12 +89,12 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     const heading = typeof flight.heading === 'number' && !isNaN(flight.heading) ? flight.heading : 0;
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // WICHTIG: Das neue plane.png Bild zeigt standardmäßig nach Osten (90°)
-    // Um die Nase in Heading-Richtung zu drehen, müssen wir 90° abziehen
-    const rotationAngle = normalizedHeading - 90;
+    // Das plane.png Bild zeigt standardmäßig nach Norden (0°)
+    // Die Rotation entspricht direkt dem Heading
+    const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
-    console.log(`🔄 Flight ${flight.flightId}: heading=${heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}° (adjusted for east-facing icon)`);
+    console.log(`🔄 Flight ${flight.flightId}: heading=${heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}° (direct heading)`);
     
     // Setze alle CSS-Eigenschaften direkt und explizit
     element.style.filter = filter;
@@ -103,7 +104,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     // Webkit-Präfix für bessere Browser-Kompatibilität
     element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId} (nose now pointing to heading ${heading}°)`);
+    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId} (nose pointing to heading ${heading}°)`);
     
     if (isSelected) {
       element.style.zIndex = '1000';
@@ -258,3 +259,4 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
 };
 
 export default React.memo(AircraftMarker);
+
