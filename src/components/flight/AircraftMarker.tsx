@@ -60,7 +60,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return svg;
   }, []);
 
-  // Create marker element with proper styling
+  // Create marker element with proper styling - fixed positioning
   const createMarkerElement = useCallback((flight: Flight): HTMLDivElement => {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
@@ -69,20 +69,26 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       height: 28px;
       cursor: pointer;
       transform-origin: center;
-      transition: all 0.2s ease;
+      transition: none;
+      position: relative;
+      pointer-events: auto;
     `;
     
     // Create SVG and append to marker element
     const svg = createSvgElement(flight);
     el.appendChild(svg);
     
-    // Event listeners for hover effects
+    // Simplified event listeners - no hover effects that could interfere with positioning
     el.addEventListener('mouseenter', () => {
-      el.style.transform = `rotate(${flight.heading}deg) scale(1.3)`;
+      if (!selectedMarkerIdRef.current || selectedMarkerIdRef.current !== flight.flightId) {
+        el.style.transform = `rotate(${flight.heading}deg) scale(1.2)`;
+      }
     });
     
     el.addEventListener('mouseleave', () => {
-      el.style.transform = `rotate(${flight.heading}deg) scale(1)`;
+      if (!selectedMarkerIdRef.current || selectedMarkerIdRef.current !== flight.flightId) {
+        el.style.transform = `rotate(${flight.heading}deg) scale(1)`;
+      }
     });
     
     return el;
@@ -103,6 +109,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     }
     
     svg.style.filter = filter;
+    // Fixed transform that doesn't interfere with map positioning
     element.style.transform = `rotate(${flight.heading}deg) scale(${isSelected ? 1.3 : 1})`;
   }, [isOnGround, filterStyles]);
 
@@ -125,7 +132,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       const existingMarker = markersRef.current[flight.flightId];
       
       if (existingMarker) {
-        // Update position
+        // Update position - this properly fixes the marker to map coordinates
         existingMarker.setLngLat([flight.longitude, flight.latitude]);
         
         // Update styling
@@ -143,7 +150,8 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
         updateMarkerStyle(element, flight, false);
         
         // Add click handler
-        element.addEventListener('click', () => {
+        element.addEventListener('click', (e) => {
+          e.stopPropagation();
           console.log(`✈️ Aircraft clicked: ${flight.flightId}`);
           
           // Update selection state
@@ -161,8 +169,13 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           onFlightSelect(flight);
         });
         
-        // Create and add marker to map
-        const marker = new mapboxgl.Marker({ element })
+        // Create and add marker to map with proper options for fixed positioning
+        const marker = new mapboxgl.Marker({ 
+          element,
+          anchor: 'center', // Center the marker on the coordinates
+          pitchAlignment: 'map', // Keep marker aligned with map
+          rotationAlignment: 'map' // Keep marker rotation aligned with map
+        })
           .setLngLat([flight.longitude, flight.latitude])
           .addTo(map);
         
