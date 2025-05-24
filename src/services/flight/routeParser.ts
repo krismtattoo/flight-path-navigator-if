@@ -1,3 +1,4 @@
+
 import { FlightTrackPoint } from "./types";
 
 // Process flight route data (actual flown route) into FlightTrackPoint array
@@ -35,6 +36,7 @@ export const parseFlownRouteData = (data: any): FlightTrackPoint[] => {
 };
 
 // Process flight plan data (planned route with waypoints) into FlightTrackPoint array
+// Based on official API documentation: result contains flightPlanItems array
 export const parseFlightPlanData = (data: any): FlightTrackPoint[] => {
   let processedPoints: FlightTrackPoint[] = [];
   
@@ -45,9 +47,34 @@ export const parseFlightPlanData = (data: any): FlightTrackPoint[] => {
     if (data?.result) {
       const result = data.result;
       
-      // Parse waypoints array if present
-      if (result.waypoints && Array.isArray(result.waypoints)) {
-        console.log(`Found flight plan with ${result.waypoints.length} waypoints`);
+      // Parse flightPlanItems array (main structure from API docs)
+      if (result.flightPlanItems && Array.isArray(result.flightPlanItems)) {
+        console.log(`Found flight plan with ${result.flightPlanItems.length} flight plan items`);
+        
+        let waypointTimestampBase = Date.now();
+        
+        // Process each flight plan item
+        result.flightPlanItems.forEach((item: any, index: number) => {
+          if (item && item.location && 
+              typeof item.location.latitude === 'number' && 
+              typeof item.location.longitude === 'number') {
+            
+            processedPoints.push({
+              latitude: item.location.latitude,
+              longitude: item.location.longitude,
+              altitude: item.altitude && item.altitude > 0 ? item.altitude : item.location.altitude || 0,
+              timestamp: waypointTimestampBase + (index * 60000), // Fake timestamps spaced 1 minute apart
+              waypointName: item.name || item.identifier || `WP${index + 1}`
+            });
+          }
+        });
+        
+        console.log(`Successfully processed ${processedPoints.length} waypoints from flightPlanItems`);
+      }
+      
+      // Fallback: Parse deprecated waypoints array if present (for backwards compatibility)
+      else if (result.waypoints && Array.isArray(result.waypoints)) {
+        console.log(`Found flight plan with ${result.waypoints.length} waypoints (deprecated format)`);
         
         let waypointTimestampBase = Date.now();
         processedPoints = result.waypoints
@@ -62,6 +89,7 @@ export const parseFlightPlanData = (data: any): FlightTrackPoint[] => {
             waypointName: waypoint.name || `WP${index + 1}`
           }));
       }
+      
       // Handle case where we might have departure and destination coordinates directly
       else if (result.departure || result.destination) {
         console.log(`Found flight plan with departure and/or destination coordinates`);

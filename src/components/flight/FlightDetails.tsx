@@ -18,6 +18,8 @@ interface FlightPlanData {
     latitude: number;
     longitude: number;
     altitude?: number;
+    type?: string;
+    identifier?: string;
   }>;
   departure?: {
     name: string;
@@ -33,6 +35,8 @@ interface FlightPlanData {
   };
   cruisingAltitude?: number;
   flightPlanId?: string;
+  flightPlanType?: string;
+  lastUpdate?: string;
 }
 
 const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
@@ -69,22 +73,27 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       if (routeData.flightPlan && routeData.flightPlan.length > 0) {
         const flightPlanPoints = routeData.flightPlan;
         
-        // Extract waypoints
-        const waypoints = flightPlanPoints.map((point, index) => ({
-          name: (point as any).waypointName || `WP${index + 1}`,
-          latitude: point.latitude,
-          longitude: point.longitude,
-          altitude: point.altitude || 0
-        }));
+        // Extract waypoints with enhanced information
+        const waypoints = flightPlanPoints.map((point, index) => {
+          const waypointName = (point as any).waypointName || `WP${index + 1}`;
+          return {
+            name: waypointName,
+            latitude: point.latitude,
+            longitude: point.longitude,
+            altitude: point.altitude || 0,
+            identifier: waypointName.length === 4 || waypointName.length === 5 ? waypointName : undefined,
+            type: determineWaypointType(waypointName, index, flightPlanPoints.length)
+          };
+        });
 
-        // Determine departure and destination
+        // Determine departure and destination from waypoints
         let departure, destination;
         
         if (waypoints.length > 0) {
           const firstWaypoint = waypoints[0];
           departure = {
-            name: firstWaypoint.name.includes('WP') ? 'Departure' : firstWaypoint.name,
-            icao: firstWaypoint.name.length === 4 ? firstWaypoint.name : 'N/A',
+            name: firstWaypoint.identifier || firstWaypoint.name,
+            icao: firstWaypoint.identifier || 'N/A',
             latitude: firstWaypoint.latitude,
             longitude: firstWaypoint.longitude
           };
@@ -93,8 +102,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         if (waypoints.length > 1) {
           const lastWaypoint = waypoints[waypoints.length - 1];
           destination = {
-            name: lastWaypoint.name.includes('WP') ? 'Destination' : lastWaypoint.name,
-            icao: lastWaypoint.name.length === 4 ? lastWaypoint.name : 'N/A',
+            name: lastWaypoint.identifier || lastWaypoint.name,
+            icao: lastWaypoint.identifier || 'N/A',
             latitude: lastWaypoint.latitude,
             longitude: lastWaypoint.longitude
           };
@@ -108,7 +117,9 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           departure,
           destination,
           cruisingAltitude: cruisingAltitude > 0 ? cruisingAltitude : undefined,
-          flightPlanId: flight.flightId
+          flightPlanId: flight.flightId,
+          flightPlanType: 'IFR', // Default assumption for structured flight plans
+          lastUpdate: new Date().toISOString()
         });
         
         console.log(`Successfully loaded flight plan with ${waypoints.length} waypoints`);
@@ -133,6 +144,21 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     } finally {
       setLoadingFlightPlan(false);
     }
+  };
+
+  // Helper function to determine waypoint type based on name and position
+  const determineWaypointType = (name: string, index: number, totalCount: number): string => {
+    if (index === 0) return 'departure';
+    if (index === totalCount - 1) return 'destination';
+    
+    // Check for common procedure types based on naming conventions
+    if (name.includes('SID') || name.includes('DEP')) return 'SID';
+    if (name.includes('STAR') || name.includes('ARR')) return 'STAR';
+    if (name.includes('APPR') || name.includes('APP')) return 'approach';
+    if (name.length === 5 && /^[A-Z0-9]+$/.test(name)) return 'fix';
+    if (name.length === 4 && /^[A-Z]+$/.test(name)) return 'airport';
+    
+    return 'waypoint';
   };
 
   // Simulate user stats (in real implementation, this would come from API)
@@ -197,12 +223,20 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             )}
           </div>
           
-          {flightPlanData.cruisingAltitude && (
-            <div className="text-center pt-2 border-t border-gray-600">
-              <span className="text-xs text-gray-400">Cruising Altitude: </span>
-              <span className="text-sm font-medium text-blue-400">{Math.round(flightPlanData.cruisingAltitude)} ft</span>
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-600">
+            {flightPlanData.flightPlanType && (
+              <div className="text-center">
+                <span className="text-xs text-gray-400">Flight Rules: </span>
+                <span className="text-sm font-medium text-blue-400">{flightPlanData.flightPlanType}</span>
+              </div>
+            )}
+            {flightPlanData.cruisingAltitude && (
+              <div className="text-center">
+                <span className="text-xs text-gray-400">Cruising Alt: </span>
+                <span className="text-sm font-medium text-blue-400">{Math.round(flightPlanData.cruisingAltitude)} ft</span>
+              </div>
+            )}
+          </div>
         </div>
         
         <Separator className="bg-gray-600" />
@@ -211,19 +245,24 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         <div>
           <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
             <Plane size={16} className="mr-2" />
-            Complete Flight Plan ({flightPlanData.waypoints.length} waypoints)
+            Flight Plan Route ({flightPlanData.waypoints.length} waypoints)
           </h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {flightPlanData.waypoints.map((waypoint, index) => (
               <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
                 <div className="flex items-center space-x-3">
                   <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                    index === 0 ? 'bg-green-500' : 
-                    index === flightPlanData.waypoints.length - 1 ? 'bg-red-500' : 
+                    waypoint.type === 'departure' ? 'bg-green-500' : 
+                    waypoint.type === 'destination' ? 'bg-red-500' : 
+                    waypoint.type === 'airport' ? 'bg-yellow-500' :
+                    waypoint.type === 'fix' ? 'bg-purple-500' :
                     'bg-blue-500'
                   }`}></div>
                   <div>
                     <span className="font-medium text-white">{waypoint.name}</span>
+                    {waypoint.identifier && waypoint.identifier !== waypoint.name && (
+                      <span className="text-xs text-gray-400 ml-1">({waypoint.identifier})</span>
+                    )}
                     <div className="text-xs text-gray-400">
                       {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
                     </div>
@@ -231,6 +270,17 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gray-500">#{index + 1}</span>
+                  {waypoint.type && waypoint.type !== 'waypoint' && (
+                    <span className={`px-2 py-1 text-xs rounded text-white ${
+                      waypoint.type === 'departure' ? 'bg-green-600' :
+                      waypoint.type === 'destination' ? 'bg-red-600' :
+                      waypoint.type === 'airport' ? 'bg-yellow-600' :
+                      waypoint.type === 'fix' ? 'bg-purple-600' :
+                      'bg-gray-600'
+                    }`}>
+                      {waypoint.type.toUpperCase()}
+                    </span>
+                  )}
                   {waypoint.altitude && waypoint.altitude > 0 && (
                     <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
                       {Math.round(waypoint.altitude)}ft
@@ -242,10 +292,15 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </div>
         </div>
 
-        {/* Flight Plan ID */}
-        {flightPlanData.flightPlanId && (
-          <div className="text-center pt-2">
-            <span className="text-xs text-gray-500">Flight Plan ID: {flightPlanData.flightPlanId}</span>
+        {/* Flight Plan Metadata */}
+        {(flightPlanData.flightPlanId || flightPlanData.lastUpdate) && (
+          <div className="text-center pt-2 border-t border-gray-600">
+            {flightPlanData.flightPlanId && (
+              <div className="text-xs text-gray-500 mb-1">Flight Plan ID: {flightPlanData.flightPlanId}</div>
+            )}
+            {flightPlanData.lastUpdate && (
+              <div className="text-xs text-gray-500">Last Update: {new Date(flightPlanData.lastUpdate).toLocaleString()}</div>
+            )}
           </div>
         )}
       </div>
