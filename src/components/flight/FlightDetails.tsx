@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Plane, MapPin, Clock, Gauge, Navigation, User, BarChart3, Route, Zap } from 'lucide-react';
@@ -8,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { getFlightRoute } from '@/services/flight/routeService';
 import { toast } from "sonner";
+import PerformanceChart from './PerformanceChart';
 
 interface FlightDetailsProps {
   flight: Flight;
@@ -55,6 +55,33 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     } catch (e) {
       return 'Unknown';
     }
+  };
+
+  // Generate mock performance data for demonstration
+  const generatePerformanceData = () => {
+    const now = new Date();
+    const data = [];
+    
+    for (let i = 9; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 60000); // 1 minute intervals
+      const baseAltitude = flight.altitude;
+      const baseSpeed = flight.speed;
+      
+      // Add some realistic variation
+      const altitudeVariation = (Math.random() - 0.5) * 200;
+      const speedVariation = (Math.random() - 0.5) * 20;
+      const verticalSpeed = (Math.random() - 0.5) * 1000; // -500 to +500 fpm
+      
+      data.push({
+        time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        altitude: Math.max(0, baseAltitude + altitudeVariation),
+        speed: Math.max(0, baseSpeed + speedVariation),
+        verticalSpeed: verticalSpeed,
+        heading: flight.heading + (Math.random() - 0.5) * 10
+      });
+    }
+    
+    return data;
   };
 
   // Load flight plan data when switching to route section
@@ -428,39 +455,55 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     );
   };
 
-  const renderPerformanceSection = () => (
-    <div className="space-y-6">
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Performance Metrics
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="text-center p-4 bg-slate-700 rounded-lg">
-              <div className="text-2xl font-bold text-green-400">{Math.round(flight.speed)}</div>
-              <div className="text-sm text-gray-400">Ground Speed (kts)</div>
+  const renderPerformanceSection = () => {
+    const performanceData = generatePerformanceData();
+    
+    return (
+      <div className="space-y-6">
+        <PerformanceChart 
+          data={performanceData}
+          currentAltitude={flight.altitude}
+          currentSpeed={flight.speed}
+        />
+        
+        {/* Additional Performance Metrics */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Zusätzliche Metriken
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
+                  <span className="text-gray-300">Kurs</span>
+                  <span className="text-white font-semibold">{Math.round(flight.heading)}°</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
+                  <span className="text-gray-300">Letztes Update</span>
+                  <span className="text-white font-semibold">{formatTime(flight.lastReportTime)}</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
+                  <span className="text-gray-300">Flugstatus</span>
+                  <Badge variant={isOnGround ? "secondary" : "default"} className={isOnGround ? "bg-yellow-600" : "bg-green-600"}>
+                    {isOnGround ? "Am Boden" : "In der Luft"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
+                  <span className="text-gray-300">Flugzeugtyp</span>
+                  <span className="text-white font-semibold">{flight.aircraft}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-4 bg-slate-700 rounded-lg">
-              <div className="text-2xl font-bold text-orange-400">N/A</div>
-              <div className="text-sm text-gray-400">Vertical Speed (fpm)</div>
-            </div>
-            <div className="text-center p-4 bg-slate-700 rounded-lg">
-              <div className="text-2xl font-bold text-red-400">{Math.round(flight.altitude)}</div>
-              <div className="text-sm text-gray-400">Altitude (ft MSL)</div>
-            </div>
-          </div>
-          
-          <div className="text-center text-gray-400">
-            <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Detailed performance graphs would be displayed here</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderPilotSection = () => (
     <div className="space-y-6">
