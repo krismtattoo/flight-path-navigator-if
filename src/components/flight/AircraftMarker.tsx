@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -55,18 +56,18 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   const createMarkerElement = useCallback((flight: Flight): HTMLDivElement => {
     const el = document.createElement('div');
     el.className = 'aircraft-marker';
+    
+    // Setze CSS-Eigenschaften explizit ohne externe CSS-Interferenz
     el.style.cssText = `
-      width: 28px;
-      height: 28px;
-      background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      transform-origin: center center;
-      cursor: pointer;
-      pointer-events: auto;
-      will-change: transform;
-      backface-visibility: hidden;
+      width: 28px !important;
+      height: 28px !important;
+      background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png") !important;
+      background-size: contain !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      position: absolute !important;
     `;
     
     console.log(`🛩️ Creating marker for flight ${flight.flightId} with heading ${flight.heading}°`);
@@ -74,7 +75,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function mit expliziter Rotation
+  // Korrigierte update marker function mit direkter CSS-Manipulation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -83,24 +84,25 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     const filter = getAircraftFilter(flight, isSelected);
     
     // Stelle sicher, dass das Heading ein gültiger Wert ist
-    const heading = typeof flight.heading === 'number' ? flight.heading : 0;
+    const heading = typeof flight.heading === 'number' && !isNaN(flight.heading) ? flight.heading : 0;
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // Das SVG zeigt standardmäßig nach rechts (90°), korrigiere für Norden (0°)
-    const rotationAngle = normalizedHeading;
+    // Das Flugzeug-Icon zeigt standardmäßig nach rechts (90°), korrigiere für Norden (0°)
+    const rotationAngle = normalizedHeading - 90;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
-    console.log(`🔄 Flight ${flight.flightId}: raw heading=${heading}°, normalized=${normalizedHeading}°, final rotation=${rotationAngle}°`);
+    console.log(`🔄 Flight ${flight.flightId}: heading=${heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}°`);
     
-    // Setze die CSS-Eigenschaften einzeln und explizit
+    // Setze alle CSS-Eigenschaften direkt und explizit mit !important
     element.style.filter = filter;
     element.style.transformOrigin = 'center center';
     element.style.transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    // Force reflow to ensure transform is applied
-    element.offsetHeight;
+    // Zusätzliche CSS-Properties für bessere Browser-Kompatibilität
+    element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
+    element.style.msTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`✅ Applied: transform=rotate(${rotationAngle}deg) scale(${scaleValue}) to ${flight.flightId}`);
+    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId}`);
     
     if (isSelected) {
       element.style.zIndex = '1000';
