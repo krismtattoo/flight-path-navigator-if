@@ -5,15 +5,28 @@ import { API_KEY, BASE_URL, ServerInfo, serverIdMap, SERVER_TYPES } from "./type
 // Get all available servers
 export async function getServers(): Promise<ServerInfo[]> {
   try {
+    console.log(`Using API Key for servers: ${API_KEY ? 'Present' : 'Missing'}`);
+    
     const response = await fetch(`${BASE_URL}/sessions`, {
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
       }
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      if (response.status === 401) {
+        console.error("Unauthorized - API Key may be invalid");
+        toast.error("API authorization failed. Please check your API key.");
+        throw new Error(`API authorization failed: ${response.status}`);
+      } else if (response.status === 403) {
+        console.error("Forbidden - API Key may lack permissions");
+        toast.error("API access forbidden. Please check your API key permissions.");
+        throw new Error(`API access forbidden: ${response.status}`);
+      } else {
+        throw new Error(`API error: ${response.status}`);
+      }
     }
 
     const data = await response.json();

@@ -1,6 +1,15 @@
 
-// API key
+// API key - Ensure this is always available
 export const API_KEY = "r8hxd0a54uoxrgj51ag5usiba3uls8ii";
+
+// Validate API key is present
+if (!API_KEY || API_KEY.trim() === "") {
+  console.error("CRITICAL: API_KEY is missing or empty!");
+  throw new Error("API_KEY is required for Infinite Flight Live API access");
+}
+
+console.log("API Key initialized successfully");
+
 export const BASE_URL = "https://api.infiniteflight.com/public/v2";
 
 // Server types

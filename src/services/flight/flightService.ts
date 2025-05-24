@@ -22,15 +22,28 @@ export async function getFlights(serverName: string): Promise<Flight[]> {
     }
     
     console.log(`Fetching flights for serverId: ${serverId}`);
+    console.log(`Using API Key for flights: ${API_KEY ? 'Present' : 'Missing'}`);
+    
     const response = await fetch(`${BASE_URL}/flights/${serverId}`, {
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
       }
     });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      if (response.status === 401) {
+        console.error("Unauthorized - API Key may be invalid");
+        toast.error("API authorization failed. Please check your API key.");
+        throw new Error(`API authorization failed: ${response.status}`);
+      } else if (response.status === 403) {
+        console.error("Forbidden - API Key may lack permissions");
+        toast.error("API access forbidden. Please check your API key permissions.");
+        throw new Error(`API access forbidden: ${response.status}`);
+      } else {
+        throw new Error(`API error: ${response.status}`);
+      }
     }
 
     const data = await response.json();
@@ -74,10 +87,13 @@ export async function getUserDetails(serverName: string, userId: string) {
     for (const endpoint of userEndpoints) {
       try {
         console.log(`Attempting to fetch user details from: ${endpoint}`);
+        console.log(`Using API Key for user details: ${API_KEY ? 'Present' : 'Missing'}`);
+        
         const response = await fetch(endpoint, {
           headers: {
             "Authorization": `Bearer ${API_KEY}`,
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Content-Type": "application/json"
           }
         });
         
@@ -87,6 +103,14 @@ export async function getUserDetails(serverName: string, userId: string) {
             console.log("User details retrieved successfully");
             return data.result;
           }
+        } else if (response.status === 401) {
+          console.error("Unauthorized - API Key may be invalid");
+          toast.error("API authorization failed. Please check your API key.");
+          return null;
+        } else if (response.status === 403) {
+          console.error("Forbidden - API Key may lack permissions");
+          toast.error("API access forbidden. Please check your API key permissions.");
+          return null;
         } else {
           console.log(`User endpoint ${endpoint} returned status ${response.status}`);
         }
