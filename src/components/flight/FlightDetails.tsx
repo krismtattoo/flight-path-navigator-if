@@ -73,7 +73,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       if (routeData.flightPlan && routeData.flightPlan.length > 0) {
         const flightPlanPoints = routeData.flightPlan;
         
-        // Extract waypoints with enhanced information
+        // Enhanced waypoint classification with better logic
         const waypoints = flightPlanPoints.map((point, index) => {
           const waypointName = (point as any).waypointName || `WP${index + 1}`;
           return {
@@ -82,7 +82,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             longitude: point.longitude,
             altitude: point.altitude || 0,
             identifier: waypointName.length === 4 || waypointName.length === 5 ? waypointName : undefined,
-            type: determineWaypointType(waypointName, index, flightPlanPoints.length)
+            type: determineWaypointType(waypointName, index, flightPlanPoints.length, point.latitude, point.longitude)
           };
         });
 
@@ -146,35 +146,39 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     }
   };
 
-  // Enhanced waypoint type determination with better SID/STAR/procedure recognition
-  const determineWaypointType = (name: string, index: number, totalCount: number): string => {
+  // Improved waypoint type determination with better logic and geographical context
+  const determineWaypointType = (name: string, index: number, totalCount: number, lat: number, lng: number): string => {
     const upperName = name.toUpperCase();
     
     // First and last waypoints
     if (index === 0) return 'departure';
     if (index === totalCount - 1) return 'destination';
     
-    // SID patterns (Standard Instrument Departure)
-    if (upperName.includes('SID') || 
-        upperName.endsWith('D') && upperName.length <= 6 ||
-        /\d[A-Z]$/.test(upperName) || // Pattern like "RWYN1A"
-        upperName.includes('DEP') ||
-        upperName.includes('RUNWAY') ||
-        upperName.startsWith('RW') ||
-        /^[A-Z]{2,4}\d[A-Z]?$/.test(upperName)) { // Patterns like "KORD1", "LOOP2A"
-      return 'SID';
+    // Airport identifiers (4-letter ICAO codes) - high priority
+    if (/^[A-Z]{4}$/.test(upperName)) {
+      return 'airport';
     }
     
-    // STAR patterns (Standard Terminal Arrival Route)
+    // SID patterns (Standard Instrument Departure) - improved detection
+    if (upperName.includes('SID') || 
+        upperName.includes('DEP') ||
+        upperName.includes('DEPARTURE') ||
+        upperName.startsWith('RW') ||
+        upperName.includes('RUNWAY') ||
+        /^[A-Z]{2,5}\d[A-Z]?$/.test(upperName) || // Patterns like "KORD1", "LOOP2A"
+        (index <= 3 && /\d[A-Z]?$/.test(upperName))) { // Early waypoints with number-letter endings
+      return 'sid';
+    }
+    
+    // STAR patterns (Standard Terminal Arrival Route) - improved detection
     if (upperName.includes('STAR') || 
         upperName.includes('ARR') ||
         upperName.includes('ARRIVAL') ||
-        upperName.endsWith('A') && upperName.length <= 6 ||
-        /\d[A-Z]?A$/.test(upperName)) { // Pattern like "RNAV1A"
-      return 'STAR';
+        (index >= totalCount - 4 && /\d[A-Z]?$/.test(upperName))) { // Late waypoints with number-letter endings
+      return 'star';
     }
     
-    // Approach patterns
+    // Approach patterns - enhanced detection
     if (upperName.includes('APPR') || 
         upperName.includes('APP') ||
         upperName.includes('ILS') ||
@@ -183,14 +187,11 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         upperName.includes('NDB') ||
         upperName.includes('GPS') ||
         upperName.includes('LOC') ||
+        upperName.includes('FINAL') ||
         upperName.startsWith('I-') ||
-        /^[A-Z]{2,4}\d{2}[LRC]?$/.test(upperName)) { // Pattern like "ILS28L"
+        /^[A-Z]{2,4}\d{2}[LRC]?$/.test(upperName) || // Pattern like "ILS28L"
+        (index >= totalCount - 3)) { // Very late waypoints likely approach
       return 'approach';
-    }
-    
-    // Airport identifiers (4-letter ICAO codes)
-    if (/^[A-Z]{4}$/.test(upperName)) {
-      return 'airport';
     }
     
     // Navigation fixes (typically 5-letter identifiers)
@@ -203,31 +204,38 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       return 'navaid';
     }
     
+    // En-route waypoints based on position in flight plan
+    if (index > 5 && index < totalCount - 5) {
+      return 'enroute';
+    }
+    
     // Default waypoint
     return 'waypoint';
   };
 
-  // Get color and label for waypoint type
+  // Enhanced color and label system for waypoint types
   const getWaypointTypeStyle = (type: string) => {
     switch (type) {
       case 'departure':
-        return { bg: 'bg-green-600', text: 'DEP', color: 'text-white' };
+        return { bg: 'bg-green-600', text: 'DEP', color: 'text-white', icon: '🛫' };
       case 'destination':
-        return { bg: 'bg-red-600', text: 'ARR', color: 'text-white' };
-      case 'SID':
-        return { bg: 'bg-blue-600', text: 'SID', color: 'text-white' };
-      case 'STAR':
-        return { bg: 'bg-orange-600', text: 'STAR', color: 'text-white' };
+        return { bg: 'bg-red-600', text: 'ARR', color: 'text-white', icon: '🛬' };
+      case 'sid':
+        return { bg: 'bg-blue-600', text: 'SID', color: 'text-white', icon: '↗️' };
+      case 'star':
+        return { bg: 'bg-orange-600', text: 'STAR', color: 'text-white', icon: '↘️' };
       case 'approach':
-        return { bg: 'bg-purple-600', text: 'APP', color: 'text-white' };
+        return { bg: 'bg-purple-600', text: 'APP', color: 'text-white', icon: '🎯' };
       case 'airport':
-        return { bg: 'bg-yellow-600', text: 'APT', color: 'text-black' };
+        return { bg: 'bg-yellow-600', text: 'APT', color: 'text-black', icon: '🏢' };
       case 'fix':
-        return { bg: 'bg-teal-600', text: 'FIX', color: 'text-white' };
+        return { bg: 'bg-teal-600', text: 'FIX', color: 'text-white', icon: '📍' };
       case 'navaid':
-        return { bg: 'bg-indigo-600', text: 'NAV', color: 'text-white' };
+        return { bg: 'bg-indigo-600', text: 'NAV', color: 'text-white', icon: '📡' };
+      case 'enroute':
+        return { bg: 'bg-cyan-600', text: 'ENR', color: 'text-white', icon: '✈️' };
       default:
-        return { bg: 'bg-gray-600', text: 'WPT', color: 'text-white' };
+        return { bg: 'bg-gray-600', text: 'WPT', color: 'text-white', icon: '📌' };
     }
   };
 
@@ -266,10 +274,21 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       );
     }
 
+    // Group waypoints by type for better organization
+    const waypointsByType = flightPlanData.waypoints.reduce((acc, waypoint) => {
+      const type = waypoint.type || 'waypoint';
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(waypoint);
+      return acc;
+    }, {} as Record<string, typeof flightPlanData.waypoints>);
+
+    // Order of sections for logical flow
+    const typeOrder = ['departure', 'sid', 'enroute', 'fix', 'navaid', 'star', 'approach', 'destination', 'airport', 'waypoint'];
+
     return (
       <div className="space-y-4">
         {/* Flight Plan Header Info */}
-        <div className="bg-gray-800 p-3 rounded-lg">
+        <div className="bg-gray-800 p-4 rounded-lg">
           <div className="grid grid-cols-2 gap-4 mb-3">
             {flightPlanData.departure && (
               <div>
@@ -311,51 +330,60 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         
         <Separator className="bg-gray-600" />
         
-        {/* Complete Flight Plan Route with Enhanced Waypoint Display */}
+        {/* Organized Flight Plan Route by Type */}
         <div>
           <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
             <Plane size={16} className="mr-2" />
             Flight Plan Route ({flightPlanData.waypoints.length} waypoints)
           </h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {flightPlanData.waypoints.map((waypoint, index) => {
-              const typeStyle = getWaypointTypeStyle(waypoint.type || 'waypoint');
+          
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {typeOrder.map(type => {
+              const waypointsOfType = waypointsByType[type];
+              if (!waypointsOfType || waypointsOfType.length === 0) return null;
+              
+              const typeStyle = getWaypointTypeStyle(type);
               
               return (
-                <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                      waypoint.type === 'departure' ? 'bg-green-500' : 
-                      waypoint.type === 'destination' ? 'bg-red-500' : 
-                      waypoint.type === 'airport' ? 'bg-yellow-500' :
-                      waypoint.type === 'fix' ? 'bg-teal-500' :
-                      waypoint.type === 'SID' ? 'bg-blue-500' :
-                      waypoint.type === 'STAR' ? 'bg-orange-500' :
-                      waypoint.type === 'approach' ? 'bg-purple-500' :
-                      waypoint.type === 'navaid' ? 'bg-indigo-500' :
-                      'bg-gray-500'
-                    }`}></div>
-                    <div>
-                      <span className="font-medium text-white">{waypoint.name}</span>
-                      {waypoint.identifier && waypoint.identifier !== waypoint.name && (
-                        <span className="text-xs text-gray-400 ml-1">({waypoint.identifier})</span>
-                      )}
-                      <div className="text-xs text-gray-400">
-                        {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">#{index + 1}</span>
-                    {/* Enhanced Type Tag */}
-                    <span className={`px-2 py-1 text-xs rounded font-medium ${typeStyle.bg} ${typeStyle.color}`}>
+                <div key={type} className="bg-gray-800 rounded-lg p-3">
+                  <div className="flex items-center mb-2">
+                    <span className="text-lg mr-2">{typeStyle.icon}</span>
+                    <span className={`px-2 py-1 text-xs rounded font-medium ${typeStyle.bg} ${typeStyle.color} mr-2`}>
                       {typeStyle.text}
                     </span>
-                    {waypoint.altitude && waypoint.altitude > 0 && (
-                      <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white font-medium">
-                        {Math.round(waypoint.altitude)}ft
-                      </span>
-                    )}
+                    <span className="text-sm font-medium text-gray-300 capitalize">
+                      {type === 'sid' ? 'Standard Instrument Departure' :
+                       type === 'star' ? 'Standard Terminal Arrival' :
+                       type === 'navaid' ? 'Navigation Aid' :
+                       type === 'enroute' ? 'En-Route Waypoints' :
+                       type} ({waypointsOfType.length})
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {waypointsOfType.map((waypoint, index) => (
+                      <div key={index} className="flex items-center justify-between py-1 px-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${typeStyle.bg.replace('bg-', 'bg-')}`}></div>
+                          <div>
+                            <span className="font-medium text-white text-sm">{waypoint.name}</span>
+                            {waypoint.identifier && waypoint.identifier !== waypoint.name && (
+                              <span className="text-xs text-gray-400 ml-1">({waypoint.identifier})</span>
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          {waypoint.altitude && waypoint.altitude > 0 && (
+                            <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white font-medium">
+                              {Math.round(waypoint.altitude)}ft
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
@@ -484,12 +512,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   );
 
   return (
-    <div className="absolute top-16 right-0 p-4 z-10 w-80 max-h-[80vh] overflow-y-auto">
+    <div className="absolute top-16 right-0 p-4 z-10 w-96 max-h-[85vh] overflow-y-auto">
       <div className="bg-[#151920] border border-gray-700 rounded-md shadow-xl text-white">
-        <div className="flex justify-between items-center border-b border-gray-700 p-3">
+        <div className="flex justify-between items-center border-b border-gray-700 p-4">
           <div className="flex flex-col">
             <div className="flex space-x-2 items-baseline">
-              <span className="font-bold text-lg">{flight.callsign}</span>
+              <span className="font-bold text-xl">{flight.callsign}</span>
               <span className="text-sm text-gray-400">{flight.username}</span>
             </div>
             <div className="text-xs text-gray-300">{serverID}</div>
@@ -504,12 +532,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </Button>
         </div>
         
-        <div className="p-3 border-b border-gray-700">
-          <div className="flex justify-between mb-1">
+        <div className="p-4 border-b border-gray-700">
+          <div className="flex justify-between mb-2">
             <span className="text-sm text-gray-400">Aircraft</span>
             <span className="font-medium">{flight.aircraft}</span>
           </div>
-          <div className="flex justify-between mb-1">
+          <div className="flex justify-between mb-2">
             <span className="text-sm text-gray-400">Livery</span>
             <span className="font-medium">{flight.livery}</span>
           </div>
@@ -521,19 +549,19 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           )}
         </div>
         
-        <div className="p-3 border-b border-gray-700">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="p-4 border-b border-gray-700">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-sm text-gray-400">Altitude</div>
-              <div className="font-medium">{Math.round(flight.altitude)} ft</div>
+              <div className="font-medium text-lg">{Math.round(flight.altitude)} ft</div>
             </div>
             <div>
               <div className="text-sm text-gray-400">Speed</div>
-              <div className="font-medium">{Math.round(flight.speed)} kts</div>
+              <div className="font-medium text-lg">{Math.round(flight.speed)} kts</div>
             </div>
             <div>
               <div className="text-sm text-gray-400">Heading</div>
-              <div className="font-medium">{Math.round(flight.heading)}°</div>
+              <div className="font-medium text-lg">{Math.round(flight.heading)}°</div>
             </div>
             <div>
               <div className="text-sm text-gray-400">Last Update</div>
@@ -602,7 +630,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         </div>
         
         {/* Tab Content */}
-        <div className="p-3">
+        <div className="p-4">
           {activeTab === 'details' && (
             <div>
               <Button 
