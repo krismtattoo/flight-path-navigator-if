@@ -146,19 +146,89 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     }
   };
 
-  // Helper function to determine waypoint type based on name and position
+  // Enhanced waypoint type determination with better SID/STAR/procedure recognition
   const determineWaypointType = (name: string, index: number, totalCount: number): string => {
+    const upperName = name.toUpperCase();
+    
+    // First and last waypoints
     if (index === 0) return 'departure';
     if (index === totalCount - 1) return 'destination';
     
-    // Check for common procedure types based on naming conventions
-    if (name.includes('SID') || name.includes('DEP')) return 'SID';
-    if (name.includes('STAR') || name.includes('ARR')) return 'STAR';
-    if (name.includes('APPR') || name.includes('APP')) return 'approach';
-    if (name.length === 5 && /^[A-Z0-9]+$/.test(name)) return 'fix';
-    if (name.length === 4 && /^[A-Z]+$/.test(name)) return 'airport';
+    // SID patterns (Standard Instrument Departure)
+    if (upperName.includes('SID') || 
+        upperName.endsWith('D') && upperName.length <= 6 ||
+        /\d[A-Z]$/.test(upperName) || // Pattern like "RWYN1A"
+        upperName.includes('DEP') ||
+        upperName.includes('RUNWAY') ||
+        upperName.startsWith('RW') ||
+        /^[A-Z]{2,4}\d[A-Z]?$/.test(upperName)) { // Patterns like "KORD1", "LOOP2A"
+      return 'SID';
+    }
     
+    // STAR patterns (Standard Terminal Arrival Route)
+    if (upperName.includes('STAR') || 
+        upperName.includes('ARR') ||
+        upperName.includes('ARRIVAL') ||
+        upperName.endsWith('A') && upperName.length <= 6 ||
+        /\d[A-Z]?A$/.test(upperName)) { // Pattern like "RNAV1A"
+      return 'STAR';
+    }
+    
+    // Approach patterns
+    if (upperName.includes('APPR') || 
+        upperName.includes('APP') ||
+        upperName.includes('ILS') ||
+        upperName.includes('RNAV') ||
+        upperName.includes('VOR') ||
+        upperName.includes('NDB') ||
+        upperName.includes('GPS') ||
+        upperName.includes('LOC') ||
+        upperName.startsWith('I-') ||
+        /^[A-Z]{2,4}\d{2}[LRC]?$/.test(upperName)) { // Pattern like "ILS28L"
+      return 'approach';
+    }
+    
+    // Airport identifiers (4-letter ICAO codes)
+    if (/^[A-Z]{4}$/.test(upperName)) {
+      return 'airport';
+    }
+    
+    // Navigation fixes (typically 5-letter identifiers)
+    if (/^[A-Z]{5}$/.test(upperName)) {
+      return 'fix';
+    }
+    
+    // VOR/DME stations (typically 3-letter identifiers)
+    if (/^[A-Z]{3}$/.test(upperName)) {
+      return 'navaid';
+    }
+    
+    // Default waypoint
     return 'waypoint';
+  };
+
+  // Get color and label for waypoint type
+  const getWaypointTypeStyle = (type: string) => {
+    switch (type) {
+      case 'departure':
+        return { bg: 'bg-green-600', text: 'DEP', color: 'text-white' };
+      case 'destination':
+        return { bg: 'bg-red-600', text: 'ARR', color: 'text-white' };
+      case 'SID':
+        return { bg: 'bg-blue-600', text: 'SID', color: 'text-white' };
+      case 'STAR':
+        return { bg: 'bg-orange-600', text: 'STAR', color: 'text-white' };
+      case 'approach':
+        return { bg: 'bg-purple-600', text: 'APP', color: 'text-white' };
+      case 'airport':
+        return { bg: 'bg-yellow-600', text: 'APT', color: 'text-black' };
+      case 'fix':
+        return { bg: 'bg-teal-600', text: 'FIX', color: 'text-white' };
+      case 'navaid':
+        return { bg: 'bg-indigo-600', text: 'NAV', color: 'text-white' };
+      default:
+        return { bg: 'bg-gray-600', text: 'WPT', color: 'text-white' };
+    }
   };
 
   // Simulate user stats (in real implementation, this would come from API)
@@ -241,54 +311,55 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         
         <Separator className="bg-gray-600" />
         
-        {/* Complete Flight Plan Route */}
+        {/* Complete Flight Plan Route with Enhanced Waypoint Display */}
         <div>
           <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center">
             <Plane size={16} className="mr-2" />
             Flight Plan Route ({flightPlanData.waypoints.length} waypoints)
           </h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {flightPlanData.waypoints.map((waypoint, index) => (
-              <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                    waypoint.type === 'departure' ? 'bg-green-500' : 
-                    waypoint.type === 'destination' ? 'bg-red-500' : 
-                    waypoint.type === 'airport' ? 'bg-yellow-500' :
-                    waypoint.type === 'fix' ? 'bg-purple-500' :
-                    'bg-blue-500'
-                  }`}></div>
-                  <div>
-                    <span className="font-medium text-white">{waypoint.name}</span>
-                    {waypoint.identifier && waypoint.identifier !== waypoint.name && (
-                      <span className="text-xs text-gray-400 ml-1">({waypoint.identifier})</span>
-                    )}
-                    <div className="text-xs text-gray-400">
-                      {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+            {flightPlanData.waypoints.map((waypoint, index) => {
+              const typeStyle = getWaypointTypeStyle(waypoint.type || 'waypoint');
+              
+              return (
+                <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                      waypoint.type === 'departure' ? 'bg-green-500' : 
+                      waypoint.type === 'destination' ? 'bg-red-500' : 
+                      waypoint.type === 'airport' ? 'bg-yellow-500' :
+                      waypoint.type === 'fix' ? 'bg-teal-500' :
+                      waypoint.type === 'SID' ? 'bg-blue-500' :
+                      waypoint.type === 'STAR' ? 'bg-orange-500' :
+                      waypoint.type === 'approach' ? 'bg-purple-500' :
+                      waypoint.type === 'navaid' ? 'bg-indigo-500' :
+                      'bg-gray-500'
+                    }`}></div>
+                    <div>
+                      <span className="font-medium text-white">{waypoint.name}</span>
+                      {waypoint.identifier && waypoint.identifier !== waypoint.name && (
+                        <span className="text-xs text-gray-400 ml-1">({waypoint.identifier})</span>
+                      )}
+                      <div className="text-xs text-gray-400">
+                        {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">#{index + 1}</span>
-                  {waypoint.type && waypoint.type !== 'waypoint' && (
-                    <span className={`px-2 py-1 text-xs rounded text-white ${
-                      waypoint.type === 'departure' ? 'bg-green-600' :
-                      waypoint.type === 'destination' ? 'bg-red-600' :
-                      waypoint.type === 'airport' ? 'bg-yellow-600' :
-                      waypoint.type === 'fix' ? 'bg-purple-600' :
-                      'bg-gray-600'
-                    }`}>
-                      {waypoint.type.toUpperCase()}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">#{index + 1}</span>
+                    {/* Enhanced Type Tag */}
+                    <span className={`px-2 py-1 text-xs rounded font-medium ${typeStyle.bg} ${typeStyle.color}`}>
+                      {typeStyle.text}
                     </span>
-                  )}
-                  {waypoint.altitude && waypoint.altitude > 0 && (
-                    <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
-                      {Math.round(waypoint.altitude)}ft
-                    </span>
-                  )}
+                    {waypoint.altitude && waypoint.altitude > 0 && (
+                      <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white font-medium">
+                        {Math.round(waypoint.altitude)}ft
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
