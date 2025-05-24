@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Gauge, Plane } from 'lucide-react';
 
 interface PerformanceData {
   time: string;
@@ -27,13 +27,25 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold mb-2">{`Zeit: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {`${entry.name}: ${entry.value}${entry.dataKey === 'altitude' ? 'ft' : entry.dataKey === 'speed' ? 'kts' : entry.dataKey === 'verticalSpeed' ? 'fpm' : '°'}`}
-            </p>
-          ))}
+        <div className="bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-xl p-4 shadow-2xl">
+          <p className="text-white font-semibold mb-3 text-sm">{`Zeit: ${label}`}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-gray-300 text-xs">
+                  {`${entry.name}: ${entry.value.toFixed(1)}${
+                    entry.dataKey === 'altitude' ? 'ft' : 
+                    entry.dataKey === 'speed' ? 'kts' : 
+                    entry.dataKey === 'verticalSpeed' ? 'fpm' : '°'
+                  }`}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -51,100 +63,114 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     <div className="space-y-6">
       {/* Performance Indicators */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-900 to-blue-800 border-blue-700">
+        <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 border-0 shadow-lg">
           <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Activity className="w-6 h-6 text-blue-400" />
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-white/20 p-2 rounded-full">
+                <Gauge className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-white">{Math.round(currentSpeed)}</p>
-            <p className="text-sm text-blue-200">Geschwindigkeit (kts)</p>
+            <p className="text-2xl font-bold text-white mb-1">{Math.round(currentSpeed)}</p>
+            <p className="text-xs text-indigo-100 uppercase tracking-wide">Geschwindigkeit</p>
+            <p className="text-xs text-indigo-200">knots</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-900 to-green-800 border-green-700">
+        <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 shadow-lg">
           <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <TrendingUp className="w-6 h-6 text-green-400" />
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-white/20 p-2 rounded-full">
+                <Plane className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-white">{Math.round(currentAltitude)}</p>
-            <p className="text-sm text-green-200">Höhe (ft)</p>
+            <p className="text-2xl font-bold text-white mb-1">{Math.round(currentAltitude).toLocaleString()}</p>
+            <p className="text-xs text-emerald-100 uppercase tracking-wide">Höhe</p>
+            <p className="text-xs text-emerald-200">feet</p>
           </CardContent>
         </Card>
 
-        <Card className={`bg-gradient-to-br ${
-          isClimbing ? 'from-emerald-900 to-emerald-800 border-emerald-700' :
-          isDescending ? 'from-red-900 to-red-800 border-red-700' :
-          'from-gray-900 to-gray-800 border-gray-700'
+        <Card className={`border-0 shadow-lg ${
+          isClimbing ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+          isDescending ? 'bg-gradient-to-br from-red-500 to-pink-600' :
+          'bg-gradient-to-br from-gray-600 to-slate-700'
         }`}>
           <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              {isClimbing ? (
-                <TrendingUp className="w-6 h-6 text-emerald-400" />
-              ) : isDescending ? (
-                <TrendingDown className="w-6 h-6 text-red-400" />
-              ) : (
-                <Activity className="w-6 h-6 text-gray-400" />
-              )}
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-white/20 p-2 rounded-full">
+                {isClimbing ? (
+                  <TrendingUp className="w-5 h-5 text-white" />
+                ) : isDescending ? (
+                  <TrendingDown className="w-5 h-5 text-white" />
+                ) : (
+                  <Activity className="w-5 h-5 text-white" />
+                )}
+              </div>
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-white mb-1">
               {currentVerticalSpeed > 0 ? '+' : ''}{Math.round(currentVerticalSpeed)}
             </p>
-            <p className={`text-sm ${
-              isClimbing ? 'text-emerald-200' :
-              isDescending ? 'text-red-200' :
-              'text-gray-200'
-            }`}>
-              Steigrate (fpm)
-            </p>
+            <p className="text-xs text-white/80 uppercase tracking-wide">Steigrate</p>
+            <p className="text-xs text-white/60">ft/min</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Performance Chart */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="w-5 h-5" />
+      {/* Main Performance Chart */}
+      <Card className="bg-gradient-to-br from-gray-900 to-slate-800 border-gray-700 shadow-xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white flex items-center gap-3 text-lg">
+            <div className="bg-blue-600 p-2 rounded-lg">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
             Flugverlauf
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-80">
+        <CardContent className="p-6">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+              <AreaChart data={data} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                <defs>
+                  <linearGradient id="altitudeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
+                  </linearGradient>
+                  <linearGradient id="speedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                 <XAxis 
                   dataKey="time" 
-                  stroke="#94a3b8"
-                  fontSize={12}
+                  stroke="#9ca3af"
+                  fontSize={11}
+                  tick={{ fill: '#9ca3af' }}
                 />
                 <YAxis 
                   yAxisId="altitude"
                   orientation="left"
                   stroke="#10b981"
-                  fontSize={12}
-                  label={{ value: 'Höhe (ft)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#10b981' } }}
+                  fontSize={11}
+                  tick={{ fill: '#10b981' }}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
                 />
                 <YAxis 
                   yAxisId="speed"
                   orientation="right"
                   stroke="#3b82f6"
-                  fontSize={12}
-                  label={{ value: 'Geschwindigkeit (kts)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#3b82f6' } }}
+                  fontSize={11}
+                  tick={{ fill: '#3b82f6' }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ color: '#ffffff' }}
-                />
-                <Line
+                <Area
                   yAxisId="altitude"
                   type="monotone"
                   dataKey="altitude"
                   stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 3 }}
-                  name="Höhe"
-                  connectNulls={false}
+                  strokeWidth={3}
+                  fill="url(#altitudeGradient)"
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4, stroke: '#064e3b' }}
+                  activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2, fill: '#ffffff' }}
                 />
                 <Line
                   yAxisId="speed"
@@ -153,36 +179,23 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   stroke="#3b82f6"
                   strokeWidth={2}
                   dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                  name="Geschwindigkeit"
-                  connectNulls={false}
+                  activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
                 />
-                <Line
-                  yAxisId="altitude"
-                  type="monotone"
-                  dataKey="verticalSpeed"
-                  stroke="#f59e0b"
-                  strokeWidth={1}
-                  dot={{ fill: '#f59e0b', strokeWidth: 1, r: 2 }}
-                  name="Steigrate (x10)"
-                  connectNulls={false}
-                />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
           
-          {/* Chart Legend */}
-          <div className="mt-4 flex justify-center space-x-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-gray-300">Höhe (ft)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-gray-300">Geschwindigkeit (kts)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span className="text-gray-300">Steigrate x10 (fpm)</span>
+          {/* Enhanced Chart Legend */}
+          <div className="mt-6 flex justify-center">
+            <div className="flex items-center space-x-8 bg-gray-800/50 px-6 py-3 rounded-full">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-sm"></div>
+                <span className="text-gray-300 text-sm font-medium">Höhe (ft)</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full shadow-sm"></div>
+                <span className="text-gray-300 text-sm font-medium">Geschwindigkeit (kts)</span>
+              </div>
             </div>
           </div>
         </CardContent>
