@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Calendar, MapPin, Plane, User, BarChart3 } from 'lucide-react';
@@ -64,9 +63,18 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           altitude: point.altitude
         }));
 
-        // Extract departure and arrival from first and last waypoints
-        const departure = waypoints.length > 0 ? `${waypoints[0].latitude.toFixed(4)}, ${waypoints[0].longitude.toFixed(4)}` : undefined;
-        const arrival = waypoints.length > 1 ? `${waypoints[waypoints.length - 1].latitude.toFixed(4)}, ${waypoints[waypoints.length - 1].longitude.toFixed(4)}` : undefined;
+        // Create departure and arrival info based on waypoints
+        let departure = 'N/A';
+        let arrival = 'N/A';
+        
+        if (waypoints.length > 0) {
+          departure = `${waypoints[0].latitude.toFixed(4)}, ${waypoints[0].longitude.toFixed(4)}`;
+        }
+        
+        if (waypoints.length > 1) {
+          const lastWaypoint = waypoints[waypoints.length - 1];
+          arrival = `${lastWaypoint.latitude.toFixed(4)}, ${lastWaypoint.longitude.toFixed(4)}`;
+        }
 
         setFlightPlanData({
           waypoints,
@@ -75,6 +83,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           estimatedDepartureTime: 'N/A',
           estimatedArrivalTime: 'N/A'
         });
+        
+        console.log(`Successfully loaded flight plan with ${waypoints.length} waypoints`);
       } else {
         setFlightPlanData({
           waypoints: [],
@@ -85,7 +95,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       }
     } catch (error) {
       console.error('Failed to load flight plan:', error);
-      toast.error('Failed to load flight plan data');
       setFlightPlanData({
         waypoints: [],
         departure: 'N/A',
@@ -161,7 +170,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
               <div key={index} className="flex items-center justify-between py-1">
                 <span className="font-medium">{waypoint.name}</span>
                 <div className="flex items-center space-x-2">
-                  {waypoint.altitude && (
+                  {waypoint.altitude && waypoint.altitude > 0 && (
                     <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
                       @{Math.round(waypoint.altitude)}ft
                     </span>

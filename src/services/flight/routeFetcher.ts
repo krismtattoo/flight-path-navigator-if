@@ -26,6 +26,9 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
       } else if (response.status === 403) {
         console.error("Forbidden - API Key may lack permissions");
         toast.error("API access forbidden. Please check your API key permissions.");
+      } else if (response.status === 404) {
+        console.log(`Flown route not found for endpoint: ${endpoint}`);
+        return [];
       } else {
         console.log(`Flown route endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`);
       }
@@ -33,11 +36,7 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
     }
     
     const data = await response.json();
-    console.log(`Flown route API response structure from ${endpoint}:`, {
-      hasResult: !!data?.result,
-      resultType: Array.isArray(data?.result) ? 'array' : typeof data?.result,
-      resultLength: Array.isArray(data?.result) ? data.result.length : 'N/A'
-    });
+    console.log(`Flown route API response from ${endpoint}:`, data);
     
     if (data && data.result) {
       const points = parseFlownRouteData(data);
@@ -48,7 +47,7 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
     }
   } catch (error) {
     console.error(`Error trying flown route endpoint ${endpoint}:`, error);
-    toast.error("Network error while fetching flight route data.");
+    // Don't show toast for network errors to avoid spam
   }
   
   return [];
@@ -77,6 +76,9 @@ export const fetchFlightPlanFromEndpoint = async (endpoint: string): Promise<Fli
       } else if (response.status === 403) {
         console.error("Forbidden - API Key may lack permissions");
         toast.error("API access forbidden. Please check your API key permissions.");
+      } else if (response.status === 404) {
+        console.log(`Flight plan not found for endpoint: ${endpoint}`);
+        return [];
       } else {
         console.log(`Flight plan endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`);
       }
@@ -84,24 +86,22 @@ export const fetchFlightPlanFromEndpoint = async (endpoint: string): Promise<Fli
     }
     
     const data = await response.json();
-    console.log(`Flight plan API response structure from ${endpoint}:`, {
-      hasResult: !!data?.result,
-      hasWaypoints: !!(data?.result?.waypoints),
-      waypointCount: data?.result?.waypoints?.length || 0,
-      hasDeparture: !!(data?.result?.departure),
-      hasDestination: !!(data?.result?.destination)
-    });
+    console.log(`Flight plan API response from ${endpoint}:`, data);
     
     if (data && data.result) {
       const points = parseFlightPlanData(data);
       if (points.length > 0) {
         console.log(`Successfully parsed ${points.length} flight plan points from ${endpoint}`);
         return points;
+      } else {
+        console.log(`No valid flight plan data found in response from ${endpoint}`);
       }
+    } else {
+      console.log(`No result data in flight plan response from ${endpoint}`);
     }
   } catch (error) {
     console.error(`Error trying flight plan endpoint ${endpoint}:`, error);
-    toast.error("Network error while fetching flight plan data.");
+    // Don't show toast for network errors to avoid spam
   }
   
   return [];
