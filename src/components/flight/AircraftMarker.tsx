@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -75,7 +74,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function mit direkter CSS-Manipulation
+  // Korrigierte update marker function - das Icon zeigt standardmäßig nach Norden (0°)
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -87,20 +86,19 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     const heading = typeof flight.heading === 'number' && !isNaN(flight.heading) ? flight.heading : 0;
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // Das Flugzeug-Icon zeigt standardmäßig nach rechts (90°), korrigiere für Norden (0°)
-    const rotationAngle = normalizedHeading - 90;
+    // Das Flugzeug-Icon zeigt standardmäßig nach Norden (0°), verwende Heading direkt
+    const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
     console.log(`🔄 Flight ${flight.flightId}: heading=${heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}°`);
     
-    // Setze alle CSS-Eigenschaften direkt und explizit mit !important
+    // Setze alle CSS-Eigenschaften direkt und explizit
     element.style.filter = filter;
     element.style.transformOrigin = 'center center';
     element.style.transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    // Zusätzliche CSS-Properties für bessere Browser-Kompatibilität
+    // Webkit-Präfix für bessere Browser-Kompatibilität (ohne MS-Transform)
     element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
-    element.style.msTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
     console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId}`);
     
