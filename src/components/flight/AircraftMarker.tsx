@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -126,7 +127,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
         const svgElement = markerElement.querySelector('svg');
         if (svgElement) {
           const onGround = isOnGround(flight);
-          const isSelected = selectedMarkerIdRef.current === flightId;
+          const isSelected = selectedMarkerIdRef.current === flight.flightId;
           
           // Update filter based on selection state
           if (onGround) {
@@ -185,7 +186,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
             
             // Update color based on current status
             const onGround = isOnGround(flight);
-            const isSelected = selectedMarkerIdRef.current === flightId;
+            const isSelected = selectedMarkerIdRef.current === flight.flightId;
             
             if (onGround) {
               svgElement.style.filter = isSelected ? filterStyles.onGroundSelected : filterStyles.onGroundNormal;
