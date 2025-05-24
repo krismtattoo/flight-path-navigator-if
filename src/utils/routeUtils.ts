@@ -1,3 +1,4 @@
+
 import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
@@ -71,6 +72,34 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
   return validPoints;
 }
 
+// Create individual line segments for altitude-based coloring
+function createAltitudeSegments(routePoints: FlightTrackPoint[]) {
+  const segments = [];
+  
+  for (let i = 0; i < routePoints.length - 1; i++) {
+    const currentPoint = routePoints[i];
+    const nextPoint = routePoints[i + 1];
+    
+    // Create a line segment between consecutive points
+    segments.push({
+      type: 'Feature' as const,
+      properties: {
+        type: 'flown',
+        altitude: currentPoint.altitude || 0
+      },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [currentPoint.longitude, currentPoint.latitude],
+          [nextPoint.longitude, nextPoint.latitude]
+        ]
+      }
+    });
+  }
+  
+  return segments;
+}
+
 // Create GeoJSON for both flight plan and flown route
 export function createRouteGeoJSON(
   flownRoute: FlightTrackPoint[], 
@@ -95,19 +124,10 @@ export function createRouteGeoJSON(
     });
   }
   
-  // Add flown route line (colored solid line)
+  // Add flown route as individual segments with altitude information
   if (flownRoute.length > 1) {
-    const flownRouteCoords = flownRoute.map(p => [p.longitude, p.latitude]);
-    features.push({
-      type: 'Feature' as const,
-      properties: {
-        type: 'flown'
-      },
-      geometry: {
-        type: 'LineString' as const,
-        coordinates: flownRouteCoords
-      }
-    });
+    const altitudeSegments = createAltitudeSegments(flownRoute);
+    features.push(...altitudeSegments);
   }
   
   // Add waypoints from flight plan

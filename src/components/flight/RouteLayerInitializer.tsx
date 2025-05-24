@@ -44,7 +44,7 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
           }
         });
 
-        // Add flown route line (colored, like in the reference image)
+        // Add flown route line with altitude-based color gradient
         map.addLayer({
           id: 'route-flown',
           type: 'line',
@@ -55,8 +55,27 @@ const RouteLayerInitializer: React.FC<RouteLayerInitializerProps> = ({ map, onSo
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#00ff88', // Bright green for flown route
-            'line-width': 4,
+            'line-color': [
+              'interpolate',
+              ['linear'],
+              ['get', 'altitude'],
+              0, '#ff0000',        // Red for ground level (0 ft)
+              1000, '#ff6600',     // Orange for low altitude (1000 ft)
+              5000, '#ffff00',     // Yellow for low cruise (5000 ft)
+              10000, '#66ff00',    // Light green for medium altitude (10000 ft)
+              20000, '#00ff66',    // Green for high altitude (20000 ft)
+              30000, '#00ffff',    // Cyan for cruise altitude (30000 ft)
+              40000, '#0066ff',    // Blue for high cruise (40000 ft)
+              50000, '#6600ff'     // Purple for very high altitude (50000+ ft)
+            ],
+            'line-width': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              5, 2,
+              10, 4,
+              15, 6
+            ],
             'line-opacity': 0.9
           }
         });
