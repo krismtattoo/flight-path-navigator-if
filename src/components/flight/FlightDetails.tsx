@@ -4,6 +4,8 @@ import { Flight } from '@/services/flight';
 import { X, Calendar, MapPin, Plane, User, BarChart3 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import { getFlightRoute } from '@/services/flight/routeService';
+import { toast } from "sonner";
 
 interface FlightDetailsProps {
   flight: Flight;
@@ -11,9 +13,24 @@ interface FlightDetailsProps {
   onClose: () => void;
 }
 
+interface FlightPlanData {
+  waypoints: Array<{
+    name: string;
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+  }>;
+  departure?: string;
+  arrival?: string;
+  estimatedDepartureTime?: string;
+  estimatedArrivalTime?: string;
+}
+
 const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
   const [showMore, setShowMore] = useState(false);
   const [activeTab, setActiveTab] = useState<'details' | 'flightplan' | 'graphs' | 'stats'>('details');
+  const [flightPlanData, setFlightPlanData] = useState<FlightPlanData | null>(null);
+  const [loadingFlightPlan, setLoadingFlightPlan] = useState(false);
   
   // Format last report time
   const formatTime = (timestamp: number): string => {
@@ -25,13 +42,58 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     }
   };
 
-  // Simulate flight plan data (in real implementation, this would come from API)
-  const mockFlightPlan = {
-    departure: 'KLAX',
-    arrival: 'EDDF',
-    takeoffTime: '6:31',
-    eta: '17:42',
-    route: ['KMIA', 'FOLZZ3', 'JAMBA', 'KBOLA', 'MARCK', 'FOLZZ', 'GOZZR', 'TOC', 'SUMRS', 'FLUPS', 'ALOBI', 'BEXUM', 'LUNKR']
+  // Load flight plan data when switching to flightplan tab
+  useEffect(() => {
+    if (activeTab === 'flightplan' && !flightPlanData && !loadingFlightPlan) {
+      loadFlightPlanData();
+    }
+  }, [activeTab, flight, serverID]);
+
+  const loadFlightPlanData = async () => {
+    setLoadingFlightPlan(true);
+    try {
+      console.log(`Loading flight plan for flight ${flight.flightId} on server ${serverID}`);
+      const routeData = await getFlightRoute(serverID, flight.flightId);
+      
+      if (routeData.flightPlan && routeData.flightPlan.length > 0) {
+        // Convert flight plan points to waypoints format
+        const waypoints = routeData.flightPlan.map((point, index) => ({
+          name: `WP${index + 1}`,
+          latitude: point.latitude,
+          longitude: point.longitude,
+          altitude: point.altitude
+        }));
+
+        // Extract departure and arrival from first and last waypoints
+        const departure = waypoints.length > 0 ? `${waypoints[0].latitude.toFixed(4)}, ${waypoints[0].longitude.toFixed(4)}` : undefined;
+        const arrival = waypoints.length > 1 ? `${waypoints[waypoints.length - 1].latitude.toFixed(4)}, ${waypoints[waypoints.length - 1].longitude.toFixed(4)}` : undefined;
+
+        setFlightPlanData({
+          waypoints,
+          departure,
+          arrival,
+          estimatedDepartureTime: 'N/A',
+          estimatedArrivalTime: 'N/A'
+        });
+      } else {
+        setFlightPlanData({
+          waypoints: [],
+          departure: 'N/A',
+          arrival: 'N/A'
+        });
+        console.log('No flight plan data available for this flight');
+      }
+    } catch (error) {
+      console.error('Failed to load flight plan:', error);
+      toast.error('Failed to load flight plan data');
+      setFlightPlanData({
+        waypoints: [],
+        departure: 'N/A',
+        arrival: 'N/A'
+      });
+    } finally {
+      setLoadingFlightPlan(false);
+    }
   };
 
   // Simulate user stats (in real implementation, this would come from API)
@@ -46,65 +108,75 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     // Reset state when flight changes
     setShowMore(false);
     setActiveTab('details');
+    setFlightPlanData(null);
   }, [flight]);
 
-  const renderFlightPlan = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-2">Departure</h4>
-          <div className="space-y-1">
-            <div className="text-lg font-bold">{mockFlightPlan.departure}</div>
-            <div className="text-sm text-gray-400">Takeoff</div>
-            <div className="text-sm font-medium">{mockFlightPlan.takeoffTime}</div>
+  const renderFlightPlan = () => {
+    if (loadingFlightPlan) {
+      return (
+        <div className="text-center text-gray-400 py-8">
+          <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full mb-2"></div>
+          <p>Loading flight plan...</p>
+        </div>
+      );
+    }
+
+    if (!flightPlanData || flightPlanData.waypoints.length === 0) {
+      return (
+        <div className="text-center text-gray-400 py-8">
+          <MapPin size={48} className="mx-auto mb-2" />
+          <p>No flight plan available</p>
+          <p className="text-sm">This flight may not have filed a flight plan</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">Departure</h4>
+            <div className="space-y-1">
+              <div className="text-lg font-bold">{flightPlanData.departure || 'N/A'}</div>
+              <div className="text-sm text-gray-400">Takeoff</div>
+              <div className="text-sm font-medium">{flightPlanData.estimatedDepartureTime || 'N/A'}</div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">Arrival</h4>
+            <div className="space-y-1">
+              <div className="text-lg font-bold">{flightPlanData.arrival || 'N/A'}</div>
+              <div className="text-sm text-gray-400">ETA</div>
+              <div className="text-sm font-medium">{flightPlanData.estimatedArrivalTime || 'N/A'}</div>
+            </div>
           </div>
         </div>
+        
+        <Separator className="bg-gray-600" />
+        
         <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-2">Arrival</h4>
-          <div className="space-y-1">
-            <div className="text-lg font-bold">{mockFlightPlan.arrival}</div>
-            <div className="text-sm text-gray-400">ETA</div>
-            <div className="text-sm font-medium">{mockFlightPlan.eta}</div>
-          </div>
-        </div>
-      </div>
-      
-      <Separator className="bg-gray-600" />
-      
-      <div>
-        <h4 className="text-sm font-medium text-gray-300 mb-3">Route</h4>
-        <div className="space-y-2">
-          {mockFlightPlan.route.map((waypoint, index) => (
-            <div key={index} className="flex items-center justify-between py-1">
-              <span className="font-medium">{waypoint}</span>
-              <div className="flex items-center space-x-2">
-                {index < 3 && (
-                  <span className="px-2 py-1 bg-orange-600 text-xs rounded text-white">
-                    {index === 1 ? 'SID' : index === 0 ? 'WP' : '@5.000ft'}
-                  </span>
-                )}
-                {index >= 3 && index < mockFlightPlan.route.length - 3 && (
-                  <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
-                    @{21900 + (index * 2000)}ft
-                  </span>
-                )}
-                {index >= mockFlightPlan.route.length - 3 && (
-                  <span className="px-2 py-1 bg-gray-600 text-xs rounded text-white">
-                    WP
-                  </span>
-                )}
-                <div className="w-4 h-4 text-teal-400">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M7 14l5-5 5 5z"/>
-                  </svg>
+          <h4 className="text-sm font-medium text-gray-300 mb-3">Flight Plan Route ({flightPlanData.waypoints.length} waypoints)</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {flightPlanData.waypoints.map((waypoint, index) => (
+              <div key={index} className="flex items-center justify-between py-1">
+                <span className="font-medium">{waypoint.name}</span>
+                <div className="flex items-center space-x-2">
+                  {waypoint.altitude && (
+                    <span className="px-2 py-1 bg-teal-600 text-xs rounded text-white">
+                      @{Math.round(waypoint.altitude)}ft
+                    </span>
+                  )}
+                  <div className="text-xs text-gray-400">
+                    {waypoint.latitude.toFixed(3)}, {waypoint.longitude.toFixed(3)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderGraphs = () => (
     <div className="space-y-4">
@@ -114,13 +186,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         <p className="text-sm">Altitude, Speed, VS</p>
         <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="bg-teal-600 text-white px-3 py-2 rounded text-sm font-medium">
-            270kts GS
+            {Math.round(flight.speed)}kts GS
           </div>
           <div className="bg-orange-500 text-white px-3 py-2 rounded text-sm font-medium">
-            3.310 fpm
+            N/A fpm
           </div>
           <div className="bg-red-500 text-white px-3 py-2 rounded text-sm font-medium">
-            2.582ft MSL
+            {Math.round(flight.altitude)}ft MSL
           </div>
         </div>
       </div>
