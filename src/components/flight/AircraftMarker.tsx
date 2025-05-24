@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -75,7 +74,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function mit tatsächlicher Rotation
+  // Korrigierte update marker function mit expliziter Rotation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -83,24 +82,25 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
     
-    // Das SVG zeigt standardmäßig nach rechts, wir müssen es korrigieren
-    // Heading 0° = Norden, aber SVG zeigt nach rechts (90°)
-    // Daher: tatsächliche Rotation = heading - 90°
-    const normalizedHeading = ((flight.heading % 360) + 360) % 360;
-    const rotationAngle = normalizedHeading - 90; // Korrektur damit Nase richtig zeigt
+    // Stelle sicher, dass das Heading ein gültiger Wert ist
+    const heading = typeof flight.heading === 'number' ? flight.heading : 0;
+    const normalizedHeading = ((heading % 360) + 360) % 360;
+    
+    // Das SVG zeigt standardmäßig nach rechts (90°), korrigiere für Norden (0°)
+    const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
-    // Erstelle die vollständige Transform-Eigenschaft
-    const transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
+    console.log(`🔄 Flight ${flight.flightId}: raw heading=${heading}°, normalized=${normalizedHeading}°, final rotation=${rotationAngle}°`);
     
-    console.log(`🔄 Updating aircraft ${flight.flightId}: heading=${flight.heading}°, corrected rotation=${rotationAngle}°`);
-    
-    // Wende die Transformation direkt an
+    // Setze die CSS-Eigenschaften einzeln und explizit
     element.style.filter = filter;
-    element.style.transform = transform;
     element.style.transformOrigin = 'center center';
+    element.style.transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`✅ Applied transform: ${transform} to flight ${flight.flightId}`);
+    // Force reflow to ensure transform is applied
+    element.offsetHeight;
+    
+    console.log(`✅ Applied: transform=rotate(${rotationAngle}deg) scale(${scaleValue}) to ${flight.flightId}`);
     
     if (isSelected) {
       element.style.zIndex = '1000';
