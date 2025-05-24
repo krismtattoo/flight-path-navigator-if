@@ -10,6 +10,7 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
     console.log(`Using API Key: ${API_KEY ? 'Present' : 'Missing'}`);
     
     const response = await fetch(endpoint, {
+      method: 'GET',
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
         "Accept": "application/json",
@@ -30,7 +31,8 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
         console.log(`Flown route not found for endpoint: ${endpoint}`);
         return [];
       } else {
-        console.log(`Flown route endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.log(`Flown route endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`, errorText);
       }
       return [];
     }
@@ -38,12 +40,12 @@ export const fetchFlownRouteFromEndpoint = async (endpoint: string): Promise<Fli
     const data = await response.json();
     console.log(`Flown route API response from ${endpoint}:`, data);
     
-    if (data && data.result) {
-      const points = parseFlownRouteData(data);
-      if (points.length > 0) {
-        console.log(`Successfully parsed ${points.length} flown route points from ${endpoint}`);
-        return points;
-      }
+    const points = parseFlownRouteData(data);
+    if (points.length > 0) {
+      console.log(`Successfully parsed ${points.length} flown route points from ${endpoint}`);
+      return points;
+    } else {
+      console.log(`No valid flown route points found in response from ${endpoint}`);
     }
   } catch (error) {
     console.error(`Error trying flown route endpoint ${endpoint}:`, error);
@@ -60,6 +62,7 @@ export const fetchFlightPlanFromEndpoint = async (endpoint: string): Promise<Fli
     console.log(`Using API Key: ${API_KEY ? 'Present' : 'Missing'}`);
     
     const response = await fetch(endpoint, {
+      method: 'GET',
       headers: {
         "Authorization": `Bearer ${API_KEY}`,
         "Accept": "application/json",
@@ -80,7 +83,8 @@ export const fetchFlightPlanFromEndpoint = async (endpoint: string): Promise<Fli
         console.log(`Flight plan not found for endpoint: ${endpoint}`);
         return [];
       } else {
-        console.log(`Flight plan endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.log(`Flight plan endpoint ${endpoint} returned status ${response.status}: ${response.statusText}`, errorText);
       }
       return [];
     }
@@ -88,16 +92,12 @@ export const fetchFlightPlanFromEndpoint = async (endpoint: string): Promise<Fli
     const data = await response.json();
     console.log(`Flight plan API response from ${endpoint}:`, data);
     
-    if (data && data.result) {
-      const points = parseFlightPlanData(data);
-      if (points.length > 0) {
-        console.log(`Successfully parsed ${points.length} flight plan points from ${endpoint}`);
-        return points;
-      } else {
-        console.log(`No valid flight plan data found in response from ${endpoint}`);
-      }
+    const points = parseFlightPlanData(data);
+    if (points.length > 0) {
+      console.log(`Successfully parsed ${points.length} flight plan points from ${endpoint}`);
+      return points;
     } else {
-      console.log(`No result data in flight plan response from ${endpoint}`);
+      console.log(`No valid flight plan data found in response from ${endpoint}`);
     }
   } catch (error) {
     console.error(`Error trying flight plan endpoint ${endpoint}:`, error);

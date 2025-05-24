@@ -54,10 +54,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       console.log(`Loading flight plan for flight ${flight.flightId} on server ${serverID}`);
       const routeData = await getFlightRoute(serverID, flight.flightId);
       
+      console.log('Route data received:', routeData);
+      
       if (routeData.flightPlan && routeData.flightPlan.length > 0) {
         // Convert flight plan points to waypoints format
         const waypoints = routeData.flightPlan.map((point, index) => ({
-          name: `WP${index + 1}`,
+          name: (point as any).waypointName || `WP${index + 1}`,
           latitude: point.latitude,
           longitude: point.longitude,
           altitude: point.altitude
@@ -68,12 +70,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         let arrival = 'N/A';
         
         if (waypoints.length > 0) {
-          departure = `${waypoints[0].latitude.toFixed(4)}, ${waypoints[0].longitude.toFixed(4)}`;
+          const firstWaypoint = waypoints[0];
+          departure = firstWaypoint.name !== `WP1` ? firstWaypoint.name : `${firstWaypoint.latitude.toFixed(4)}, ${firstWaypoint.longitude.toFixed(4)}`;
         }
         
         if (waypoints.length > 1) {
           const lastWaypoint = waypoints[waypoints.length - 1];
-          arrival = `${lastWaypoint.latitude.toFixed(4)}, ${lastWaypoint.longitude.toFixed(4)}`;
+          arrival = lastWaypoint.name !== `WP${waypoints.length}` ? lastWaypoint.name : `${lastWaypoint.latitude.toFixed(4)}, ${lastWaypoint.longitude.toFixed(4)}`;
         }
 
         setFlightPlanData({
@@ -86,12 +89,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         
         console.log(`Successfully loaded flight plan with ${waypoints.length} waypoints`);
       } else {
+        console.log('No flight plan data available for this flight');
         setFlightPlanData({
           waypoints: [],
           departure: 'N/A',
           arrival: 'N/A'
         });
-        console.log('No flight plan data available for this flight');
       }
     } catch (error) {
       console.error('Failed to load flight plan:', error);

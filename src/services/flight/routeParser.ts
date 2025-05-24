@@ -1,4 +1,3 @@
-
 import { FlightTrackPoint } from "./types";
 
 // Process flight route data (actual flown route) into FlightTrackPoint array
@@ -6,6 +5,8 @@ export const parseFlownRouteData = (data: any): FlightTrackPoint[] => {
   let processedPoints: FlightTrackPoint[] = [];
   
   try {
+    console.log('Raw flown route data:', data);
+    
     // Handle flight route API response (actual flown route from /route endpoint)
     if (data?.result && Array.isArray(data.result)) {
       console.log(`Found ${data.result.length} flown route points from flight route API`);
@@ -36,82 +37,62 @@ export const parseFlightPlanData = (data: any): FlightTrackPoint[] => {
   let processedPoints: FlightTrackPoint[] = [];
   
   try {
-    // Handle flight plan API response (planned route from /flightplan endpoint)
-    if (data?.result?.waypoints && Array.isArray(data.result.waypoints)) {
-      console.log(`Found flight plan with ${data.result.waypoints.length} waypoints`);
+    console.log('Raw flight plan data:', data);
+    
+    // Handle flight plan API response according to official documentation
+    if (data?.result) {
+      const result = data.result;
       
-      let waypointTimestampBase = Date.now();
-      processedPoints = data.result.waypoints
-        .filter((waypoint: any) => waypoint?.location && 
-                 typeof waypoint.location.latitude === 'number' && 
-                 typeof waypoint.location.longitude === 'number')
-        .map((waypoint: any, index: number) => ({
-          latitude: waypoint.location.latitude,
-          longitude: waypoint.location.longitude,
-          altitude: waypoint.altitude || 0,
-          timestamp: waypointTimestampBase + (index * 60000) // Fake timestamps spaced 1 minute apart
-        }));
-    }
-    // Handle case where we have departure and destination info
-    else if (data?.result?.departure || data?.result?.destination) {
-      console.log(`Found flight plan with departure and/or destination`);
-      
-      const points = [];
-      
-      // Add departure point
-      if (data.result.departure?.location && 
-          typeof data.result.departure.location.latitude === 'number' &&
-          typeof data.result.departure.location.longitude === 'number') {
-        points.push({
-          latitude: data.result.departure.location.latitude,
-          longitude: data.result.departure.location.longitude,
-          altitude: 0,
-          timestamp: Date.now()
-        });
+      // Parse waypoints array if present
+      if (result.waypoints && Array.isArray(result.waypoints)) {
+        console.log(`Found flight plan with ${result.waypoints.length} waypoints`);
+        
+        let waypointTimestampBase = Date.now();
+        processedPoints = result.waypoints
+          .filter((waypoint: any) => waypoint && 
+                   typeof waypoint.latitude === 'number' && 
+                   typeof waypoint.longitude === 'number')
+          .map((waypoint: any, index: number) => ({
+            latitude: waypoint.latitude,
+            longitude: waypoint.longitude,
+            altitude: waypoint.altitude || 0,
+            timestamp: waypointTimestampBase + (index * 60000), // Fake timestamps spaced 1 minute apart
+            waypointName: waypoint.name || `WP${index + 1}`
+          }));
       }
-      
-      // Add waypoints if available
-      if (data.result.waypoints && Array.isArray(data.result.waypoints)) {
-        data.result.waypoints.forEach((waypoint: any, index: number) => {
-          if (waypoint?.location && 
-              typeof waypoint.location.latitude === 'number' && 
-              typeof waypoint.location.longitude === 'number') {
-            points.push({
-              latitude: waypoint.location.latitude,
-              longitude: waypoint.location.longitude,
-              altitude: waypoint.altitude || 0,
-              timestamp: Date.now() + ((index + 1) * 60000)
-            });
-          }
-        });
-      }
-      
-      // Add destination point
-      if (data.result.destination?.location && 
-          typeof data.result.destination.location.latitude === 'number' &&
-          typeof data.result.destination.location.longitude === 'number') {
-        points.push({
-          latitude: data.result.destination.location.latitude,
-          longitude: data.result.destination.location.longitude,
-          altitude: 0,
-          timestamp: Date.now() + (points.length * 60000)
-        });
-      }
-      
-      processedPoints = points;
-    }
-    // Handle alternative flight plan structure
-    else if (data?.result && typeof data.result === 'object') {
-      console.log('Checking for alternative flight plan structure');
-      
-      // Check if result contains direct coordinate data
-      if (data.result.latitude && data.result.longitude) {
-        processedPoints = [{
-          latitude: data.result.latitude,
-          longitude: data.result.longitude,
-          altitude: data.result.altitude || 0,
-          timestamp: Date.now()
-        }];
+      // Handle case where we might have departure and destination coordinates directly
+      else if (result.departure || result.destination) {
+        console.log(`Found flight plan with departure and/or destination coordinates`);
+        
+        const points = [];
+        
+        // Add departure point if coordinates are available
+        if (result.departure && 
+            typeof result.departure.latitude === 'number' &&
+            typeof result.departure.longitude === 'number') {
+          points.push({
+            latitude: result.departure.latitude,
+            longitude: result.departure.longitude,
+            altitude: 0,
+            timestamp: Date.now(),
+            waypointName: result.departure.name || result.departure.icao || 'DEP'
+          });
+        }
+        
+        // Add destination point if coordinates are available
+        if (result.destination && 
+            typeof result.destination.latitude === 'number' &&
+            typeof result.destination.longitude === 'number') {
+          points.push({
+            latitude: result.destination.latitude,
+            longitude: result.destination.longitude,
+            altitude: 0,
+            timestamp: Date.now() + 60000,
+            waypointName: result.destination.name || result.destination.icao || 'ARR'
+          });
+        }
+        
+        processedPoints = points;
       }
     }
   } catch (error) {
