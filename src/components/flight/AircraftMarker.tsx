@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -47,9 +48,174 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     // SVG Grundkonfiguration - optimiert für 28x28px
     svg.setAttribute('width', '28');
     svg.setAttribute('height', '28');
-    svg.setAttribute('viewBox', '0 0 512 512');
+    svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('version', '1.1');
     
-    // Erstelle die Flugzeug-Path mit originalem SVG-Pfad
+    // Erstelle die Flugzeug-Path mit einem sauberen, vollständigen SVG-Pfad
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M0 0 C9.97090367 6.20637881 16.54338161 14.11514025 19.75582886 25.47262573 C21.13174644 31.87947737 20.79586384 38.24558253 20.61767578 44.76220703 C20.58762934 46.16772381 20.55887199 47.57326864 20.53129578 48.97883606 C20.48717024 51.21733586 20.44215486 53.4557854 20.3932507 55.69418645 C20.27252112 61.2441688 20.19241198 66.79370211 20.13619995 72.34469604 C20.12797341 73.15404669 20.11974686 73.96339733 20.11127102 74.79727376 C20.07819492 78.13160339 20.0465075 81.46594455 20.0156157 84.80029511 C19.92673263 94.22923527 19.79871506 103.65383375 19.55175781 113.08007812 C19.35523119 120.59153438 19.24512114 128.09880241 19.23387134 135.61289585 C19.22476759 139.58111303 19.17411897 143.53831276 19.01810074 147.50369644 C17.90904692 163.91116026 17.90904692 163.91116026 23.9625473 178.40016937 C29.58238225 183.14578164 35.79632296 186.26174123 42.50304794 189.18706894 C47.86465413 191.68656611 52.72837318 194.95034572 57.6796875 198.16796875 C59.67751369 199.42144013 61.6772675 200.67184912 63.6796875 201.91796875 C99.6796875 224.41796875 135.6796875 246.91796875 171.6796875 269.41796875 C172.67073486 270.03736328 173.66178223 270.65675781 174.68286133 271.29492188 C176.67231852 272.53835288 178.6617394 273.78184196 180.65112305 275.02539062 C185.81212388 278.25138639 190.97385138 281.47621088 196.13671875 284.69921875 C197.20083984 285.36373047 198.26496094 286.02824219 199.36132812 286.71289062 C201.37411143 287.96978151 203.38711409 289.2263212 205.40039062 290.48242188 C210.21432666 293.48903231 215.02081216 296.50717607 219.81640625 299.54296875 C220.72479248 300.11789062 221.63317871 300.6928125 222.5690918 301.28515625 C224.6796875 302.66796875 224.6796875 302.66796875 225.6796875 303.66796875 C225.77309184 305.29471653 225.79713921 306.92550926 225.79321289 308.55493164 C225.79313736 309.59593521 225.79306183 310.63693878 225.79298401 311.70948792 C225.78782272 312.84176315 225.78266144 313.97403839 225.77734375 315.140625 C225.77522133 316.86979408 225.77522133 316.86979408 225.77305603 318.63389587 C225.76743755 322.33277939 225.75488192 326.03160339 225.7421875 329.73046875 C225.73717488 332.23111892 225.73261156 334.73177004 225.72851562 337.23242188 C225.71746212 343.37762463 225.70070602 349.52279244 225.6796875 355.66796875 C216.88911361 353.59128739 208.29643244 351.07483152 199.69140625 348.3359375 C198.33447376 347.9071079 196.97742472 347.47864692 195.62026978 347.05052185 C192.71895945 346.1346891 189.81828942 345.21686772 186.91812134 344.29742432 C179.87983635 342.06642283 172.83793755 339.8468723 165.7960186 337.62737274 C164.16523198 337.11337043 162.53448096 336.59925518 160.90376472 336.0850296 C140.91419854 329.78242424 120.89247026 323.58440604 100.86568165 317.40127468 C97.48707632 316.35801031 94.10870342 315.3139952 90.73046875 314.26953125 C90.06487883 314.06377031 89.3992889 313.85800938 88.71352959 313.64601326 C66.34583747 306.72752535 44.01576423 299.68767907 21.6796875 292.66796875 C21.1873222 310.51379935 20.81796185 328.3578498 20.59163189 346.20902252 C20.48370557 354.49957873 20.3368395 362.78589711 20.09545898 371.07373047 C19.88495709 378.30484097 19.7504031 385.53288284 19.70382911 392.76697206 C19.67662491 396.5932029 19.61364266 400.41066387 19.45935631 404.23405457 C18.37777003 420.10185364 18.37777003 420.10185364 23.67694473 434.46224976 C28.49792731 439.31757675 33.95331078 442.7931648 39.92057228 446.07676697 C44.51314226 448.72533542 48.65263049 451.96483688 52.8671875 455.16796875 C54.33906219 456.24195735 55.81159668 457.31504305 57.28515625 458.38671875 C57.98769531 458.92941406 58.69023437 459.47210938 59.4140625 460.03125 C61.69146439 461.75197275 61.69146439 461.75197275 64.4296875 463.1484375 C68.09584636 465.37302328 71.08622314 467.31543037 72.18600464 471.67504883 C72.93202735 477.66500054 72.58921384 483.65641038 72.3046875 489.66796875 C72.25447461 491.51029605 72.20885633 493.35275465 72.16796875 495.1953125 C72.05827857 499.68946125 71.88606183 504.17726343 71.6796875 508.66796875 C66.06996879 508.08958657 60.93165788 507.04930751 55.53881836 505.42724609 C54.76860855 505.20116165 53.99839874 504.97507721 53.20484924 504.74214172 C51.54650813 504.25475594 49.88895443 503.76468432 48.23213005 503.27216721 C45.60616641 502.49251569 42.97768039 501.72199225 40.34828186 500.95401001 C32.87757413 498.77076626 25.41059794 496.57505886 17.94799805 494.36425781 C13.37106153 493.00902837 8.79029691 491.66747993 4.20688057 490.33433914 C2.46668626 489.82522327 0.728009 489.31089104 -1.00905037 488.79117966 C-3.43875221 488.06457054 -5.87294911 487.35544514 -8.30883789 486.64990234 C-9.37432358 486.32426552 -9.37432358 486.32426552 -10.46133423 485.99205017 C-17.95537688 483.86277393 -24.27043831 485.79062082 -31.48706055 487.89282227 C-32.27169678 488.11730042 -33.05633301 488.34177856 -33.86474609 488.57305908 C-35.55675868 489.05774 -37.24817038 489.54452261 -38.9390316 490.03320503 C-41.61522285 490.8064654 -44.29305426 491.57378646 -46.97138977 492.33958435 C-53.61788341 494.24120823 -60.26164229 496.15231039 -66.90515137 498.06433105 C-72.53096072 499.68320919 -78.1579346 501.29790713 -83.78663063 502.90672112 C-86.42462816 503.66259049 -89.06078446 504.4246585 -91.69694519 505.18690491 C-93.31178815 505.64909241 -94.9267178 506.11097715 -96.54174805 506.57250977 C-97.27377945 506.78600571 -98.00
+    path.setAttribute('d', 'M12 2L13.09 8.26L22 9L15 12L16 21L12 18L8 21L9 12L2 9L10.91 8.26L12 2Z');
+    path.setAttribute('fill', 'currentColor');
+    
+    // Füge den Pfad zum SVG hinzu
+    svg.appendChild(path);
+    
+    // Bestimme Farbe basierend auf Flugstatus (Boden oder Luft)
+    const onGround = isOnGround(flight);
+    const isSelected = selectedMarkerIdRef.current === flight.flightId;
+    
+    // Setze die entsprechende Farbe und den Filter
+    if (onGround) {
+      svg.style.filter = isSelected ? filterStyles.onGroundSelected : filterStyles.onGroundNormal;
+    } else {
+      svg.style.filter = isSelected ? filterStyles.airborneSelected : filterStyles.airborneNormal;
+    }
+    
+    // Rotiere das SVG basierend auf dem Heading
+    // Das Icon zeigt standardmäßig nach oben (Norden), daher verwenden wir das Heading direkt
+    svg.style.transform = `rotate(${flight.heading}deg)`;
+    svg.style.transformOrigin = 'center';
+    
+    console.log(`✈️ Aircraft ${flight.flightId}: heading=${flight.heading}°, onGround=${onGround}, altitude=${flight.altitude}ft, speed=${flight.speed}kts`);
+    
+    return svg;
+  }, [isOnGround, filterStyles]);
+
+  // Optimized marker creation function
+  const createMarker = useCallback((flight: Flight): mapboxgl.Marker => {
+    const markerElement = document.createElement('div');
+    markerElement.className = 'aircraft-marker';
+    markerElement.style.cursor = 'pointer';
+    
+    // Create SVG element
+    const svgElement = createSvgElement(flight);
+    markerElement.appendChild(svgElement);
+    
+    // Store marker element reference
+    markerElementsRef.current[flight.flightId] = markerElement;
+    
+    // Create marker with optimized settings
+    const marker = new mapboxgl.Marker({
+      element: markerElement,
+      anchor: 'center'
+    })
+    .setLngLat([flight.longitude, flight.latitude]);
+    
+    // Add click handler
+    markerElement.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log(`🎯 Aircraft clicked: ${flight.flightId} (${flight.callsign})`);
+      onFlightSelect(flight);
+      
+      // Update selected marker reference
+      selectedMarkerIdRef.current = flight.flightId;
+      
+      // Update all marker styles to reflect selection
+      updateAllMarkerStyles();
+    });
+    
+    return marker;
+  }, [createSvgElement, onFlightSelect]);
+
+  // Function to update all marker styles (for selection state)
+  const updateAllMarkerStyles = useCallback(() => {
+    Object.keys(markerElementsRef.current).forEach(flightId => {
+      const markerElement = markerElementsRef.current[flightId];
+      const flight = flightLookup[flightId];
+      
+      if (markerElement && flight) {
+        const svgElement = markerElement.querySelector('svg');
+        if (svgElement) {
+          const onGround = isOnGround(flight);
+          const isSelected = selectedMarkerIdRef.current === flightId;
+          
+          // Update filter based on selection state
+          if (onGround) {
+            svgElement.style.filter = isSelected ? filterStyles.onGroundSelected : filterStyles.onGroundNormal;
+          } else {
+            svgElement.style.filter = isSelected ? filterStyles.airborneSelected : filterStyles.airborneNormal;
+          }
+          
+          // Update z-index for selected marker
+          if (isSelected) {
+            markerElement.classList.add('aircraft-marker-selected');
+          } else {
+            markerElement.classList.remove('aircraft-marker-selected');
+          }
+        }
+      }
+    });
+  }, [flightLookup, isOnGround, filterStyles]);
+
+  // Main effect to manage markers
+  useEffect(() => {
+    if (!map) return;
+
+    console.log(`🔄 Updating ${flights.length} aircraft markers`);
+    
+    // Remove markers for flights that no longer exist
+    Object.keys(markersRef.current).forEach(flightId => {
+      if (!currentFlightIds.has(flightId)) {
+        console.log(`🗑️ Removing marker for flight ${flightId}`);
+        markersRef.current[flightId].remove();
+        delete markersRef.current[flightId];
+        delete markerElementsRef.current[flightId];
+        
+        // Clear selection if this flight was selected
+        if (selectedMarkerIdRef.current === flightId) {
+          selectedMarkerIdRef.current = null;
+        }
+      }
+    });
+
+    // Update or create markers for current flights
+    flights.forEach(flight => {
+      const existingMarker = markersRef.current[flight.flightId];
+      
+      if (existingMarker) {
+        // Update existing marker position and rotation
+        existingMarker.setLngLat([flight.longitude, flight.latitude]);
+        
+        // Update the SVG element for this marker
+        const markerElement = markerElementsRef.current[flight.flightId];
+        if (markerElement) {
+          const svgElement = markerElement.querySelector('svg');
+          if (svgElement) {
+            // Update rotation based on current heading
+            svgElement.style.transform = `rotate(${flight.heading}deg)`;
+            
+            // Update color based on current status
+            const onGround = isOnGround(flight);
+            const isSelected = selectedMarkerIdRef.current === flight.flightId;
+            
+            if (onGround) {
+              svgElement.style.filter = isSelected ? filterStyles.onGroundSelected : filterStyles.onGroundNormal;
+            } else {
+              svgElement.style.filter = isSelected ? filterStyles.airborneSelected : filterStyles.airborneNormal;
+            }
+          }
+        }
+      } else {
+        // Create new marker
+        console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign})`);
+        const newMarker = createMarker(flight);
+        newMarker.addTo(map);
+        markersRef.current[flight.flightId] = newMarker;
+      }
+    });
+
+    console.log(`📊 Active markers: ${Object.keys(markersRef.current).length}`);
+  }, [map, flights, currentFlightIds, createMarker, isOnGround, filterStyles]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      Object.values(markersRef.current).forEach(marker => marker.remove());
+      markersRef.current = {};
+      markerElementsRef.current = {};
+    };
+  }, []);
+
+  return null;
+};
+
+export default AircraftMarker;
