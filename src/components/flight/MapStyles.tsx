@@ -16,8 +16,24 @@ const MapStyles = () => {
         transition: none;
       }
       
+      .aircraft-marker svg {
+        /* Optimized SVG rendering */
+        shape-rendering: optimizeSpeed;
+        /* GPU acceleration for SVG */
+        transform: translateZ(0);
+        /* Smooth SVG transforms */
+        transition: transform 0.1s ease-out;
+        /* Prevent SVG blurriness */
+        image-rendering: crisp-edges;
+      }
+      
       .aircraft-marker-selected {
         z-index: 1000 !important;
+      }
+      
+      .aircraft-marker-selected svg {
+        /* Enhanced glow for selected aircraft */
+        filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)) !important;
       }
       
       /* Optimize marker interactions */
@@ -42,6 +58,12 @@ const MapStyles = () => {
       /* Reduce repaints on map interactions */
       .mapboxgl-control-container {
         contain: layout;
+      }
+      
+      /* SVG-specific optimizations */
+      .aircraft-marker svg path {
+        /* Optimize path rendering */
+        vector-effect: non-scaling-stroke;
       }
     `}</style>
   );
