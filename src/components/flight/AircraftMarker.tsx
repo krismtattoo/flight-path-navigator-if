@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
 
@@ -12,30 +12,123 @@ interface AircraftMarkerProps {
 const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightSelect }) => {
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const selectedMarkerIdRef = useRef<string | null>(null);
+  const markerElementsRef = useRef<{ [key: string]: HTMLDivElement }>({});
+
+  // Memoize flight lookup for better performance
+  const flightLookup = useMemo(() => {
+    const lookup: { [key: string]: Flight } = {};
+    flights.forEach(flight => {
+      lookup[flight.flightId] = flight;
+    });
+    return lookup;
+  }, [flights]);
+
+  // Memoize current flight IDs set
+  const currentFlightIds = useMemo(() => {
+    return new Set(flights.map(f => f.flightId));
+  }, [flights]);
 
   // Function to determine if aircraft is on ground
-  const isOnGround = (flight: Flight): boolean => {
+  const isOnGround = useCallback((flight: Flight): boolean => {
     return flight.altitude < 100 && flight.speed < 50;
-  };
+  }, []);
 
-  // Function to get aircraft color filter based on status
-  const getAircraftFilter = (flight: Flight, isSelected: boolean = false): string => {
+  // Pre-computed filter styles for better performance
+  const filterStyles = useMemo(() => ({
+    onGroundNormal: 'brightness(0) saturate(0) invert(0.4) contrast(1.5) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+    airborneNormal: 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(180deg) saturate(2) drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+    onGroundSelected: 'brightness(0) saturate(0) invert(0.8) contrast(2) drop-shadow(0 0 8px rgba(255,255,255,0.8))',
+    airborneSelected: 'brightness(0) saturate(0) invert(0.7) sepia(1) hue-rotate(180deg) saturate(3) drop-shadow(0 0 8px rgba(91,173,236,0.8))'
+  }), []);
+
+  // Optimized function to get aircraft filter
+  const getAircraftFilter = useCallback((flight: Flight, isSelected: boolean = false): string => {
     const onGround = isOnGround(flight);
     
     if (isSelected) {
-      return onGround 
-        ? 'brightness(0) saturate(0) invert(0.8) contrast(2) drop-shadow(0 0 8px rgba(255,255,255,0.8))'
-        : 'brightness(0) saturate(0) invert(0.7) sepia(1) hue-rotate(180deg) saturate(3) drop-shadow(0 0 8px rgba(91,173,236,0.8))';
+      return onGround ? filterStyles.onGroundSelected : filterStyles.airborneSelected;
     }
     
-    return onGround 
-      ? 'brightness(0) saturate(0) invert(0.4) contrast(1.5) drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-      : 'brightness(0) saturate(0) invert(0.6) sepia(1) hue-rotate(180deg) saturate(2) drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
-  };
+    return onGround ? filterStyles.onGroundNormal : filterStyles.airborneNormal;
+  }, [isOnGround, filterStyles]);
+
+  // Optimized marker creation function
+  const createMarkerElement = useCallback((flight: Flight): HTMLDivElement => {
+    const el = document.createElement('div');
+    el.className = 'aircraft-marker';
+    el.style.cssText = `
+      width: 28px;
+      height: 28px;
+      background-image: url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      transform-origin: center;
+      cursor: pointer;
+      pointer-events: auto;
+      will-change: transform;
+      backface-visibility: hidden;
+    `;
+    
+    return el;
+  }, []);
+
+  // Optimized update marker function
+  const updateMarkerAppearance = useCallback((
+    element: HTMLDivElement, 
+    flight: Flight, 
+    isSelected: boolean
+  ) => {
+    const filter = getAircraftFilter(flight, isSelected);
+    const transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
+    
+    // Batch DOM updates to avoid layout thrashing
+    if (element.style.filter !== filter) {
+      element.style.filter = filter;
+    }
+    if (element.style.transform !== transform) {
+      element.style.transform = transform;
+    }
+    if (isSelected) {
+      element.style.zIndex = '1000';
+      element.classList.add('aircraft-marker-selected');
+    } else {
+      element.style.zIndex = '0';
+      element.classList.remove('aircraft-marker-selected');
+    }
+  }, [getAircraftFilter]);
+
+  // Optimized click handler with debouncing
+  const createClickHandler = useCallback((flight: Flight) => {
+    return (e: MouseEvent) => {
+      e.stopPropagation();
+      console.log(`🎯 Flight clicked: ${flight.flightId}`);
+      
+      // Remove highlight from previously selected marker
+      if (selectedMarkerIdRef.current && markerElementsRef.current[selectedMarkerIdRef.current]) {
+        const prevElement = markerElementsRef.current[selectedMarkerIdRef.current];
+        const prevFlight = flightLookup[selectedMarkerIdRef.current];
+        if (prevFlight) {
+          console.log(`🔄 Removing highlight from ${selectedMarkerIdRef.current}`);
+          updateMarkerAppearance(prevElement, prevFlight, false);
+        }
+      }
+      
+      // Highlight selected marker
+      const currentElement = markerElementsRef.current[flight.flightId];
+      if (currentElement) {
+        updateMarkerAppearance(currentElement, flight, true);
+      }
+      
+      selectedMarkerIdRef.current = flight.flightId;
+      console.log(`✅ Selected: ${flight.flightId}`);
+      
+      onFlightSelect(flight);
+    };
+  }, [flightLookup, updateMarkerAppearance, onFlightSelect]);
 
   useEffect(() => {
     console.log(`🛩️ AircraftMarker effect - ${flights.length} flights, map loaded: ${map?.loaded()}`);
-    console.log(`📍 Current markers: ${Object.keys(markersRef.current).length}`);
     
     if (!map || !map.loaded()) {
       console.log("🔄 Map not loaded, waiting...");
@@ -53,106 +146,87 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     function updateMarkers() {
       console.log(`🔄 Updating ${flights.length} flight markers`);
       
-      const currentFlightIds = new Set(flights.map(f => f.flightId));
       const existingMarkerIds = Object.keys(markersRef.current);
       
-      // Only remove markers for flights that no longer exist
+      // Remove markers for flights that no longer exist
       existingMarkerIds.forEach(flightId => {
         if (!currentFlightIds.has(flightId)) {
           console.log(`🗑️ Removing marker for departed flight ${flightId}`);
           markersRef.current[flightId].remove();
           delete markersRef.current[flightId];
+          delete markerElementsRef.current[flightId];
           if (selectedMarkerIdRef.current === flightId) {
             selectedMarkerIdRef.current = null;
           }
         }
       });
       
-      let updatedCount = 0;
-      let createdCount = 0;
-      
-      // Update existing markers or create new ones
-      flights.forEach(flight => {
-        const existingMarker = markersRef.current[flight.flightId];
-        const isSelected = selectedMarkerIdRef.current === flight.flightId;
+      // Use requestAnimationFrame to batch DOM updates
+      requestAnimationFrame(() => {
+        let updatedCount = 0;
+        let createdCount = 0;
         
-        if (existingMarker) {
-          // Update existing marker
-          existingMarker.setLngLat([flight.longitude, flight.latitude]);
-          const el = existingMarker.getElement();
-          el.style.filter = getAircraftFilter(flight, isSelected);
-          el.style.transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
-          updatedCount++;
-        } else {
-          // Create new marker
-          console.log(`➕ Creating marker for flight ${flight.flightId}`);
+        // Process flights in batches to avoid blocking the main thread
+        const batchSize = 100;
+        let batchIndex = 0;
+        
+        const processBatch = () => {
+          const start = batchIndex * batchSize;
+          const end = Math.min(start + batchSize, flights.length);
           
-          const el = document.createElement('div');
-          el.className = 'aircraft-marker';
-          el.style.width = '28px';
-          el.style.height = '28px';
-          el.style.backgroundImage = 'url("/lovable-uploads/d61f4489-f69c-490b-a66b-6ed9139df944.png")';
-          el.style.backgroundSize = 'contain';
-          el.style.backgroundRepeat = 'no-repeat';
-          el.style.backgroundPosition = 'center';
-          el.style.filter = getAircraftFilter(flight, isSelected);
-          el.style.transform = `rotate(${flight.heading}deg)${isSelected ? ' scale(1.2)' : ''}`;
-          el.style.transformOrigin = 'center';
-          el.style.cursor = 'pointer';
-          el.style.pointerEvents = 'auto';
-          
-          const marker = new mapboxgl.Marker({
-            element: el,
-            anchor: 'center',
-            draggable: false,
-            rotationAlignment: 'viewport',
-            pitchAlignment: 'viewport',
-          });
-          
-          marker.setLngLat([flight.longitude, flight.latitude]);
-          
-          if (map && map.getCanvas()) {
-            marker.addTo(map);
-            markersRef.current[flight.flightId] = marker;
-            createdCount++;
+          for (let i = start; i < end; i++) {
+            const flight = flights[i];
+            const existingMarker = markersRef.current[flight.flightId];
+            const isSelected = selectedMarkerIdRef.current === flight.flightId;
             
-            // Add click handler
-            el.addEventListener('click', (e) => {
-              e.stopPropagation();
-              console.log(`🎯 Flight clicked: ${flight.flightId}`);
-              
-              // Remove highlight from previously selected marker
-              if (selectedMarkerIdRef.current && markersRef.current[selectedMarkerIdRef.current]) {
-                const prevMarker = markersRef.current[selectedMarkerIdRef.current];
-                const prevEl = prevMarker.getElement();
-                const prevFlight = flights.find(f => f.flightId === selectedMarkerIdRef.current);
-                if (prevFlight) {
-                  console.log(`🔄 Removing highlight from ${selectedMarkerIdRef.current}`);
-                  prevEl.style.zIndex = '0';
-                  prevEl.style.filter = getAircraftFilter(prevFlight);
-                  prevEl.style.transform = `rotate(${prevFlight.heading}deg)`;
-                  prevEl.classList.remove('aircraft-marker-selected');
-                }
+            if (existingMarker) {
+              // Update existing marker position and appearance
+              existingMarker.setLngLat([flight.longitude, flight.latitude]);
+              const element = markerElementsRef.current[flight.flightId];
+              if (element) {
+                updateMarkerAppearance(element, flight, isSelected);
               }
+              updatedCount++;
+            } else {
+              // Create new marker
+              const element = createMarkerElement(flight);
+              updateMarkerAppearance(element, flight, isSelected);
               
-              // Highlight selected marker
-              el.style.zIndex = '1000';
-              el.style.filter = getAircraftFilter(flight, true);
-              el.style.transform = `rotate(${flight.heading}deg) scale(1.2)`;
-              el.classList.add('aircraft-marker-selected');
+              const marker = new mapboxgl.Marker({
+                element,
+                anchor: 'center',
+                draggable: false,
+                rotationAlignment: 'viewport',
+                pitchAlignment: 'viewport',
+              });
               
-              selectedMarkerIdRef.current = flight.flightId;
-              console.log(`✅ Selected: ${flight.flightId}`);
+              marker.setLngLat([flight.longitude, flight.latitude]);
               
-              onFlightSelect(flight);
-            });
+              if (map && map.getCanvas()) {
+                marker.addTo(map);
+                markersRef.current[flight.flightId] = marker;
+                markerElementsRef.current[flight.flightId] = element;
+                createdCount++;
+                
+                // Add optimized click handler
+                element.addEventListener('click', createClickHandler(flight));
+              }
+            }
           }
-        }
+          
+          batchIndex++;
+          if (end < flights.length) {
+            // Process next batch in next frame
+            requestAnimationFrame(processBatch);
+          } else {
+            console.log(`✅ Markers updated - Updated: ${updatedCount}, Created: ${createdCount}, Total: ${Object.keys(markersRef.current).length}`);
+          }
+        };
+        
+        processBatch();
       });
-      
-      console.log(`✅ Markers updated - Updated: ${updatedCount}, Created: ${createdCount}, Total: ${Object.keys(markersRef.current).length}`);
     }
-  }, [flights, map, onFlightSelect]);
+  }, [flights, map, currentFlightIds, createMarkerElement, updateMarkerAppearance, createClickHandler]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -160,12 +234,11 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       console.log(`🧹 Cleaning up ${Object.keys(markersRef.current).length} markers`);
       Object.values(markersRef.current).forEach(marker => marker.remove());
       markersRef.current = {};
+      markerElementsRef.current = {};
     };
   }, []);
-
-  console.log(`🔄 AircraftMarker render - ${flights.length} flights, selected: ${selectedMarkerIdRef.current}`);
 
   return null;
 };
 
-export default AircraftMarker;
+export default React.memo(AircraftMarker);

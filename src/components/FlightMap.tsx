@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
@@ -34,6 +34,9 @@ const FlightMap: React.FC = () => {
     handleServerChange 
   } = useFlightData();
   
+  // Memoize flights to prevent unnecessary re-renders
+  const memoizedFlights = useMemo(() => flights, [flights]);
+  
   // Debug log for flights changes
   useEffect(() => {
     console.log(`🛩️ FlightMap - Flights updated: ${flights.length} flights`);
@@ -50,6 +53,14 @@ const FlightMap: React.FC = () => {
   
   const handleMapInit = useCallback((initializedMap: mapboxgl.Map) => {
     console.log("🗺️ Map initialized in FlightMap component");
+    
+    // Optimize map performance settings
+    initializedMap.getCanvas().style.cursor = '';
+    
+    // Disable unnecessary features for performance
+    initializedMap.dragRotate.disable();
+    initializedMap.touchZoomRotate.disableRotation();
+    
     setMap(initializedMap);
     
     // Set mapLoaded to true when the map is fully loaded
@@ -65,8 +76,8 @@ const FlightMap: React.FC = () => {
     }
   }, []);
 
-  // Handle flight selection
-  const handleFlightSelect = async (flight: Flight) => {
+  // Optimized flight selection handler
+  const handleFlightSelect = useCallback(async (flight: Flight) => {
     console.log(`🎯 Flight selected: ${flight.flightId}`);
     setSelectedFlight(flight);
     
@@ -82,19 +93,29 @@ const FlightMap: React.FC = () => {
       setFlownRoute(routeData.flownRoute);
       setFlightPlan(routeData.flightPlan);
       
-      // Focus on the flight with closer zoom
+      // Optimize map focus with smoother animation
       if (map && flight) {
         map.flyTo({
           center: [flight.longitude, flight.latitude],
           zoom: 9,
-          speed: 1.2
+          speed: 0.8, // Reduced speed for smoother animation
+          curve: 1.2,
+          essential: true
         });
       }
     } catch (error) {
       console.error("❌ Failed to fetch flight route:", error);
       toast.error("Failed to load flight route.");
     }
-  };
+  }, [activeServer, map]);
+
+  // Optimized close handler
+  const handleCloseFlightDetails = useCallback(() => {
+    console.log("🔄 Closing flight details");
+    setSelectedFlight(null);
+    setFlownRoute([]);
+    setFlightPlan([]);
+  }, []);
 
   return (
     <div className="relative h-screen w-full bg-[#151920]">
@@ -118,12 +139,7 @@ const FlightMap: React.FC = () => {
         <FlightDetails 
           flight={selectedFlight} 
           serverID={activeServer.id} 
-          onClose={() => {
-            console.log("🔄 Closing flight details");
-            setSelectedFlight(null);
-            setFlownRoute([]);
-            setFlightPlan([]);
-          }} 
+          onClose={handleCloseFlightDetails} 
         />
       )}
       
@@ -138,7 +154,7 @@ const FlightMap: React.FC = () => {
         <>
           <AircraftMarker 
             map={map} 
-            flights={flights} 
+            flights={memoizedFlights} 
             onFlightSelect={handleFlightSelect} 
           />
           <FlightRoute 
@@ -156,4 +172,4 @@ const FlightMap: React.FC = () => {
   );
 };
 
-export default FlightMap;
+export default React.memo(FlightMap);
