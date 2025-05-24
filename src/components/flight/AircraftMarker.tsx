@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -77,7 +75,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Korrigierte update marker function - plane.png zeigt standardmäßig nach Norden (0°)
+  // KORRIGIERTE Update marker function - plane.png zeigt standardmäßig nach Norden (0°)
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -85,16 +83,25 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
     
-    // Stelle sicher, dass das Heading ein gültiger Wert ist
-    const heading = typeof flight.heading === 'number' && !isNaN(flight.heading) ? flight.heading : 0;
+    // Sichere Handling des Heading-Werts
+    const rawHeading = flight.heading;
+    const heading = typeof rawHeading === 'number' && !isNaN(rawHeading) ? rawHeading : 0;
+    
+    // Normalisiere Heading auf 0-360 Grad
     const normalizedHeading = ((heading % 360) + 360) % 360;
     
-    // Das plane.png Bild zeigt standardmäßig nach Norden (0°)
-    // Die Rotation entspricht direkt dem Heading
+    // WICHTIG: plane.png zeigt standardmäßig nach Norden (0°)
+    // Das bedeutet:
+    // - 0° = Norden (kein Rotation nötig)
+    // - 90° = Osten (90° Rotation im Uhrzeigersinn)
+    // - 180° = Süden (180° Rotation)
+    // - 270° = Westen (270° Rotation)
+    // Die Rotation entspricht EXAKT dem normalisierten Heading
     const rotationAngle = normalizedHeading;
     const scaleValue = isSelected ? 1.2 : 1.0;
     
-    console.log(`🔄 Flight ${flight.flightId}: heading=${heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}° (direct heading)`);
+    console.log(`🧭 Flight ${flight.flightId}: Raw heading=${rawHeading}°, Normalized=${normalizedHeading}°, Rotation=${rotationAngle}°`);
+    console.log(`✈️ Direction: ${getDirectionName(normalizedHeading)}`);
     
     // Setze alle CSS-Eigenschaften direkt und explizit
     element.style.filter = filter;
@@ -104,7 +111,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     // Webkit-Präfix für bessere Browser-Kompatibilität
     element.style.webkitTransform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`✅ Applied rotation ${rotationAngle}° to flight ${flight.flightId} (nose pointing to heading ${heading}°)`);
+    console.log(`✅ Applied ${rotationAngle}° rotation to flight ${flight.flightId} - aircraft now pointing ${getDirectionName(normalizedHeading)}`);
     
     if (isSelected) {
       element.style.zIndex = '1000';
@@ -114,6 +121,19 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
       element.classList.remove('aircraft-marker-selected');
     }
   }, [getAircraftFilter]);
+
+  // Hilfsfunktion um Richtungsname zu bekommen
+  const getDirectionName = (heading: number): string => {
+    if (heading >= 337.5 || heading < 22.5) return 'North';
+    if (heading >= 22.5 && heading < 67.5) return 'Northeast';
+    if (heading >= 67.5 && heading < 112.5) return 'East';
+    if (heading >= 112.5 && heading < 157.5) return 'Southeast';
+    if (heading >= 157.5 && heading < 202.5) return 'South';
+    if (heading >= 202.5 && heading < 247.5) return 'Southwest';
+    if (heading >= 247.5 && heading < 292.5) return 'West';
+    if (heading >= 292.5 && heading < 337.5) return 'Northwest';
+    return 'Unknown';
+  };
 
   // Optimized click handler with debouncing
   const createClickHandler = useCallback((flight: Flight) => {
@@ -259,4 +279,3 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
 };
 
 export default React.memo(AircraftMarker);
-
