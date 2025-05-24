@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Flight } from '@/services/flight';
@@ -74,7 +75,7 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
     return el;
   }, []);
 
-  // Optimized update marker function with proper heading rotation
+  // Korrigierte update marker function mit tatsächlicher Rotation
   const updateMarkerAppearance = useCallback((
     element: HTMLDivElement, 
     flight: Flight, 
@@ -82,26 +83,25 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
   ) => {
     const filter = getAircraftFilter(flight, isSelected);
     
-    // Berechne die korrekte Rotation basierend auf dem Heading
-    // Das SVG zeigt standardmäßig nach oben (0°), Flugrichtung 0° ist Norden
-    // Daher müssen wir um 90° korrigieren, damit die Flugzeugnase in die richtige Richtung zeigt
+    // Das SVG zeigt standardmäßig nach rechts, wir müssen es korrigieren
+    // Heading 0° = Norden, aber SVG zeigt nach rechts (90°)
+    // Daher: tatsächliche Rotation = heading - 90°
     const normalizedHeading = ((flight.heading % 360) + 360) % 360;
-    const rotationAngle = normalizedHeading;
+    const rotationAngle = normalizedHeading - 90; // Korrektur damit Nase richtig zeigt
     const scaleValue = isSelected ? 1.2 : 1.0;
     
     // Erstelle die vollständige Transform-Eigenschaft
     const transform = `rotate(${rotationAngle}deg) scale(${scaleValue})`;
     
-    console.log(`🔄 Updating aircraft ${flight.flightId}: heading=${flight.heading}°, normalized=${normalizedHeading}°, rotation=${rotationAngle}°`);
+    console.log(`🔄 Updating aircraft ${flight.flightId}: heading=${flight.heading}°, corrected rotation=${rotationAngle}°`);
     
-    // Batch DOM updates to avoid layout thrashing
-    if (element.style.filter !== filter) {
-      element.style.filter = filter;
-    }
-    if (element.style.transform !== transform) {
-      element.style.transform = transform;
-      console.log(`✅ Applied transform: ${transform} to flight ${flight.flightId}`);
-    }
+    // Wende die Transformation direkt an
+    element.style.filter = filter;
+    element.style.transform = transform;
+    element.style.transformOrigin = 'center center';
+    
+    console.log(`✅ Applied transform: ${transform} to flight ${flight.flightId}`);
+    
     if (isSelected) {
       element.style.zIndex = '1000';
       element.classList.add('aircraft-marker-selected');
