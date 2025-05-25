@@ -4,20 +4,20 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      /* Bright Leaflet map container styles */
+      /* CartoDB Positron map container styles */
       .leaflet-container {
         background-color: #ffffff;
         font-family: inherit;
       }
       
-      /* Enhanced bright map tiles for OpenStreetMap */
+      /* Light styling for CartoDB Positron tiles */
       .leaflet-tile {
-        filter: brightness(1.25) contrast(1.15) saturate(0.8);
+        filter: brightness(1.05) contrast(1.05) saturate(0.95);
         image-rendering: optimizeQuality;
       }
       
       .leaflet-tile-container img {
-        filter: brightness(1.3) contrast(1.1) saturate(0.75);
+        filter: brightness(1.1) contrast(1.02) saturate(0.9);
       }
       
       /* SIMPLIFIED aircraft marker styles - removed problematic animations */
@@ -82,22 +82,22 @@ const MapStyles = () => {
         contain: layout;
       }
       
-      /* Extra bright control styling for OpenStreetMap */
+      /* Clean control styling for CartoDB Positron */
       .leaflet-control-zoom {
         border: none;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
       }
       
       .leaflet-control-zoom a {
-        background-color: rgba(255,255,255,0.98);
-        color: #222;
+        background-color: rgba(255,255,255,0.95);
+        color: #333;
         border: none;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-zoom a:hover {
         background-color: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       }
       
       /* Enhanced route line styles for smooth gradients and curves */
@@ -189,16 +189,16 @@ const MapStyles = () => {
         animation: none !important;
       }
       
-      /* Extra bright map overlay enhancements for OpenStreetMap */
+      /* Clean map overlay for CartoDB Positron */
       .leaflet-control-attribution {
-        background-color: rgba(255, 255, 255, 0.95);
-        color: #222;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #333;
         font-size: 11px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-attribution a {
-        color: #0066CC;
+        color: #0078A8;
       }
     `}</style>
   );

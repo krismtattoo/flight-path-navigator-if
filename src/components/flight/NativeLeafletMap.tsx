@@ -22,7 +22,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing native Leaflet map with bright OpenStreetMap design");
+    console.log("🗺️ Initializing native Leaflet map with CartoDB Positron light design");
 
     // Create the map
     const map = L.map(mapContainer.current, {
@@ -32,10 +32,11 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
       preferCanvas: true, // Better performance for many markers
     });
 
-    // Add bright OpenStreetMap tile layer (no authentication required)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    // Add CartoDB Positron tile layer (very light and clean design)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19,
+      subdomains: 'abcd'
     }).addTo(map);
 
     // Enable all interactions
@@ -48,7 +49,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Native Leaflet map with bright OpenStreetMap design initialized successfully");
+    console.log("🗺️ Native Leaflet map with CartoDB Positron light design initialized successfully");
     onMapInit(map);
 
     // Cleanup function
