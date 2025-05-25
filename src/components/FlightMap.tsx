@@ -276,6 +276,17 @@ const FlightMap: React.FC = () => {
     }
   }, [map, selectedFlight, handleCloseFlightDetails, fetchAirportInfo]);
 
+  // Enhanced airport details with flight selection
+  const handleAirportFlightSelect = useCallback((flight: Flight) => {
+    console.log(`🛩️ Flight selected from airport panel: ${flight.flightId}`);
+    
+    // Close airport details
+    handleCloseAirportDetails();
+    
+    // Select the flight
+    handleFlightSelect(flight);
+  }, [handleCloseAirportDetails, handleFlightSelect]);
+
   // FIXED: Clear selection when changing servers (removed problematic dependencies)
   useEffect(() => {
     console.log("🔄 Server changed, clearing flight selection immediately");
@@ -336,13 +347,15 @@ const FlightMap: React.FC = () => {
         />
       )}
       
-      {/* Enhanced Airport Details */}
+      {/* Enhanced Airport Details with flight data */}
       {(selectedAirport || selectedAirportInfo) && (
         <EnhancedAirportDetails 
           airport={selectedAirport || undefined}
           airportInfo={airportInfo || undefined}
+          flights={memoizedFlights}
           loading={airportInfoLoading}
-          onClose={handleCloseAirportDetails} 
+          onClose={handleCloseAirportDetails}
+          onFlightSelect={handleAirportFlightSelect}
         />
       )}
       

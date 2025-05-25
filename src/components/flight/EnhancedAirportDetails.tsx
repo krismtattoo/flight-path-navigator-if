@@ -2,24 +2,37 @@
 import React from 'react';
 import { AirportStatus } from '@/services/flight/worldService';
 import { AirportInfo } from '@/services/flight/airportInfoService';
+import { Flight } from '@/services/flight';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Plane, Users, Radio, MapPin, Globe, Clock, Building } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AirportFlightList from './AirportFlightList';
+import { useAirportFlights } from '@/hooks/useAirportFlights';
 
 interface EnhancedAirportDetailsProps {
   airport?: AirportStatus;
   airportInfo?: AirportInfo;
+  flights?: Flight[];
   loading?: boolean;
   onClose: () => void;
+  onFlightSelect?: (flight: Flight) => void;
 }
 
 const EnhancedAirportDetails: React.FC<EnhancedAirportDetailsProps> = ({ 
   airport, 
   airportInfo,
+  flights = [],
   loading,
-  onClose 
+  onClose,
+  onFlightSelect
 }) => {
+  // Get inbound and outbound flights for this airport
+  const { inboundFlights, outboundFlights } = useAirportFlights({ 
+    airport: airport || null, 
+    flights 
+  });
+
   const getATCTypeLabel = (type: number): string => {
     const types = {
       0: 'Ground',
@@ -59,6 +72,14 @@ const EnhancedAirportDetails: React.FC<EnhancedAirportDetailsProps> = ({
       4: 'Internationale Flughäfen'
     };
     return classes[classNumber as keyof typeof classes] || 'Unbekannt';
+  };
+
+  const handleFlightSelect = (flight: Flight) => {
+    if (onFlightSelect) {
+      onFlightSelect(flight);
+      // Close airport details when selecting a flight
+      onClose();
+    }
   };
 
   const displayName = airportInfo?.name || airport?.airportName || 'Flughafen';
@@ -119,6 +140,21 @@ const EnhancedAirportDetails: React.FC<EnhancedAirportDetailsProps> = ({
                 </div>
                 <p className="text-2xl font-bold text-green-100">{airport.outboundFlightsCount}</p>
               </div>
+            </div>
+          )}
+
+          {/* Flight Lists - only show if we have flight data and airport data */}
+          {airport && flights.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Plane className="h-4 w-4 text-gray-400" />
+                Flugbewegungen
+              </h3>
+              <AirportFlightList
+                inboundFlights={inboundFlights}
+                outboundFlights={outboundFlights}
+                onFlightSelect={handleFlightSelect}
+              />
             </div>
           )}
 
