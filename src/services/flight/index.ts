@@ -9,3 +9,4 @@ export * from './routeParser';
 export * from './routeFetcher';
 export * from './aircraftService';
 export * from './worldService';
+export * from './airportInfoService';
