@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -130,7 +129,8 @@ const FlightMap: React.FC = () => {
           <LeafletAircraftMarker 
             map={map} 
             flights={memoizedFlights} 
-            onFlightSelect={handleFlightSelect} 
+            onFlightSelect={handleFlightSelect}
+            selectedFlightId={selectedFlight?.flightId || null}
           />
           <LeafletFlightRoute 
             map={map} 

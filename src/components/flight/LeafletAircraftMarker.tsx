@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -7,17 +6,26 @@ interface LeafletAircraftMarkerProps {
   map: L.Map;
   flights: Flight[];
   onFlightSelect: (flight: Flight) => void;
+  selectedFlightId?: string | null;
 }
 
-const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flights, onFlightSelect }) => {
+const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ 
+  map, 
+  flights, 
+  onFlightSelect,
+  selectedFlightId 
+}) => {
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const selectedMarkerIdRef = useRef<string | null>(null);
+  const lastKnownFlightDataRef = useRef<{ [key: string]: Flight }>({});
 
   // Memoize flight lookup for better performance
   const flightLookup = useMemo(() => {
     const lookup: { [key: string]: Flight } = {};
     flights.forEach(flight => {
       lookup[flight.flightId] = flight;
+      // Store last known data for all flights
+      lastKnownFlightDataRef.current[flight.flightId] = flight;
     });
     return lookup;
   }, [flights]);
@@ -26,6 +34,11 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flig
   const currentFlightIds = useMemo(() => {
     return new Set(flights.map(f => f.flightId));
   }, [flights]);
+
+  // Update selected marker reference when prop changes
+  useEffect(() => {
+    selectedMarkerIdRef.current = selectedFlightId || null;
+  }, [selectedFlightId]);
 
   // Function to determine if aircraft is on ground
   const isOnGround = useCallback((flight: Flight): boolean => {
@@ -73,7 +86,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flig
   const updateAllMarkerStyles = useCallback(() => {
     Object.keys(markersRef.current).forEach(flightId => {
       const marker = markersRef.current[flightId];
-      const flight = flightLookup[flightId];
+      const flight = flightLookup[flightId] || lastKnownFlightDataRef.current[flightId];
       
       if (marker && flight) {
         const isSelected = selectedMarkerIdRef.current === flight.flightId;
@@ -107,17 +120,24 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flig
 
     console.log(`🔄 Updating ${flights.length} aircraft markers`);
     
-    // Remove markers for flights that no longer exist
+    // Remove markers for flights that no longer exist, BUT protect selected flight
     Object.keys(markersRef.current).forEach(flightId => {
       if (!currentFlightIds.has(flightId)) {
+        // Don't remove the selected flight marker even if it's not in current data
+        if (selectedMarkerIdRef.current === flightId) {
+          console.log(`🛡️ Protecting selected flight marker ${flightId} from removal`);
+          
+          // Update marker with last known data but keep it visible
+          const lastKnownFlight = lastKnownFlightDataRef.current[flightId];
+          if (lastKnownFlight) {
+            updateMarkerStyle(markersRef.current[flightId], lastKnownFlight, true);
+          }
+          return; // Skip removal for selected flight
+        }
+        
         console.log(`🗑️ Removing marker for flight ${flightId}`);
         map.removeLayer(markersRef.current[flightId]);
         delete markersRef.current[flightId];
-        
-        // Clear selection if this flight was selected
-        if (selectedMarkerIdRef.current === flightId) {
-          selectedMarkerIdRef.current = null;
-        }
       }
     });
 
