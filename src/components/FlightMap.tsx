@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -46,6 +47,9 @@ const FlightMap: React.FC = () => {
   const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
   
+  // Critical: Track selection in progress to prevent race conditions
+  const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
+  
   const handleMapInit = useCallback((initializedMap: L.Map) => {
     console.log("🗺️ Native Leaflet map initialized in FlightMap component");
     
@@ -53,14 +57,22 @@ const FlightMap: React.FC = () => {
     setMapLoaded(true);
   }, []);
 
-  // Optimized flight selection handler
+  // Improved flight selection handler with immediate state protection
   const handleFlightSelect = useCallback(async (flight: Flight) => {
-    console.log(`🎯 Flight selected: ${flight.flightId}`);
+    console.log(`🎯 Flight selected: ${flight.flightId} - Starting selection process`);
     
-    // Immediate state update to ensure synchronization
+    // CRITICAL: Set selection in progress IMMEDIATELY to protect marker
+    setSelectionInProgress(flight.flightId);
+    
+    // CRITICAL: Set selected flight IMMEDIATELY (synchronous)
     setSelectedFlight(flight);
     
-    if (!activeServer) return;
+    console.log(`🛡️ PROTECTION ACTIVATED for flight ${flight.flightId}`);
+    
+    if (!activeServer) {
+      setSelectionInProgress(null);
+      return;
+    }
     
     try {
       // Log debug information
@@ -79,40 +91,52 @@ const FlightMap: React.FC = () => {
           duration: 1.0
         });
       }
+      
+      console.log(`✅ Selection process completed for flight ${flight.flightId}`);
     } catch (error) {
       console.error("❌ Failed to fetch flight route:", error);
       toast.error("Failed to load flight route.");
+    } finally {
+      // Clear selection in progress after a delay to ensure marker stability
+      setTimeout(() => {
+        setSelectionInProgress(null);
+        console.log(`🔓 Selection process finished for flight ${flight.flightId}`);
+      }, 2000); // 2 second delay to ensure stability
     }
   }, [activeServer, map]);
 
-  // Improved close handler that doesn't immediately clear the selected flight
+  // Improved close handler
   const handleCloseFlightDetails = useCallback(() => {
-    console.log("🔄 Closing flight details (keeping marker visible)");
+    console.log("🔄 Closing flight details");
     
-    // Clear the details panel but keep the flight selected for marker purposes
-    // This allows the marker to remain visible and highlighted
+    // Clear the details panel and routes
     setFlownRoute([]);
     setFlightPlan([]);
     
-    // Delay clearing the selected flight to allow marker to stay visible
+    // Clear selection after a short delay to allow smooth transition
     setTimeout(() => {
-      console.log("🔄 Clearing selected flight after delay");
+      console.log("🔄 Clearing selected flight");
       setSelectedFlight(null);
-    }, 1000); // 1 second delay
+      setSelectionInProgress(null);
+    }, 1000);
   }, []);
 
-  // Clear selection when changing servers (immediate clear is appropriate here)
+  // Clear selection when changing servers
   useEffect(() => {
     console.log("🔄 Server changed, clearing flight selection immediately");
     setSelectedFlight(null);
     setFlownRoute([]);
     setFlightPlan([]);
+    setSelectionInProgress(null);
   }, [activeServer]);
 
-  // Ensure selected flight ID is passed correctly to marker component
+  // Enhanced selected flight ID calculation
   const selectedFlightId = useMemo(() => {
-    return selectedFlight?.flightId || null;
-  }, [selectedFlight]);
+    // Return either the selected flight ID or the one in progress
+    const id = selectedFlight?.flightId || selectionInProgress || null;
+    console.log(`🎯 Current selected/protected flight ID: ${id}`);
+    return id;
+  }, [selectedFlight, selectionInProgress]);
 
   return (
     <div className="relative h-screen w-full bg-[#151920]">
@@ -154,6 +178,7 @@ const FlightMap: React.FC = () => {
             flights={memoizedFlights} 
             onFlightSelect={handleFlightSelect}
             selectedFlightId={selectedFlightId}
+            selectionInProgress={selectionInProgress}
           />
           <LeafletFlightRoute 
             map={map} 
