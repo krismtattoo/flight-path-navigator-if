@@ -18,12 +18,14 @@ interface LeafletMapContainerProps {
 
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<L.Map | null>(null);
 
-  // Handle map initialization when the MapContainer is created
-  const handleMapCreated = (map: L.Map) => {
+  // Handle map initialization when the MapContainer is ready
+  const handleMapReady = (map: L.Map) => {
     if (map && !mapRef.current) {
       console.log("🗺️ Leaflet map initialized successfully");
       mapRef.current = map;
+      mapContainerRef.current = map;
       
       // Enable standard Leaflet interactions
       map.dragging.enable();
@@ -42,6 +44,7 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        mapContainerRef.current = null;
       }
     };
   }, []);
@@ -53,7 +56,8 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        whenCreated={handleMapCreated}
+        whenReady={handleMapReady}
+        ref={mapContainerRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
