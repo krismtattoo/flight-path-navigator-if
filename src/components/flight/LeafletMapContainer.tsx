@@ -19,18 +19,23 @@ interface LeafletMapContainerProps {
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
 
-  const handleMapCreated = (map: L.Map) => {
+  const handleMapReady = (map: L.Map) => {
     console.log("🗺️ Leaflet map initialized successfully");
+    
+    if (!map) {
+      console.error("Map is null in handleMapReady");
+      return;
+    }
     
     mapRef.current = map;
     
-    // Enable standard Leaflet interactions
-    map.dragging.enable();
-    map.touchZoom.enable();
-    map.doubleClickZoom.enable();
-    map.scrollWheelZoom.enable();
-    map.boxZoom.enable();
-    map.keyboard.enable();
+    // Enable standard Leaflet interactions with null checks
+    if (map.dragging) map.dragging.enable();
+    if (map.touchZoom) map.touchZoom.enable();
+    if (map.doubleClickZoom) map.doubleClickZoom.enable();
+    if (map.scrollWheelZoom) map.scrollWheelZoom.enable();
+    if (map.boxZoom) map.boxZoom.enable();
+    if (map.keyboard) map.keyboard.enable();
     
     onMapInit(map);
   };
@@ -51,7 +56,7 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        ref={handleMapCreated}
+        whenReady={handleMapReady}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
