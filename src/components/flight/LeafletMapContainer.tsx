@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,15 +16,14 @@ interface LeafletMapContainerProps {
   onMapInit: (map: L.Map) => void;
 }
 
-// Component to access the map instance from within the MapContainer
-const MapInitializer: React.FC<{ onMapInit: (map: L.Map) => void }> = ({ onMapInit }) => {
-  const map = useMap();
-  const initializedRef = useRef(false);
+const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
+  const mapRef = useRef<L.Map | null>(null);
 
-  useEffect(() => {
-    if (map && !initializedRef.current) {
+  // Handle map initialization when the MapContainer is created
+  const handleMapCreated = (map: L.Map) => {
+    if (map && !mapRef.current) {
       console.log("🗺️ Leaflet map initialized successfully");
-      initializedRef.current = true;
+      mapRef.current = map;
       
       // Enable standard Leaflet interactions
       map.dragging.enable();
@@ -36,13 +35,7 @@ const MapInitializer: React.FC<{ onMapInit: (map: L.Map) => void }> = ({ onMapIn
       
       onMapInit(map);
     }
-  }, [map, onMapInit]);
-
-  return null;
-};
-
-const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
-  const mapRef = useRef<L.Map | null>(null);
+  };
 
   useEffect(() => {
     return () => {
@@ -60,13 +53,13 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
+        whenCreated={handleMapCreated}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
-        <MapInitializer onMapInit={onMapInit} />
       </MapContainer>
     </div>
   );
