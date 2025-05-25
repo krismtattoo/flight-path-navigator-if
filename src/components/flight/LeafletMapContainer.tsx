@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,31 +16,24 @@ interface LeafletMapContainerProps {
   onMapInit: (map: L.Map) => void;
 }
 
-// Component to handle map events and initialization
-const MapInitializer: React.FC<{ onMapInit: (map: L.Map) => void }> = ({ onMapInit }) => {
-  const map = useMapEvents({});
-  
-  useEffect(() => {
-    if (map) {
-      console.log("🗺️ Leaflet map initialized successfully");
-      
-      // Enable standard Leaflet interactions
-      map.dragging.enable();
-      map.touchZoom.enable();
-      map.doubleClickZoom.enable();
-      map.scrollWheelZoom.enable();
-      map.boxZoom.enable();
-      map.keyboard.enable();
-      
-      onMapInit(map);
-    }
-  }, [map, onMapInit]);
-
-  return null;
-};
-
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
+
+  const handleMapCreated = (map: L.Map) => {
+    console.log("🗺️ Leaflet map initialized successfully");
+    
+    mapRef.current = map;
+    
+    // Enable standard Leaflet interactions
+    map.dragging.enable();
+    map.touchZoom.enable();
+    map.doubleClickZoom.enable();
+    map.scrollWheelZoom.enable();
+    map.boxZoom.enable();
+    map.keyboard.enable();
+    
+    onMapInit(map);
+  };
 
   useEffect(() => {
     return () => {
@@ -58,13 +51,13 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
+        ref={handleMapCreated}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
-        <MapInitializer onMapInit={onMapInit} />
       </MapContainer>
     </div>
   );
