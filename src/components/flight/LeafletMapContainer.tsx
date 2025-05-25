@@ -42,7 +42,7 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        whenCreated={handleMapCreated}
+        whenReady={handleMapCreated}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
