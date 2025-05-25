@@ -15,7 +15,7 @@ const MapContainer: React.FC<MapContainerProps> = ({ onMapInit }) => {
     
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11', // Changed to light style
+      style: 'mapbox://styles/mapbox/dark-v11', // Changed to dark style
       center: [10.5, 51.0], // Zentriert auf Deutschland
       zoom: 5,
       projection: 'mercator'

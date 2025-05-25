@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Area, AreaChart } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TrendingUp, TrendingDown, Activity, Gauge, Plane } from 'lucide-react';
 
@@ -115,28 +115,24 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         </Card>
       </div>
 
-      {/* Main Performance Chart */}
+      {/* Main Performance Chart with Multiple Metrics */}
       <Card className="bg-gradient-to-br from-gray-900 to-slate-800 border-gray-700 shadow-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-white flex items-center gap-3 text-lg">
             <div className="bg-blue-600 p-2 rounded-lg">
               <Activity className="w-5 h-5 text-white" />
             </div>
-            Flugverlauf
+            Flugverlauf - Höhe, Geschwindigkeit & Steigrate
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+              <ComposedChart data={data} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
                 <defs>
                   <linearGradient id="altitudeGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
-                  </linearGradient>
-                  <linearGradient id="speedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -146,22 +142,43 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   fontSize={11}
                   tick={{ fill: '#9ca3af' }}
                 />
+                
+                {/* Left Y-Axis for Altitude */}
                 <YAxis 
                   yAxisId="altitude"
                   orientation="left"
                   stroke="#10b981"
                   fontSize={11}
                   tick={{ fill: '#10b981' }}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(1)}k ft`}
+                  domain={['dataMin - 500', 'dataMax + 500']}
                 />
+                
+                {/* Right Y-Axis for Speed */}
                 <YAxis 
                   yAxisId="speed"
                   orientation="right"
                   stroke="#3b82f6"
                   fontSize={11}
                   tick={{ fill: '#3b82f6' }}
+                  tickFormatter={(value) => `${value.toFixed(0)} kts`}
                 />
+                
+                {/* Additional Y-Axis for Vertical Speed */}
+                <YAxis 
+                  yAxisId="verticalSpeed"
+                  orientation="right"
+                  stroke="#f59e0b"
+                  fontSize={11}
+                  tick={{ fill: '#f59e0b' }}
+                  tickFormatter={(value) => `${value.toFixed(0)} fpm`}
+                  domain={[-2000, 2000]}
+                  hide={true} // Hide this axis but use for scaling
+                />
+                
                 <Tooltip content={<CustomTooltip />} />
+                
+                {/* Altitude Area Chart */}
                 <Area
                   yAxisId="altitude"
                   type="monotone"
@@ -169,32 +186,53 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   stroke="#10b981"
                   strokeWidth={3}
                   fill="url(#altitudeGradient)"
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4, stroke: '#064e3b' }}
+                  name="Höhe"
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2, fill: '#ffffff' }}
                 />
+                
+                {/* Speed Line */}
                 <Line
                   yAxisId="speed"
                   type="monotone"
                   dataKey="speed"
                   stroke="#3b82f6"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
+                  name="Geschwindigkeit"
                   dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
                   activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
                 />
-              </AreaChart>
+                
+                {/* Vertical Speed Line */}
+                <Line
+                  yAxisId="verticalSpeed"
+                  type="monotone"
+                  dataKey="verticalSpeed"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  name="Steigrate"
+                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 2 }}
+                  activeDot={{ r: 4, stroke: '#f59e0b', strokeWidth: 2, fill: '#ffffff' }}
+                  strokeDasharray="5 5"
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
           
           {/* Enhanced Chart Legend */}
           <div className="mt-6 flex justify-center">
-            <div className="flex items-center space-x-8 bg-gray-800/50 px-6 py-3 rounded-full">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center space-x-6 bg-gray-800/50 px-6 py-3 rounded-full">
+              <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-sm"></div>
                 <span className="text-gray-300 text-sm font-medium">Höhe (ft)</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full shadow-sm"></div>
                 <span className="text-gray-300 text-sm font-medium">Geschwindigkeit (kts)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full shadow-sm border-2 border-dashed border-amber-500"></div>
+                <span className="text-gray-300 text-sm font-medium">Steigrate (fpm)</span>
               </div>
             </div>
           </div>
