@@ -10,14 +10,14 @@ const MapStyles = () => {
         font-family: inherit;
       }
       
-      /* Enhanced bright map tiles */
+      /* Enhanced bright map tiles for OpenStreetMap */
       .leaflet-tile {
-        filter: brightness(1.15) contrast(1.1) saturate(0.9);
+        filter: brightness(1.25) contrast(1.15) saturate(0.8);
         image-rendering: optimizeQuality;
       }
       
       .leaflet-tile-container img {
-        filter: brightness(1.2) contrast(1.05) saturate(0.85);
+        filter: brightness(1.3) contrast(1.1) saturate(0.75);
       }
       
       /* SIMPLIFIED aircraft marker styles - removed problematic animations */
@@ -82,22 +82,22 @@ const MapStyles = () => {
         contain: layout;
       }
       
-      /* Bright control styling */
+      /* Extra bright control styling for OpenStreetMap */
       .leaflet-control-zoom {
         border: none;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-zoom a {
-        background-color: rgba(255,255,255,0.95);
-        color: #333;
+        background-color: rgba(255,255,255,0.98);
+        color: #222;
         border: none;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       }
       
       .leaflet-control-zoom a:hover {
         background-color: #fff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       }
       
       /* Enhanced route line styles for smooth gradients and curves */
@@ -189,15 +189,16 @@ const MapStyles = () => {
         animation: none !important;
       }
       
-      /* Bright map overlay enhancements */
+      /* Extra bright map overlay enhancements for OpenStreetMap */
       .leaflet-control-attribution {
-        background-color: rgba(255, 255, 255, 0.9);
-        color: #333;
+        background-color: rgba(255, 255, 255, 0.95);
+        color: #222;
         font-size: 11px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       }
       
       .leaflet-control-attribution a {
-        color: #0078A8;
+        color: #0066CC;
       }
     `}</style>
   );
