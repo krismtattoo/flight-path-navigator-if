@@ -94,24 +94,33 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 200;
   }, []);
 
-  // FIXED: Improved aircraft icon with pink highlight and shadow for selected state
+  // FIXED: Pink aircraft for selected state with dark shadow for all aircraft
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Use same color as airborne aircraft for selected state
-    const baseColor = onGround ? '#9ca3af' : '#475569';
-    const color = '#475569'; // Always use airborne color for selected aircraft
+    // Color logic: Pink for selected, normal colors for others
+    const groundColor = '#9ca3af';
+    const airborneColor = '#475569';
+    const selectedColor = '#ec4899'; // Pink for selected aircraft
+    
+    let fillColor;
+    if (isSelected) {
+      fillColor = selectedColor;
+    } else {
+      fillColor = onGround ? groundColor : airborneColor;
+    }
     
     const svgIcon = `
       <svg width="${isSelected ? '28' : '24'}" height="${isSelected ? '28' : '24'}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg);" class="aircraft-svg">
-        ${isSelected ? `
-          <!-- Pink highlight background with shadow -->
-          <circle cx="256" cy="256" r="220" fill="#ec4899" opacity="0.3" 
-                  filter="drop-shadow(0 4px 8px rgba(236, 72, 153, 0.4))"/>
-          <circle cx="256" cy="256" r="200" fill="none" stroke="#ec4899" stroke-width="3" opacity="0.6"/>
-        ` : ''}
+        <!-- Dark background shadow for ALL aircraft -->
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
-              fill="${isSelected ? color : (onGround ? baseColor : color)}" 
+              fill="#000000" 
+              opacity="0.3"
+              transform="translate(2,2)"
+              stroke="none"/>
+        <!-- Main aircraft icon -->
+        <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
+              fill="${fillColor}" 
               stroke="none"/>
       </svg>
     `;
