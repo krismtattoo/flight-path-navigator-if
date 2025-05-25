@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -18,6 +19,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const selectedMarkerIdRef = useRef<string | null>(null);
   const lastKnownFlightDataRef = useRef<{ [key: string]: Flight }>({});
+  const isUpdatingRef = useRef(false);
 
   // Memoize flight lookup for better performance
   const flightLookup = useMemo(() => {
@@ -37,7 +39,13 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
 
   // Update selected marker reference when prop changes
   useEffect(() => {
+    console.log(`🔄 selectedFlightId changed from ${selectedMarkerIdRef.current} to ${selectedFlightId}`);
     selectedMarkerIdRef.current = selectedFlightId || null;
+    
+    // Update all marker styles when selection changes
+    if (!isUpdatingRef.current) {
+      updateAllMarkerStyles();
+    }
   }, [selectedFlightId]);
 
   // Function to determine if aircraft is on ground
@@ -76,14 +84,24 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     });
   }, [isOnGround]);
 
-  // Update marker style
+  // Update marker style with DOM safety check
   const updateMarkerStyle = useCallback((marker: L.Marker, flight: Flight, isSelected: boolean) => {
-    const newIcon = createAircraftIcon(flight, isSelected);
-    marker.setIcon(newIcon);
+    try {
+      if (!marker || !flight) return;
+      
+      const newIcon = createAircraftIcon(flight, isSelected);
+      marker.setIcon(newIcon);
+    } catch (error) {
+      console.warn(`⚠️ Failed to update marker style for flight ${flight?.flightId}:`, error);
+    }
   }, [createAircraftIcon]);
 
   // Update all marker styles
   const updateAllMarkerStyles = useCallback(() => {
+    if (isUpdatingRef.current) return;
+    
+    console.log(`🎨 Updating all marker styles, selected: ${selectedMarkerIdRef.current}`);
+    
     Object.keys(markersRef.current).forEach(flightId => {
       const marker = markersRef.current[flightId];
       const flight = flightLookup[flightId] || lastKnownFlightDataRef.current[flightId];
@@ -95,29 +113,37 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     });
   }, [flightLookup, updateMarkerStyle]);
 
-  // Create marker for flight
-  const createMarker = useCallback((flight: Flight): L.Marker => {
-    const icon = createAircraftIcon(flight, false);
-    
-    const marker = L.marker([flight.latitude, flight.longitude], { icon })
-      .on('click', () => {
-        console.log(`🎯 Aircraft clicked: ${flight.flightId} (${flight.callsign})`);
-        onFlightSelect(flight);
-        
-        // Update selected marker reference
-        selectedMarkerIdRef.current = flight.flightId;
-        
-        // Update all marker styles to reflect selection
-        updateAllMarkerStyles();
-      });
+  // Create marker for flight with DOM safety check
+  const createMarker = useCallback((flight: Flight): L.Marker | null => {
+    try {
+      if (!map || !flight) return null;
+      
+      const icon = createAircraftIcon(flight, false);
+      
+      const marker = L.marker([flight.latitude, flight.longitude], { icon })
+        .on('click', () => {
+          console.log(`🎯 Aircraft clicked: ${flight.flightId} (${flight.callsign})`);
+          onFlightSelect(flight);
+          
+          // Update selected marker reference immediately
+          selectedMarkerIdRef.current = flight.flightId;
+          
+          // Update all marker styles to reflect selection
+          setTimeout(() => updateAllMarkerStyles(), 50);
+        });
 
-    return marker;
-  }, [createAircraftIcon, onFlightSelect, updateAllMarkerStyles]);
+      return marker;
+    } catch (error) {
+      console.error(`❌ Failed to create marker for flight ${flight.flightId}:`, error);
+      return null;
+    }
+  }, [createAircraftIcon, onFlightSelect, updateAllMarkerStyles, map]);
 
   // Main effect to manage markers
   useEffect(() => {
     if (!map) return;
 
+    isUpdatingRef.current = true;
     console.log(`🔄 Updating ${flights.length} aircraft markers`);
     
     // Remove markers for flights that no longer exist, BUT protect selected flight
@@ -136,8 +162,14 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
         }
         
         console.log(`🗑️ Removing marker for flight ${flightId}`);
-        map.removeLayer(markersRef.current[flightId]);
-        delete markersRef.current[flightId];
+        try {
+          if (markersRef.current[flightId]) {
+            map.removeLayer(markersRef.current[flightId]);
+            delete markersRef.current[flightId];
+          }
+        } catch (error) {
+          console.warn(`⚠️ Failed to remove marker for flight ${flightId}:`, error);
+        }
       }
     });
 
@@ -147,32 +179,48 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
       
       if (existingMarker) {
         // Update existing marker position and icon
-        existingMarker.setLatLng([flight.latitude, flight.longitude]);
-        
-        // Update icon with current flight data
-        const isSelected = selectedMarkerIdRef.current === flight.flightId;
-        updateMarkerStyle(existingMarker, flight, isSelected);
+        try {
+          existingMarker.setLatLng([flight.latitude, flight.longitude]);
+          
+          // Update icon with current flight data
+          const isSelected = selectedMarkerIdRef.current === flight.flightId;
+          updateMarkerStyle(existingMarker, flight, isSelected);
+        } catch (error) {
+          console.warn(`⚠️ Failed to update existing marker for flight ${flight.flightId}:`, error);
+        }
       } else {
         // Create new marker
         console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign})`);
         const newMarker = createMarker(flight);
-        newMarker.addTo(map);
-        markersRef.current[flight.flightId] = newMarker;
+        
+        if (newMarker) {
+          try {
+            newMarker.addTo(map);
+            markersRef.current[flight.flightId] = newMarker;
+          } catch (error) {
+            console.error(`❌ Failed to add marker to map for flight ${flight.flightId}:`, error);
+          }
+        }
       }
     });
 
     console.log(`📊 Active markers: ${Object.keys(markersRef.current).length}`);
+    isUpdatingRef.current = false;
   }, [map, flights, currentFlightIds, createMarker, updateMarkerStyle]);
 
   // Cleanup effect
   useEffect(() => {
     return () => {
-      Object.values(markersRef.current).forEach(marker => {
-        if (map) {
-          map.removeLayer(marker);
-        }
-      });
-      markersRef.current = {};
+      try {
+        Object.values(markersRef.current).forEach(marker => {
+          if (map && marker) {
+            map.removeLayer(marker);
+          }
+        });
+        markersRef.current = {};
+      } catch (error) {
+        console.warn('⚠️ Error during marker cleanup:', error);
+      }
     };
   }, [map]);
 

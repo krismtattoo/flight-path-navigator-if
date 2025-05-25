@@ -83,13 +83,23 @@ const FlightMap: React.FC = () => {
     }
   }, [activeServer, map]);
 
-  // Optimized close handler
+  // Optimized close handler with improved state management
   const handleCloseFlightDetails = useCallback(() => {
     console.log("🔄 Closing flight details");
     setSelectedFlight(null);
     setFlownRoute([]);
     setFlightPlan([]);
+    // Note: selectedFlightId will be null due to selectedFlight being null,
+    // which will trigger the marker style update in LeafletAircraftMarker
   }, []);
+
+  // Clear selection when changing servers
+  useEffect(() => {
+    console.log("🔄 Server changed, clearing flight selection");
+    setSelectedFlight(null);
+    setFlownRoute([]);
+    setFlightPlan([]);
+  }, [activeServer]);
 
   return (
     <div className="relative h-screen w-full bg-[#151920]">
