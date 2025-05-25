@@ -10,8 +10,10 @@ export interface PerformanceData {
 }
 
 // Generate performance data from flight track points
-export function generatePerformanceFromTrack(trackPoints: FlightTrackPoint[]): PerformanceData[] {
-  if (!trackPoints || trackPoints.length === 0) {
+export function generatePerformanceFromTrack(trackPoints: FlightTrackPoint[] | undefined): PerformanceData[] {
+  // Early return with proper null/undefined checks
+  if (!trackPoints || !Array.isArray(trackPoints) || trackPoints.length === 0) {
+    console.log(`📊 No track points available, generating mock flight data`);
     return generateMockFlightData();
   }
 
