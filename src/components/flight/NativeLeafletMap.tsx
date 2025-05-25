@@ -22,22 +22,22 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing native Leaflet map with dark blue theme");
+    console.log("🗺️ Initializing minimalist elegant dark blue map");
 
     // Create the map
     const map = L.map(mapContainer.current, {
       center: [51.0, 10.5],
       zoom: 5,
       zoomControl: true,
-      preferCanvas: true, // Better performance for many markers
+      preferCanvas: true,
     });
 
-    // Add dark blue tile layer (CartoDB Dark Matter with blue filter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    // Use Stamen Toner for ultra-minimalist look with custom styling
+    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://stamen.com">Stamen Design</a>',
       subdomains: 'abcd',
-      maxZoom: 19,
-      className: 'dark-blue-tiles',
+      maxZoom: 18,
+      className: 'minimalist-blue-tiles',
     }).addTo(map);
 
     // Enable all interactions
@@ -50,13 +50,13 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Native Leaflet map initialized successfully with dark blue theme");
+    console.log("🗺️ Minimalist elegant dark blue map initialized successfully");
     onMapInit(map);
 
     // Cleanup function
     return () => {
       if (mapInstance.current) {
-        console.log("🗑️ Cleaning up native Leaflet map");
+        console.log("🗑️ Cleaning up minimalist map");
         mapInstance.current.remove();
         mapInstance.current = null;
       }
@@ -65,11 +65,17 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
   return (
     <div className="absolute inset-0 z-0">
+      {/* Gradient Background Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#1e3a8a] to-[#0f172a] z-0"></div>
+      
       <div 
         ref={mapContainer} 
-        className="w-full h-full dark-blue-map"
+        className="w-full h-full minimalist-elegant-map relative z-10"
         style={{ minHeight: '400px' }}
       />
+      
+      {/* Subtle overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/20 via-transparent to-[#1e3a8a]/10 pointer-events-none z-20"></div>
     </div>
   );
 };

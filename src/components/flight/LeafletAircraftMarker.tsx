@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -90,24 +89,25 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 100 && flight.speed < 50;
   }, []);
 
-  // Create SVG icon for aircraft with dark theme colors
+  // Create SVG icon for aircraft with elegant minimalist design
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Enhanced colors for dark blue background
-    const baseColor = onGround ? '#94a3b8' : '#e2e8f0';
-    const selectedColor = '#96c7f2';
+    // Elegant colors for minimalist design
+    const baseColor = onGround ? '#64748b' : '#93c5fd';
+    const selectedColor = '#bfdbfe';
     const color = isSelected ? selectedColor : baseColor;
     
     const glowEffect = isSelected 
-      ? 'drop-shadow(0 0 12px rgba(96, 165, 250, 0.8)) drop-shadow(0 0 20px rgba(96, 165, 250, 0.4))' 
-      : 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))';
+      ? 'drop-shadow(0 0 20px rgba(147, 197, 253, 0.8)) drop-shadow(0 0 40px rgba(147, 197, 253, 0.4))' 
+      : 'drop-shadow(0 2px 8px rgba(10, 22, 40, 0.3))';
     
     const svgIcon = `
-      <svg width="32" height="32" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${glowEffect};" class="aircraft-svg">
+      <svg width="28" height="28" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${glowEffect};" class="aircraft-svg">
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
               fill="${color}" 
-              stroke="none"
+              stroke="rgba(147, 197, 253, 0.6)"
+              stroke-width="1"
               vector-effect="non-scaling-stroke"/>
       </svg>
     `;
@@ -115,8 +115,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return L.divIcon({
       html: svgIcon,
       className: `aircraft-marker ${isSelected ? 'aircraft-marker-selected aircraft-marker-glow' : ''}`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
     });
   }, [isOnGround]);
 
@@ -217,7 +217,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
           existingMarker.setLatLng([flight.latitude, flight.longitude]);
           
           // Enhanced selection check - fix the variable scope issue
-          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flight.flightId;
+          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flightId;
           updateMarkerStyle(existingMarker, flight, isSelected);
         } catch (error) {
           console.warn(`⚠️ Failed to update existing marker for flight ${flight.flightId}:`, error);
