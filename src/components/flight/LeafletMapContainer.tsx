@@ -1,6 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import React from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,28 +16,28 @@ interface LeafletMapContainerProps {
   onMapInit: (map: L.Map) => void;
 }
 
+// Component to handle map initialization from within react-leaflet context
+const MapInitializer: React.FC<{ onMapInit: (map: L.Map) => void }> = ({ onMapInit }) => {
+  const map = useMap();
+  
+  React.useEffect(() => {
+    console.log("🗺️ Leaflet map initialized successfully");
+    
+    // Enable standard Leaflet interactions with null checks
+    if (map && map.dragging) map.dragging.enable();
+    if (map && map.touchZoom) map.touchZoom.enable();
+    if (map && map.doubleClickZoom) map.doubleClickZoom.enable();
+    if (map && map.scrollWheelZoom) map.scrollWheelZoom.enable();
+    if (map && map.boxZoom) map.boxZoom.enable();
+    if (map && map.keyboard) map.keyboard.enable();
+    
+    onMapInit(map);
+  }, [map, onMapInit]);
+
+  return null;
+};
+
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
-  const mapRef = useRef<L.Map | null>(null);
-
-  useEffect(() => {
-    // If map is available, initialize it
-    if (mapRef.current && !mapRef.current.hasEventListeners('ready')) {
-      console.log("🗺️ Leaflet map initialized successfully");
-      
-      const map = mapRef.current;
-      
-      // Enable standard Leaflet interactions with null checks
-      if (map && map.dragging) map.dragging.enable();
-      if (map && map.touchZoom) map.touchZoom.enable();
-      if (map && map.doubleClickZoom) map.doubleClickZoom.enable();
-      if (map && map.scrollWheelZoom) map.scrollWheelZoom.enable();
-      if (map && map.boxZoom) map.boxZoom.enable();
-      if (map && map.keyboard) map.keyboard.enable();
-      
-      onMapInit(map);
-    }
-  }, [onMapInit]);
-
   return (
     <div className="absolute inset-0 z-0">
       <MapContainer
@@ -45,13 +45,13 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        ref={mapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
+        <MapInitializer onMapInit={onMapInit} />
       </MapContainer>
     </div>
   );
