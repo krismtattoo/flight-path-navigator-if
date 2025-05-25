@@ -445,35 +445,35 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     return (
       <ScrollArea className="h-[70vh] w-full">
         <div className="space-y-4 pr-4">
-          {/* Enhanced Performance Metrics Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/50 border-blue-700/50 backdrop-blur-sm">
-              <CardContent className="p-4 text-center">
+          {/* Enhanced Performance Metrics Grid - All three in one compact row */}
+          <div className="grid grid-cols-3 gap-2">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-3 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Zap className="w-5 h-5 text-blue-400" />
+                  <Zap className="w-4 h-4 text-blue-400" />
                 </div>
-                <p className="text-xl font-bold text-white">{Math.round(flight.speed)}</p>
-                <p className="text-xs text-blue-200">Geschwindigkeit (kts)</p>
+                <p className="text-lg font-bold text-white">{Math.round(flight.speed)}</p>
+                <p className="text-xs text-gray-400">Geschwindigkeit (kts)</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-700/50 backdrop-blur-sm">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-3 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Gauge className="w-5 h-5 text-green-400" />
+                  <Gauge className="w-4 h-4 text-green-400" />
                 </div>
-                <p className="text-xl font-bold text-white">{Math.round(flight.altitude)}</p>
-                <p className="text-xs text-green-200">Höhe (ft)</p>
+                <p className="text-lg font-bold text-white">{Math.round(flight.altitude)}</p>
+                <p className="text-xs text-gray-400">Höhe (ft)</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-orange-900/50 to-orange-800/50 border-orange-700/50 backdrop-blur-sm">
-              <CardContent className="p-4 text-center">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-3 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Navigation className="w-5 h-5 text-orange-400" />
+                  <Navigation className="w-4 h-4 text-orange-400" />
                 </div>
-                <p className="text-xl font-bold text-white">{Math.round(flight.heading)}°</p>
-                <p className="text-xs text-orange-200">Kurs</p>
+                <p className="text-lg font-bold text-white">{Math.round(flight.heading)}°</p>
+                <p className="text-xs text-gray-400">Kurs</p>
               </CardContent>
             </Card>
           </div>
