@@ -50,7 +50,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   const [loadingFlightPlan, setLoadingFlightPlan] = useState(false);
   
   // Fetch detailed aircraft information
-  const { aircraftName, liveryName, loading: aircraftLoading } = useAircraftInfo(
+  const { aircraftName, liveryName, loading: aircraftLoading, error: aircraftError } = useAircraftInfo(
     flight.aircraftId || '', 
     flight.liveryId || ''
   );
@@ -258,9 +258,11 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
               <div className="min-h-[20px]">
                 {aircraftLoading ? (
                   <div className="animate-pulse bg-slate-600 h-4 w-3/4 rounded"></div>
+                ) : aircraftError ? (
+                  <p className="text-sm text-red-400">API Error</p>
                 ) : (
                   <p className="text-sm font-semibold text-white">
-                    {aircraftName || flight.aircraft}
+                    {aircraftName || flight.aircraft || 'Unknown'}
                   </p>
                 )}
               </div>
@@ -276,9 +278,11 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             <div className="min-h-[20px]">
               {aircraftLoading ? (
                 <div className="animate-pulse bg-slate-600 h-4 w-2/3 rounded"></div>
+              ) : aircraftError ? (
+                <p className="text-sm text-red-400">API Error</p>
               ) : (
                 <p className="text-sm text-white truncate">
-                  {liveryName || flight.livery}
+                  {liveryName || flight.livery || 'Unknown'}
                 </p>
               )}
             </div>
