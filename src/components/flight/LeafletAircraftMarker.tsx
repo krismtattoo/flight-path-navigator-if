@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -31,30 +32,34 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flig
     return flight.altitude < 100 && flight.speed < 50;
   }, []);
 
-  // Create SVG icon for aircraft
+  // Create SVG icon for aircraft with improved quality and glow effect
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Color based on status
-    const color = onGround ? '#6b7280' : '#e84393'; // Gray for ground, pink for airborne
-    const strokeColor = isSelected ? '#ffffff' : 'none'; // No stroke for non-selected aircraft
-    const strokeWidth = isSelected ? '2' : '0'; // No stroke width for non-selected aircraft
-    const dropShadow = isSelected ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))';
+    // Slate color scheme to match FlightDetails panel
+    const baseColor = onGround ? '#64748b' : '#475569'; // Slate-500 for ground, slate-600 for airborne
+    const selectedColor = '#334155'; // Slate-700 for selected
+    const color = isSelected ? selectedColor : baseColor;
+    
+    // Glow effect for selected aircraft instead of stroke
+    const glowEffect = isSelected 
+      ? 'drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.4))' 
+      : 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))';
     
     const svgIcon = `
-      <svg width="28" height="28" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${dropShadow};">
+      <svg width="32" height="32" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${glowEffect};" class="aircraft-svg">
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
               fill="${color}" 
-              stroke="${strokeColor}" 
-              stroke-width="${strokeWidth}"/>
+              stroke="none"
+              vector-effect="non-scaling-stroke"/>
       </svg>
     `;
 
     return L.divIcon({
       html: svgIcon,
-      className: `aircraft-marker ${isSelected ? 'aircraft-marker-selected' : ''}`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+      className: `aircraft-marker ${isSelected ? 'aircraft-marker-selected aircraft-marker-glow' : ''}`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
     });
   }, [isOnGround]);
 

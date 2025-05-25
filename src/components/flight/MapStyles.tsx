@@ -10,29 +10,65 @@ const MapStyles = () => {
         font-family: inherit;
       }
       
-      /* Aircraft marker optimizations */
+      /* Aircraft marker optimizations with improved SVG rendering */
       .aircraft-marker {
         will-change: transform;
         backface-visibility: hidden;
         transform-style: preserve-3d;
-        transition: none;
+        transition: all 0.2s ease-out;
         pointer-events: auto;
         cursor: pointer;
       }
       
-      .aircraft-marker svg {
-        shape-rendering: optimizeSpeed;
-        transform: translateZ(0);
-        transition: transform 0.1s ease-out;
+      .aircraft-marker svg,
+      .aircraft-svg {
+        shape-rendering: geometricPrecision;
         image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+        transform: translateZ(0);
+        transition: all 0.2s ease-out;
+        filter-rendering: optimizeQuality;
+        vector-effect: non-scaling-stroke;
       }
       
+      /* Glow animation for selected aircraft */
       .aircraft-marker-selected {
         z-index: 1000 !important;
+        animation: aircraft-pulse 2s ease-in-out infinite;
       }
       
-      .aircraft-marker-selected svg {
-        filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)) !important;
+      .aircraft-marker-glow svg {
+        animation: glow-pulse 1.5s ease-in-out infinite alternate;
+      }
+      
+      /* Smooth hover effects */
+      .aircraft-marker:hover {
+        transform: scale(1.1);
+        z-index: 999;
+      }
+      
+      .aircraft-marker:hover svg {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
+      }
+      
+      /* Keyframe animations */
+      @keyframes aircraft-pulse {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+      
+      @keyframes glow-pulse {
+        0% {
+          filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
+        }
+        100% {
+          filter: drop-shadow(0 0 16px rgba(59, 130, 246, 1)) drop-shadow(0 0 28px rgba(59, 130, 246, 0.6));
+        }
       }
       
       /* Leaflet marker optimizations */
