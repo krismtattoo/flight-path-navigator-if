@@ -152,7 +152,11 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
 
   // Main effect to manage markers
   useEffect(() => {
-    if (!map) return;
+    // Add validation to ensure map is available and loaded
+    if (!map || !map.loaded()) {
+      console.log('🗺️ Map not ready for markers yet');
+      return;
+    }
 
     console.log(`🔄 Updating ${flights.length} aircraft markers`);
     
@@ -199,11 +203,15 @@ const AircraftMarker: React.FC<AircraftMarkerProps> = ({ map, flights, onFlightS
           }
         }
       } else {
-        // Create new marker
-        console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign})`);
-        const newMarker = createMarker(flight);
-        newMarker.addTo(map);
-        markersRef.current[flight.flightId] = newMarker;
+        // Create new marker only if map is available
+        try {
+          console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign})`);
+          const newMarker = createMarker(flight);
+          newMarker.addTo(map);
+          markersRef.current[flight.flightId] = newMarker;
+        } catch (error) {
+          console.error(`❌ Error creating marker for flight ${flight.flightId}:`, error);
+        }
       }
     });
 
