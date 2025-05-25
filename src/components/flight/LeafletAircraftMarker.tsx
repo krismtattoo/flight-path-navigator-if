@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -215,8 +216,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
         try {
           existingMarker.setLatLng([flight.latitude, flight.longitude]);
           
-          // Enhanced selection check
-          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flightId;
+          // Enhanced selection check - fix the variable scope issue
+          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flight.flightId;
           updateMarkerStyle(existingMarker, flight, isSelected);
         } catch (error) {
           console.warn(`⚠️ Failed to update existing marker for flight ${flight.flightId}:`, error);
