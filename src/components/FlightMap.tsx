@@ -23,8 +23,7 @@ import { useFlightSearch, SearchResult } from '@/hooks/useFlightSearch';
 import { useAirportData } from '@/hooks/useAirportData';
 import { AirportStatus } from '@/services/flight/worldService';
 import { useAirportInfo } from '@/hooks/useAirportInfo';
-import { Airport } from '@/data/airportData';
-import { allAirports } from '@/data/airportData';
+import { Airport, airports } from '@/data/airportData';
 
 const FlightMap: React.FC = () => {
   const { 
@@ -71,7 +70,7 @@ const FlightMap: React.FC = () => {
   const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
   
   // Airport data hook
-  const { airports, loading: airportsLoading } = useAirportData({ 
+  const { airports: liveAirports, loading: airportsLoading } = useAirportData({ 
     activeServerId: activeServer?.id || null 
   });
   
@@ -90,6 +89,14 @@ const FlightMap: React.FC = () => {
     setMap(initializedMap);
     setMapLoaded(true);
   }, []);
+
+  // Close airport details handler
+  const handleCloseAirportDetails = useCallback(() => {
+    console.log("🔄 Closing airport details");
+    setSelectedAirport(null);
+    setSelectedAirportInfo(null);
+    clearAirportInfo();
+  }, [clearAirportInfo]);
 
   // Enhanced close handler to also clear airport selection
   const handleCloseFlightDetails = useCallback(() => {
@@ -110,14 +117,6 @@ const FlightMap: React.FC = () => {
       setSelectionInProgress(null);
     }, 1000);
   }, [airportMarkers, map]);
-
-  // Close airport details handler
-  const handleCloseAirportDetails = useCallback(() => {
-    console.log("🔄 Closing airport details");
-    setSelectedAirport(null);
-    setSelectedAirportInfo(null);
-    clearAirportInfo();
-  }, [clearAirportInfo]);
 
   // Handle search result selection
   const handleSelectSearchResult = useCallback((result: SearchResult) => {
@@ -374,12 +373,12 @@ const FlightMap: React.FC = () => {
           />
           <AirportMarkers
             map={map}
-            airports={airports}
+            airports={liveAirports}
             onAirportSelect={handleAirportSelect}
           />
           <AllAirportMarkers
             map={map}
-            airports={allAirports}
+            airports={airports}
             onAirportSelect={handleAirportInfoSelect}
           />
           <LeafletFlightRoute 
