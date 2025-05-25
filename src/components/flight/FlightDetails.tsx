@@ -13,7 +13,7 @@ interface FlightDetailsProps {
 }
 
 const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
-  const { aircraftInfo, loading: aircraftLoading } = useAircraftInfo(flight.aircraftId, flight.liveryId);
+  const { aircraftName, liveryName, loading: aircraftLoading } = useAircraftInfo(flight.aircraftId, flight.liveryId);
   const [showPerformanceChart, setShowPerformanceChart] = useState(false);
 
   // Auto-show performance chart after a short delay
@@ -106,9 +106,9 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             <div className="flex-1 min-w-0">
               <p className="text-gray-300 text-sm font-medium">Flugzeug</p>
               <p className="text-white text-sm truncate">
-                {aircraftLoading ? "Lädt..." : (aircraftInfo?.Name || flight.aircraft)}
+                {aircraftLoading ? "Lädt..." : (aircraftName || flight.aircraft)}
               </p>
-              <p className="text-gray-400 text-xs truncate">{flight.livery}</p>
+              <p className="text-gray-400 text-xs truncate">{liveryName || flight.livery}</p>
             </div>
           </div>
 
