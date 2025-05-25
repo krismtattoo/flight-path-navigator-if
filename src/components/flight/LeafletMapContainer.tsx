@@ -19,26 +19,22 @@ interface LeafletMapContainerProps {
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
 
-  const handleMapReady = () => {
+  const handleMapReady = (map: L.Map) => {
     console.log("🗺️ Leaflet map ready event fired");
-    // We'll get the map instance through a different approach
-  };
-
-  // Use a ref callback to get the map instance when MapContainer mounts
-  const mapRefCallback = (mapInstance: L.Map | null) => {
-    if (mapInstance && !mapRef.current) {
-      console.log("🗺️ Leaflet map initialized via ref callback");
-      mapRef.current = mapInstance;
+    
+    if (!mapRef.current) {
+      console.log("🗺️ Leaflet map initialized via whenReady");
+      mapRef.current = map;
       
       // Enable standard Leaflet interactions
-      mapInstance.dragging.enable();
-      mapInstance.touchZoom.enable();
-      mapInstance.doubleClickZoom.enable();
-      mapInstance.scrollWheelZoom.enable();
-      mapInstance.boxZoom.enable();
-      mapInstance.keyboard.enable();
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
       
-      onMapInit(mapInstance);
+      onMapInit(map);
     }
   };
 
@@ -56,9 +52,8 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         center={[51.0, 10.5]}
         zoom={5}
         className="w-full h-full"
-        whenReady={handleMapReady}
+        whenReady={(e) => handleMapReady(e.target)}
         zoomControl={true}
-        ref={mapRefCallback}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
