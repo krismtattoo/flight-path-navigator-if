@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -84,6 +85,32 @@ const FlightMap: React.FC = () => {
     
     setMap(initializedMap);
     setMapLoaded(true);
+  }, []);
+
+  // Enhanced close handler to also clear airport selection
+  const handleCloseFlightDetails = useCallback(() => {
+    console.log("🔄 Closing flight details");
+    
+    // Clear the details panel and routes
+    setFlownRoute([]);
+    setFlightPlan([]);
+    
+    // Clear airport markers
+    airportMarkers.forEach(marker => map?.removeLayer(marker));
+    setAirportMarkers([]);
+    
+    // Clear selections after a short delay to allow smooth transition
+    setTimeout(() => {
+      console.log("🔄 Clearing selected flight");
+      setSelectedFlight(null);
+      setSelectionInProgress(null);
+    }, 1000);
+  }, [airportMarkers, map]);
+
+  // Close airport details handler
+  const handleCloseAirportDetails = useCallback(() => {
+    console.log("🔄 Closing airport details");
+    setSelectedAirport(null);
   }, []);
 
   // Handle search result selection
@@ -218,26 +245,6 @@ const FlightMap: React.FC = () => {
       });
     }
   }, [map, selectedFlight, handleCloseFlightDetails]);
-
-  // Enhanced close handler to also clear airport selection
-  const handleCloseFlightDetails = useCallback(() => {
-    console.log("🔄 Closing flight details");
-    
-    // Clear the details panel and routes
-    setFlownRoute([]);
-    setFlightPlan([]);
-    
-    // Clear airport markers
-    airportMarkers.forEach(marker => map?.removeLayer(marker));
-    setAirportMarkers([]);
-    
-    // Clear selections after a short delay to allow smooth transition
-    setTimeout(() => {
-      console.log("🔄 Clearing selected flight");
-      setSelectedFlight(null);
-      setSelectionInProgress(null);
-    }, 1000);
-  }, [airportMarkers, map]);
 
   // FIXED: Clear selection when changing servers (removed problematic dependencies)
   useEffect(() => {
