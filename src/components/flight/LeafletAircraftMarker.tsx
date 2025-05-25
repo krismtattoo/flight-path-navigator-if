@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -93,20 +94,20 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Elegant colors for minimalist design
-    const baseColor = onGround ? '#64748b' : '#93c5fd';
-    const selectedColor = '#bfdbfe';
+    // Elegant colors for minimalist blue design
+    const baseColor = onGround ? '#475569' : '#60a5fa';
+    const selectedColor = '#93c5fd';
     const color = isSelected ? selectedColor : baseColor;
     
     const glowEffect = isSelected 
-      ? 'drop-shadow(0 0 20px rgba(147, 197, 253, 0.8)) drop-shadow(0 0 40px rgba(147, 197, 253, 0.4))' 
+      ? 'drop-shadow(0 0 20px rgba(96, 165, 250, 0.8)) drop-shadow(0 0 40px rgba(96, 165, 250, 0.4))' 
       : 'drop-shadow(0 2px 8px rgba(10, 22, 40, 0.3))';
     
     const svgIcon = `
       <svg width="28" height="28" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${glowEffect};" class="aircraft-svg">
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
               fill="${color}" 
-              stroke="rgba(147, 197, 253, 0.6)"
+              stroke="rgba(96, 165, 250, 0.6)"
               stroke-width="1"
               vector-effect="non-scaling-stroke"/>
       </svg>
@@ -216,8 +217,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
         try {
           existingMarker.setLatLng([flight.latitude, flight.longitude]);
           
-          // Enhanced selection check - fix the variable scope issue
-          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flightId;
+          // Fixed: Use flight.flightId instead of flightId
+          const isSelected = selectedFlightId === flight.flightId || selectionInProgress === flight.flightId;
           updateMarkerStyle(existingMarker, flight, isSelected);
         } catch (error) {
           console.warn(`⚠️ Failed to update existing marker for flight ${flight.flightId}:`, error);
