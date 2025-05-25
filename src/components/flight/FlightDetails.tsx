@@ -272,35 +272,35 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         </CardContent>
       </Card>
 
-      {/* Flight Data Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Flight Data Grid - All three in one row */}
+      <div className="grid grid-cols-3 gap-3">
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4 text-center">
+          <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Gauge className="w-6 h-6 text-blue-400" />
+              <Gauge className="w-5 h-5 text-blue-400" />
             </div>
-            <p className="text-2xl font-bold text-white">{Math.round(flight.altitude)}</p>
-            <p className="text-sm text-gray-400">Altitude (ft)</p>
+            <p className="text-xl font-bold text-white">{Math.round(flight.altitude)}</p>
+            <p className="text-xs text-gray-400">Altitude (ft)</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4 text-center">
+          <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Zap className="w-6 h-6 text-green-400" />
+              <Zap className="w-5 h-5 text-green-400" />
             </div>
-            <p className="text-2xl font-bold text-white">{Math.round(flight.speed)}</p>
-            <p className="text-sm text-gray-400">Speed (kts)</p>
+            <p className="text-xl font-bold text-white">{Math.round(flight.speed)}</p>
+            <p className="text-xs text-gray-400">Speed (kts)</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4 text-center">
+          <CardContent className="p-3 text-center">
             <div className="flex items-center justify-center mb-2">
-              <Navigation className="w-6 h-6 text-orange-400" />
+              <Navigation className="w-5 h-5 text-orange-400" />
             </div>
-            <p className="text-2xl font-bold text-white">{Math.round(flight.heading)}°</p>
-            <p className="text-sm text-gray-400">Heading</p>
+            <p className="text-xl font-bold text-white">{Math.round(flight.heading)}°</p>
+            <p className="text-xs text-gray-400">Heading</p>
           </CardContent>
         </Card>
       </div>
@@ -646,14 +646,39 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </div>
         </div>
 
-        {/* Content */}
-        <CardContent className="p-6 overflow-y-auto max-h-[70vh]">
+        {/* Content with custom scrollbar */}
+        <CardContent className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
           {activeSection === 'overview' && renderOverviewSection()}
           {activeSection === 'route' && renderRouteSection()}
           {activeSection === 'performance' && renderPerformanceSection()}
           {activeSection === 'pilot' && renderPilotSection()}
         </CardContent>
       </Card>
+
+      {/* Custom scrollbar styles */}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(100, 116, 139, 0.5);
+          border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(100, 116, 139, 0.7);
+        }
+        
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+        }
+      `}</style>
     </div>
   );
 };
