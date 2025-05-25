@@ -19,28 +19,11 @@ interface LeafletMapContainerProps {
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
 
-  const handleMapReady = () => {
+  const handleMapReady = (map: L.Map) => {
     console.log("🗺️ Leaflet map ready event fired");
     
-    if (mapRef.current && !mapRef.current._container) {
+    if (!mapRef.current) {
       console.log("🗺️ Leaflet map initialized via whenReady");
-      
-      // Enable standard Leaflet interactions
-      mapRef.current.dragging.enable();
-      mapRef.current.touchZoom.enable();
-      mapRef.current.doubleClickZoom.enable();
-      mapRef.current.scrollWheelZoom.enable();
-      mapRef.current.boxZoom.enable();
-      mapRef.current.keyboard.enable();
-      
-      onMapInit(mapRef.current);
-    }
-  };
-
-  // Use ref callback to capture the map instance
-  const setMapRef = (map: L.Map | null) => {
-    if (map && !mapRef.current) {
-      console.log("🗺️ Leaflet map initialized via ref");
       mapRef.current = map;
       
       // Enable standard Leaflet interactions
@@ -69,9 +52,8 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         center={[51.0, 10.5]}
         zoom={5}
         className="w-full h-full"
-        whenReady={handleMapReady}
+        whenReady={(e) => handleMapReady(e.target)}
         zoomControl={true}
-        ref={setMapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
