@@ -21,24 +21,24 @@ const ServerSelection: React.FC<ServerSelectionProps> = ({
   defaultValue = "casual" 
 }) => {
   return (
-    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+    <div className="absolute top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-10 w-full max-w-[calc(100vw-1rem)] sm:max-w-none px-2 sm:px-0">
       <Card className="shadow-lg bg-slate-800/95 backdrop-blur-sm border-slate-700">
         <Tabs 
           defaultValue={defaultValue}
-          className="w-[400px]"
+          className="w-full sm:w-[400px]"
           onValueChange={(value) => {
             console.log(`Selected server: ${value}`);
             onServerChange(value);
           }}
         >
-          <TabsList className="grid grid-cols-3 w-full bg-slate-700/50">
+          <TabsList className="grid grid-cols-3 w-full bg-slate-700/50 h-10 sm:h-auto">
             {servers.map(server => (
               <TabsTrigger 
                 key={server.id} 
                 value={server.id}
-                className="text-white data-[state=active]:bg-slate-600 data-[state=active]:text-white"
+                className="text-white data-[state=active]:bg-slate-600 data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-2 min-h-[44px] sm:min-h-auto"
               >
-                {server.name}
+                <span className="truncate">{server.name}</span>
               </TabsTrigger>
             ))}
           </TabsList>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LeafletAircraftMarkerProps {
   map: L.Map;
@@ -22,6 +23,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
   const markerMissCountRef = useRef<{ [key: string]: number }>({});
   const protectedMarkersRef = useRef<Set<string>>(new Set());
   const isUpdatingRef = useRef(false);
+  const isMobile = useIsMobile();
 
   const MAX_MISS_COUNT = 3;
 
@@ -94,7 +96,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 200;
   }, []);
 
-  // UPDATED: Light blue aircraft for selected state matching the image
+  // Mobile-responsive aircraft icon with touch-optimized sizing
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
@@ -110,8 +112,14 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
       fillColor = onGround ? groundColor : airborneColor;
     }
     
+    // Mobile-responsive sizing: larger touch targets on mobile
+    const baseSize = isMobile ? 28 : 24;
+    const selectedSize = isMobile ? 34 : 28;
+    const size = isSelected ? selectedSize : baseSize;
+    const anchor = size / 2;
+    
     const svgIcon = `
-      <svg width="${isSelected ? '28' : '24'}" height="${isSelected ? '28' : '24'}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg);" class="aircraft-svg">
+      <svg width="${size}" height="${size}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg);" class="aircraft-svg">
         <!-- Dark background shadow for ALL aircraft -->
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
               fill="#000000" 
@@ -128,10 +136,10 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return L.divIcon({
       html: svgIcon,
       className: `aircraft-marker ${isSelected ? 'aircraft-marker-selected' : ''}`,
-      iconSize: isSelected ? [28, 28] : [24, 24],
-      iconAnchor: isSelected ? [14, 14] : [12, 12],
+      iconSize: [size, size],
+      iconAnchor: [anchor, anchor],
     });
-  }, [isOnGround]);
+  }, [isOnGround, isMobile]);
 
   const safeRemoveMarker = useCallback((flightId: string) => {
     const marker = markersRef.current[flightId];

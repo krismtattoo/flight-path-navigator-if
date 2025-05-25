@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,98 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent zoom on mobile when focusing inputs */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 767px) {
+    /* Improve touch targets */
+    button, a, input, textarea, select {
+      min-height: 44px;
+    }
+    
+    /* Prevent horizontal scroll */
+    html, body {
+      overflow-x: hidden;
+    }
+    
+    /* Better text rendering on mobile */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+  }
+
+  /* Smooth scrolling for better UX */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Aircraft marker animations for mobile */
+  .aircraft-marker {
+    transition: transform 0.2s ease-out;
+  }
+  
+  .aircraft-marker:hover {
+    transform: scale(1.1);
+  }
+  
+  .aircraft-marker-selected {
+    z-index: 1000 !important;
+  }
+
+  /* Touch-friendly scrollbars on mobile */
+  @media (max-width: 767px) {
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+  }
+
+  /* Leaflet map container responsive fixes */
+  .leaflet-container {
+    font-family: inherit;
+  }
+  
+  @media (max-width: 767px) {
+    .leaflet-control-zoom {
+      margin-right: 10px !important;
+      margin-bottom: 80px !important;
+    }
+    
+    .leaflet-control-zoom a {
+      width: 44px !important;
+      height: 44px !important;
+      line-height: 44px !important;
+      font-size: 18px !important;
+    }
+  }
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 767px) {
+  * {
+    /* Hardware acceleration for smoother animations */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Reduce motion for battery saving on request */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
