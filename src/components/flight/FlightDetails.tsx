@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Plane, MapPin, Clock, User, Navigation, Gauge, Zap, Route, Fuel, BarChart3, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +41,28 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   };
 
   const aircraftStatus = getAircraftStatus();
+
+  // Generate mock performance data based on current flight data
+  const generatePerformanceData = () => {
+    const data = [];
+    const now = new Date();
+    
+    // Generate 10 data points over the last hour
+    for (let i = 9; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 6 * 60 * 1000); // 6 minutes apart
+      const variation = Math.random() * 0.2 - 0.1; // ±10% variation
+      
+      data.push({
+        time: time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+        altitude: Math.max(0, flight.altitude + (flight.altitude * variation)),
+        speed: Math.max(0, flight.speed + (flight.speed * variation * 0.5)),
+        verticalSpeed: (Math.random() - 0.5) * 1000, // Random vertical speed
+        heading: flight.heading
+      });
+    }
+    
+    return data;
+  };
 
   // Section renderers
   const renderOverviewSection = () => (
@@ -118,22 +141,22 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-400">Flight Plan</p>
-              <p className="text-white font-medium">{flight.flightPlan || 'N/A'}</p>
+              <p className="text-white font-medium">N/A</p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Track</p>
-              <p className="text-white font-medium">{Math.round(flight.track)}°</p>
+              <p className="text-white font-medium">{Math.round(flight.heading)}°</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-400">Ground Speed</p>
-              <p className="text-white font-medium">{Math.round(flight.groundSpeed)} kts</p>
+              <p className="text-white font-medium">{Math.round(flight.speed)} kts</p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Vertical Speed</p>
-              <p className="text-white font-medium">{Math.round(flight.verticalSpeed)} ft/min</p>
+              <p className="text-white font-medium">N/A ft/min</p>
             </div>
           </div>
         </CardContent>
@@ -173,13 +196,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-400">Flight Plan</p>
-              <p className="text-white">{flight.flightPlan || 'No flight plan available'}</p>
+              <p className="text-white">No flight plan available</p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-400">Current Track</p>
-                <p className="text-white font-medium">{Math.round(flight.track)}°</p>
+                <p className="text-white font-medium">{Math.round(flight.heading)}°</p>
               </div>
               <div>
                 <p className="text-sm text-gray-400">Current Heading</p>
@@ -202,7 +225,11 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
 
   const renderPerformanceSection = () => (
     <div className="space-y-4">
-      <PerformanceChart flight={flight} />
+      <PerformanceChart 
+        data={generatePerformanceData()}
+        currentAltitude={flight.altitude}
+        currentSpeed={flight.speed}
+      />
       
       {/* Performance Stats */}
       <div className="grid grid-cols-2 gap-4">
@@ -241,7 +268,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         <CardContent className="space-y-4">
           <div>
             <p className="text-sm text-gray-400">Display Name</p>
-            <p className="text-white font-medium">{flight.displayName}</p>
+            <p className="text-white font-medium">{flight.username}</p>
           </div>
           
           <div>
@@ -342,39 +369,14 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </div>
         </CardHeader>
 
-        {/* Content with custom scrollbar */}
-        <CardContent className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+        {/* Content with improved scrollbar */}
+        <CardContent className="p-6 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-slate-500">
           {activeSection === 'overview' && renderOverviewSection()}
           {activeSection === 'route' && renderRouteSection()}
           {activeSection === 'performance' && renderPerformanceSection()}
           {activeSection === 'pilot' && renderPilotSection()}
         </CardContent>
       </Card>
-
-      {/* Custom scrollbar styles */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(100, 116, 139, 0.5);
-          border-radius: 3px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(100, 116, 139, 0.7);
-        }
-        
-        .custom-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
-        }
-      `}</style>
     </div>
   );
 };
