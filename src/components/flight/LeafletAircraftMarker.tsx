@@ -94,14 +94,14 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 200;
   }, []);
 
-  // FIXED: Pink aircraft for selected state with dark shadow for all aircraft
+  // UPDATED: Light blue aircraft for selected state matching the image
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Color logic: Pink for selected, normal colors for others
+    // Color logic: Light blue for selected (matching the image), normal colors for others
     const groundColor = '#9ca3af';
     const airborneColor = '#475569';
-    const selectedColor = '#ec4899'; // Pink for selected aircraft
+    const selectedColor = '#5DADEC'; // Light blue matching the image
     
     let fillColor;
     if (isSelected) {
