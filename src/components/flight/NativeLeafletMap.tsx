@@ -22,7 +22,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing minimalist elegant dark blue map");
+    console.log("🗺️ Initializing minimalist elegant dark blue map with OpenStreetMap");
 
     // Create the map
     const map = L.map(mapContainer.current, {
@@ -32,10 +32,9 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
       preferCanvas: true,
     });
 
-    // Use Stamen Toner for ultra-minimalist look with custom styling
-    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="http://stamen.com">Stamen Design</a>',
-      subdomains: 'abcd',
+    // Use OpenStreetMap with custom styling for minimalist blue look
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 18,
       className: 'minimalist-blue-tiles',
     }).addTo(map);
@@ -50,7 +49,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Minimalist elegant dark blue map initialized successfully");
+    console.log("🗺️ Minimalist elegant dark blue map initialized successfully with OpenStreetMap");
     onMapInit(map);
 
     // Cleanup function

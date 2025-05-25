@@ -14,16 +14,15 @@ const MapStyles = () => {
         background: transparent;
       }
       
-      /* Ultra-minimalist tile styling with elegant blue filter */
+      /* Elegant blue filter for tiles - much lighter to keep map visible */
       .minimalist-blue-tiles {
         filter: 
-          grayscale(100%) 
-          brightness(0.3) 
-          contrast(2) 
-          hue-rotate(220deg) 
-          saturate(0.8)
-          opacity(0.7);
-        mix-blend-mode: screen;
+          hue-rotate(210deg) 
+          saturate(0.4)
+          brightness(0.7) 
+          contrast(1.2)
+          opacity(0.8);
+        mix-blend-mode: multiply;
       }
       
       /* Enhanced aircraft markers for elegant look */
@@ -174,16 +173,15 @@ const MapStyles = () => {
         image-rendering: optimizeQuality;
       }
       
-      /* Elegant tile enhancement */
+      /* Adjusted tile enhancement for visibility */
       .leaflet-tile-container img {
         filter: 
-          grayscale(100%) 
-          brightness(0.3) 
-          contrast(2) 
-          hue-rotate(220deg) 
-          saturate(0.8)
-          opacity(0.7);
-        mix-blend-mode: screen;
+          hue-rotate(210deg) 
+          saturate(0.4)
+          brightness(0.7) 
+          contrast(1.2)
+          opacity(0.8);
+        mix-blend-mode: multiply;
       }
       
       .aircraft-marker svg path {
