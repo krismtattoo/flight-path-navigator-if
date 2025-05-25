@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Flight } from '@/services/flight';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plane, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -79,27 +80,29 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
           </CardHeader>
           {showInbound && (
             <CardContent className="pt-0">
-              <div className="bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-600">
-                      <TableHead className="text-xs py-1 text-blue-300">Callsign</TableHead>
-                      <TableHead className="text-xs py-1 text-blue-300">Aircraft</TableHead>
-                      <TableHead className="text-xs py-1 text-blue-300">Altitude</TableHead>
-                      <TableHead className="text-xs py-1 text-blue-300">Speed</TableHead>
-                      <TableHead className="text-xs py-1 text-blue-300">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inboundFlights.map((flight) => (
-                      <FlightRow 
-                        key={flight.flightId} 
-                        flight={flight} 
-                        type="inbound" 
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden">
+                <ScrollArea className="h-48">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-slate-600">
+                        <TableHead className="text-xs py-1 text-blue-300">Callsign</TableHead>
+                        <TableHead className="text-xs py-1 text-blue-300">Aircraft</TableHead>
+                        <TableHead className="text-xs py-1 text-blue-300">Altitude</TableHead>
+                        <TableHead className="text-xs py-1 text-blue-300">Speed</TableHead>
+                        <TableHead className="text-xs py-1 text-blue-300">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inboundFlights.map((flight) => (
+                        <FlightRow 
+                          key={flight.flightId} 
+                          flight={flight} 
+                          type="inbound" 
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               </div>
             </CardContent>
           )}
@@ -127,27 +130,29 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
           </CardHeader>
           {showOutbound && (
             <CardContent className="pt-0">
-              <div className="bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-600">
-                      <TableHead className="text-xs py-1 text-green-300">Callsign</TableHead>
-                      <TableHead className="text-xs py-1 text-green-300">Aircraft</TableHead>
-                      <TableHead className="text-xs py-1 text-green-300">Altitude</TableHead>
-                      <TableHead className="text-xs py-1 text-green-300">Speed</TableHead>
-                      <TableHead className="text-xs py-1 text-green-300">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {outboundFlights.map((flight) => (
-                      <FlightRow 
-                        key={flight.flightId} 
-                        flight={flight} 
-                        type="outbound" 
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden">
+                <ScrollArea className="h-48">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-slate-600">
+                        <TableHead className="text-xs py-1 text-green-300">Callsign</TableHead>
+                        <TableHead className="text-xs py-1 text-green-300">Aircraft</TableHead>
+                        <TableHead className="text-xs py-1 text-green-300">Altitude</TableHead>
+                        <TableHead className="text-xs py-1 text-green-300">Speed</TableHead>
+                        <TableHead className="text-xs py-1 text-green-300">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {outboundFlights.map((flight) => (
+                        <FlightRow 
+                          key={flight.flightId} 
+                          flight={flight} 
+                          type="outbound" 
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               </div>
             </CardContent>
           )}
