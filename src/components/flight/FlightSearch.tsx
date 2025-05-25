@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Search, Plane, MapPin, User } from 'lucide-react';
+import { Search, Plane, MapPin, User, Loader2 } from 'lucide-react';
 import {
   Command,
   CommandDialog,
@@ -21,6 +21,8 @@ interface FlightSearchProps {
   onQueryChange: (query: string) => void;
   searchResults: SearchResult[];
   onSelectResult: (result: SearchResult) => void;
+  isSearching?: boolean;
+  debouncedQuery?: string;
 }
 
 const FlightSearch: React.FC<FlightSearchProps> = ({
@@ -29,7 +31,9 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
   query,
   onQueryChange,
   searchResults,
-  onSelectResult
+  onSelectResult,
+  isSearching = false,
+  debouncedQuery = ''
 }) => {
   
   // Keyboard shortcut for opening search
@@ -80,6 +84,27 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
     return acc;
   }, {} as Record<string, SearchResult[]>);
 
+  const getEmptyMessage = () => {
+    if (query.length < 2) {
+      return "Geben Sie mindestens 2 Zeichen ein...";
+    }
+    
+    if (isSearching) {
+      return (
+        <div className="flex items-center justify-center gap-2 py-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Suche läuft...</span>
+        </div>
+      );
+    }
+    
+    if (debouncedQuery && debouncedQuery !== query) {
+      return "Suche wird aktualisiert...";
+    }
+    
+    return "Keine Ergebnisse gefunden.";
+  };
+
   return (
     <CommandDialog open={isOpen} onOpenChange={onOpenChange}>
       <CommandInput
@@ -89,10 +114,7 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
       />
       <CommandList>
         <CommandEmpty>
-          {query.length < 2 
-            ? "Geben Sie mindestens 2 Zeichen ein..." 
-            : "Keine Ergebnisse gefunden."
-          }
+          {getEmptyMessage()}
         </CommandEmpty>
         
         {Object.entries(groupedResults).map(([type, results]) => (

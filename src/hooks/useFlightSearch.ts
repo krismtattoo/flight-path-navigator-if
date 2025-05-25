@@ -2,6 +2,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Flight } from '@/services/flight';
 import { Airport, searchAirports } from '@/data/airportData';
+import { useDebounce } from './useDebounce';
 
 export interface SearchResult {
   type: 'aircraft' | 'airport' | 'user';
@@ -15,31 +16,98 @@ export interface UseFlightSearchProps {
   flights: Flight[];
 }
 
+// Helper function to get aircraft display name
+const getAircraftDisplayName = (aircraft: string | null | undefined): string => {
+  if (!aircraft || aircraft.trim() === '') {
+    return 'Unknown Aircraft';
+  }
+  
+  // Clean up aircraft string - remove empty spaces and handle common formats
+  const cleanAircraft = aircraft.trim();
+  
+  // If it's just a code or very short, it might be an aircraft ID
+  if (cleanAircraft.length <= 3) {
+    return 'Unknown Aircraft';
+  }
+  
+  return cleanAircraft;
+};
+
+// Helper function to normalize search string for better matching
+const normalizeSearchString = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str.toLowerCase().trim();
+};
+
+// Helper function to check if string matches query
+const matchesQuery = (value: string | null | undefined, query: string): boolean => {
+  if (!value) return false;
+  return normalizeSearchString(value).includes(query);
+};
+
 export function useFlightSearch({ flights }: UseFlightSearchProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Debounce the search query to improve performance
+  const debouncedQuery = useDebounce(query, 300);
 
   const searchResults = useMemo(() => {
-    if (!query || query.length < 2) return [];
+    // Early return for short queries
+    if (!debouncedQuery || debouncedQuery.length < 2) {
+      setIsSearching(false);
+      return [];
+    }
 
-    const normalizedQuery = query.toLowerCase().trim();
+    setIsSearching(true);
+    console.log(`🔍 Searching for: "${debouncedQuery}" across ${flights.length} flights`);
+
+    const normalizedQuery = debouncedQuery.toLowerCase().trim();
     const results: SearchResult[] = [];
 
-    // Search aircraft by username, callsign, and aircraft type - with null safety
-    const aircraftResults = flights.filter(flight => 
-      (flight.username?.toLowerCase().includes(normalizedQuery)) ||
-      (flight.callsign?.toLowerCase().includes(normalizedQuery)) ||
-      (flight.aircraft?.toLowerCase().includes(normalizedQuery))
-    ).slice(0, 8).map(flight => ({
-      type: 'aircraft' as const,
-      id: flight.flightId,
-      title: flight.callsign || 'Unknown Callsign',
-      subtitle: `${flight.username || 'Unknown User'} • ${flight.aircraft || 'Unknown Aircraft'}`,
-      data: flight
-    }));
+    // More efficient single-pass filtering for aircraft
+    const aircraftResults: SearchResult[] = [];
+    const userResults: SearchResult[] = [];
+    
+    // Process flights in a single loop for better performance
+    for (const flight of flights) {
+      // Early break if we have enough results
+      if (aircraftResults.length >= 8 && userResults.length >= 6) break;
+      
+      const matchesUsername = matchesQuery(flight.username, normalizedQuery);
+      const matchesCallsign = matchesQuery(flight.callsign, normalizedQuery);
+      const matchesAircraft = matchesQuery(flight.aircraft, normalizedQuery);
+      
+      // Add to aircraft results if matches any aircraft-related field
+      if ((matchesUsername || matchesCallsign || matchesAircraft) && aircraftResults.length < 8) {
+        const aircraftDisplayName = getAircraftDisplayName(flight.aircraft);
+        
+        aircraftResults.push({
+          type: 'aircraft' as const,
+          id: flight.flightId,
+          title: flight.callsign || 'Unknown Callsign',
+          subtitle: `${flight.username || 'Unknown User'} • ${aircraftDisplayName}`,
+          data: flight
+        });
+      }
+      
+      // Add to user results if matches username specifically
+      if (matchesUsername && userResults.length < 6) {
+        const aircraftDisplayName = getAircraftDisplayName(flight.aircraft);
+        
+        userResults.push({
+          type: 'user' as const,
+          id: `user-${flight.userId}`,
+          title: flight.username || 'Unknown User',
+          subtitle: `Flying ${aircraftDisplayName} as ${flight.callsign || 'Unknown Callsign'}`,
+          data: flight
+        });
+      }
+    }
 
-    // Search airports by ICAO/IATA
-    const airportResults = searchAirports(normalizedQuery).map(airport => ({
+    // Search airports (limit to 5 for performance)
+    const airportResults = searchAirports(normalizedQuery).slice(0, 5).map(airport => ({
       type: 'airport' as const,
       id: airport.icao,
       title: `${airport.icao} / ${airport.iata}`,
@@ -47,28 +115,22 @@ export function useFlightSearch({ flights }: UseFlightSearchProps) {
       data: airport
     }));
 
-    // Search users by username (same as aircraft search but grouped differently) - with null safety
-    const userResults = flights.filter(flight => 
-      flight.username?.toLowerCase().includes(normalizedQuery)
-    ).slice(0, 6).map(flight => ({
-      type: 'user' as const,
-      id: `user-${flight.userId}`,
-      title: flight.username || 'Unknown User',
-      subtitle: `Flying ${flight.aircraft || 'Unknown Aircraft'} as ${flight.callsign || 'Unknown Callsign'}`,
-      data: flight
-    }));
-
-    // Combine and prioritize results
+    // Combine results with prioritization
     results.push(...aircraftResults);
     results.push(...airportResults);
     results.push(...userResults);
 
-    return results.slice(0, 15); // Limit total results
-  }, [query, flights]);
+    const totalResults = results.length;
+    console.log(`✅ Search completed: ${totalResults} results (${aircraftResults.length} aircraft, ${airportResults.length} airports, ${userResults.length} users)`);
+    
+    setIsSearching(false);
+    return results.slice(0, 15); // Limit total results for performance
+  }, [debouncedQuery, flights]);
 
   const clearSearch = useCallback(() => {
     setQuery('');
     setIsOpen(false);
+    setIsSearching(false);
   }, []);
 
   const openSearch = useCallback(() => {
@@ -82,6 +144,8 @@ export function useFlightSearch({ flights }: UseFlightSearchProps) {
     isOpen,
     setIsOpen,
     clearSearch,
-    openSearch
+    openSearch,
+    isSearching,
+    debouncedQuery
   };
 }

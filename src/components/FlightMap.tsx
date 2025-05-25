@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -42,7 +41,9 @@ const FlightMap: React.FC = () => {
     isOpen,
     setIsOpen,
     clearSearch,
-    openSearch
+    openSearch,
+    isSearching,
+    debouncedQuery
   } = useFlightSearch({ flights });
   
   // Memoize flights to prevent unnecessary re-renders
@@ -246,6 +247,8 @@ const FlightMap: React.FC = () => {
         onQueryChange={setQuery}
         searchResults={searchResults}
         onSelectResult={handleSelectSearchResult}
+        isSearching={isSearching}
+        debouncedQuery={debouncedQuery}
       />
       
       {/* Loading indicator */}
