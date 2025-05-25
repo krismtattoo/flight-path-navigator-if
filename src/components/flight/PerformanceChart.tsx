@@ -143,7 +143,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   tick={{ fill: '#9ca3af' }}
                 />
                 
-                {/* Left Y-Axis for Altitude */}
+                {/* Left Y-Axis for Altitude - Starting at 0 */}
                 <YAxis 
                   yAxisId="altitude"
                   orientation="left"
@@ -151,10 +151,10 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   fontSize={11}
                   tick={{ fill: '#10b981' }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(1)}k ft`}
-                  domain={['dataMin - 500', 'dataMax + 500']}
+                  domain={[0, 'dataMax + 2000']}
                 />
                 
-                {/* Right Y-Axis for Speed */}
+                {/* Right Y-Axis for Speed - Starting at 0 */}
                 <YAxis 
                   yAxisId="speed"
                   orientation="right"
@@ -162,9 +162,10 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   fontSize={11}
                   tick={{ fill: '#3b82f6' }}
                   tickFormatter={(value) => `${value.toFixed(0)} kts`}
+                  domain={[0, 'dataMax + 50']}
                 />
                 
-                {/* Additional Y-Axis for Vertical Speed */}
+                {/* Additional Y-Axis for Vertical Speed - Centered around 0 */}
                 <YAxis 
                   yAxisId="verticalSpeed"
                   orientation="right"
@@ -173,7 +174,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   tick={{ fill: '#f59e0b' }}
                   tickFormatter={(value) => `${value.toFixed(0)} fpm`}
                   domain={[-2000, 2000]}
-                  hide={true} // Hide this axis but use for scaling
+                  hide={true}
                 />
                 
                 <Tooltip content={<CustomTooltip />} />
@@ -189,6 +190,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   name="Höhe"
                   dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2, fill: '#ffffff' }}
+                  connectNulls={false}
                 />
                 
                 {/* Speed Line */}
@@ -201,6 +203,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   name="Geschwindigkeit"
                   dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
                   activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
+                  connectNulls={false}
                 />
                 
                 {/* Vertical Speed Line */}
@@ -214,6 +217,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   dot={{ fill: '#f59e0b', strokeWidth: 2, r: 2 }}
                   activeDot={{ r: 4, stroke: '#f59e0b', strokeWidth: 2, fill: '#ffffff' }}
                   strokeDasharray="5 5"
+                  connectNulls={false}
                 />
               </ComposedChart>
             </ResponsiveContainer>
