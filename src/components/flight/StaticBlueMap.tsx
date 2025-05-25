@@ -22,15 +22,14 @@ const StaticBlueMap: React.FC<StaticBlueMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing static elegant blue map");
+    console.log("🗺️ Initializing static blue world map");
 
     // Create the map without any tile layers
     const map = L.map(mapContainer.current, {
-      center: [51.0, 10.5],
-      zoom: 5,
+      center: [30, 0],
+      zoom: 3,
       zoomControl: true,
       preferCanvas: true,
-      // Disable attribution since we're using a custom static background
       attributionControl: false,
     });
 
@@ -44,7 +43,7 @@ const StaticBlueMap: React.FC<StaticBlueMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Static elegant blue map initialized successfully");
+    console.log("🗺️ Static blue world map initialized successfully");
     onMapInit(map);
 
     // Cleanup function
@@ -59,8 +58,11 @@ const StaticBlueMap: React.FC<StaticBlueMapProps> = ({ onMapInit }) => {
 
   return (
     <div className="absolute inset-0 z-0">
-      {/* Static Blue Map Background with elegant continent outlines */}
-      <div className="absolute inset-0 static-blue-map-background z-0"></div>
+      {/* Static Blue World Map Background */}
+      <div className="absolute inset-0 static-blue-world-map z-0"></div>
+      
+      {/* World Map SVG Overlay */}
+      <div className="absolute inset-0 world-map-overlay z-5"></div>
       
       <div 
         ref={mapContainer} 
@@ -68,8 +70,8 @@ const StaticBlueMap: React.FC<StaticBlueMapProps> = ({ onMapInit }) => {
         style={{ minHeight: '400px' }}
       />
       
-      {/* Subtle overlay for depth and elegance */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/20 via-transparent to-[#1e3a8a]/10 pointer-events-none z-20"></div>
+      {/* Subtle overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/10 via-transparent to-transparent pointer-events-none z-20"></div>
     </div>
   );
 };
