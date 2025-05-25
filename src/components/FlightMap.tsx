@@ -4,25 +4,21 @@ import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
 
-// Import mapbox
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// Import Leaflet types
+import L from 'leaflet';
 
 // Import our components
 import ServerSelection from './flight/ServerSelection';
 import FlightDetails from './flight/FlightDetails';
-import AircraftMarker from './flight/AircraftMarker';
-import FlightRoute from './flight/FlightRoute';
 import FlightCount from './flight/FlightCount';
 import LoadingIndicator from './flight/LoadingIndicator';
 import MapStyles from './flight/MapStyles';
-import MapContainer from './flight/MapContainer';
+import LeafletMapContainer from './flight/LeafletMapContainer';
+import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
+import LeafletFlightRoute from './flight/LeafletFlightRoute';
 
 // Import custom hook
 import { useFlightData } from '@/hooks/useFlightData';
-
-// Mapbox token - updating to user's token
-mapboxgl.accessToken = 'pk.eyJ1Ijoia3Jpc210YXR0b28iLCJhIjoiY2x0bGh2cjAxMTl2MzJtcDY2cTR1aXY4dCJ9.qG3BOVZeFRKcmNgtiMd9uw';
 
 const FlightMap: React.FC = () => {
   const { 
@@ -45,35 +41,17 @@ const FlightMap: React.FC = () => {
     }
   }, [flights]);
   
-  const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
   
-  const handleMapInit = useCallback((initializedMap: mapboxgl.Map) => {
-    console.log("🗺️ Map initialized in FlightMap component");
-    
-    // Optimize map performance settings
-    initializedMap.getCanvas().style.cursor = '';
-    
-    // Disable unnecessary features for performance
-    initializedMap.dragRotate.disable();
-    initializedMap.touchZoomRotate.disableRotation();
+  const handleMapInit = useCallback((initializedMap: L.Map) => {
+    console.log("🗺️ Leaflet map initialized in FlightMap component");
     
     setMap(initializedMap);
-    
-    // Set mapLoaded to true when the map is fully loaded
-    if (initializedMap.loaded()) {
-      console.log("🗺️ Map already loaded on init");
-      setMapLoaded(true);
-    } else {
-      console.log("🗺️ Waiting for map to load");
-      initializedMap.once('load', () => {
-        console.log("🗺️ Map load event fired");
-        setMapLoaded(true);
-      });
-    }
+    setMapLoaded(true);
   }, []);
 
   // Optimized flight selection handler
@@ -93,14 +71,11 @@ const FlightMap: React.FC = () => {
       setFlownRoute(routeData.flownRoute);
       setFlightPlan(routeData.flightPlan);
       
-      // Optimize map focus with smoother animation
+      // Focus map on flight with smooth animation
       if (map && flight) {
-        map.flyTo({
-          center: [flight.longitude, flight.latitude],
-          zoom: 9,
-          speed: 0.8, // Reduced speed for smoother animation
-          curve: 1.2,
-          essential: true
+        map.flyTo([flight.latitude, flight.longitude], 9, {
+          animate: true,
+          duration: 1.0
         });
       }
     } catch (error) {
@@ -147,17 +122,17 @@ const FlightMap: React.FC = () => {
       <FlightCount count={flights.length} />
       
       {/* Map Container */}
-      <MapContainer onMapInit={handleMapInit} />
+      <LeafletMapContainer onMapInit={handleMapInit} />
       
       {/* Aircraft Markers and Flight Route - only render when map is loaded */}
       {map && mapLoaded && (
         <>
-          <AircraftMarker 
+          <LeafletAircraftMarker 
             map={map} 
             flights={memoizedFlights} 
             onFlightSelect={handleFlightSelect} 
           />
-          <FlightRoute 
+          <LeafletFlightRoute 
             map={map} 
             flownRoute={flownRoute}
             flightPlan={flightPlan}
