@@ -189,26 +189,69 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, flownRo
   );
 
   const renderRouteSection = () => (
-    <div className="space-y-4">
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white">Route Information</CardTitle>
+    <div className="space-y-6">
+      {/* Route Overview */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-xl">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg">
+              <Route className="w-5 h-5 text-white" />
+            </div>
+            Flight Route Overview
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-400">Flight Plan Status</p>
-              <p className="text-white">{flightPlan.length > 0 ? `${flightPlan.length} waypoints loaded` : 'No flight plan available'}</p>
+        <CardContent className="space-y-6">
+          {/* Route Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <p className="text-sm text-gray-300">Flight Plan</p>
+              </div>
+              <p className="text-xl font-bold text-white">
+                {flightPlan.length > 0 ? `${flightPlan.length} Waypoints` : 'Not Filed'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {flightPlan.length > 0 ? 'Active route' : 'Visual flight'}
+              </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <p className="text-sm text-gray-300">Track History</p>
+              </div>
+              <p className="text-xl font-bold text-white">
+                {flownRoute.length > 0 ? `${flownRoute.length} Points` : 'No Data'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {flownRoute.length > 0 ? 'Recording active' : 'No history'}
+              </p>
+            </div>
+          </div>
+
+          {/* Current Position */}
+          <div className="bg-slate-700/30 rounded-xl p-4 border border-slate-600/50">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="w-4 h-4 text-red-400" />
+              <p className="text-sm font-medium text-gray-300">Current Position</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-sm text-gray-400">Current Track</p>
+                <p className="text-gray-400">Latitude</p>
+                <p className="text-white font-mono">{flight.latitude.toFixed(6)}°</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Longitude</p>
+                <p className="text-white font-mono">{flight.longitude.toFixed(6)}°</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Heading</p>
                 <p className="text-white font-medium">{Math.round(flight.heading)}°</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400">Flown Route</p>
-                <p className="text-white font-medium">{flownRoute.length > 0 ? `${flownRoute.length} points` : 'N/A'}</p>
+                <p className="text-gray-400">Altitude</p>
+                <p className="text-white font-medium">{Math.round(flight.altitude)} ft</p>
               </div>
             </div>
           </div>
@@ -217,33 +260,65 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, flownRo
       
       {/* Flight Plan Waypoints */}
       {flightPlan.length > 0 ? (
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Route className="w-5 h-5 text-blue-400" />
-              Flight Plan Waypoints
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-white flex items-center gap-3">
+              <div className="p-2 bg-indigo-600 rounded-lg">
+                <Navigation className="w-5 h-5 text-white" />
+              </div>
+              Flight Plan Details
+              <Badge className="bg-green-600 text-white border-none ml-auto">
+                {flightPlan.length} Waypoints
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-64">
+            <ScrollArea className="h-80">
               <div className="space-y-3">
                 {flightPlan.map((waypoint, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                        {index + 1}
+                  <div key={index} className="group relative">
+                    {/* Connection line */}
+                    {index < flightPlan.length - 1 && (
+                      <div className="absolute left-6 top-12 w-0.5 h-8 bg-gradient-to-b from-blue-400 to-indigo-500"></div>
+                    )}
+                    
+                    <div className="bg-slate-700/40 hover:bg-slate-700/60 transition-all duration-200 rounded-xl p-4 border border-slate-600/50 hover:border-blue-500/50">
+                      <div className="flex items-center gap-4">
+                        {/* Waypoint number */}
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                            {index + 1}
+                          </div>
+                        </div>
+                        
+                        {/* Waypoint details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-white font-semibold truncate">
+                              {waypoint.waypointName || `Waypoint ${index + 1}`}
+                            </h4>
+                            <Badge variant="outline" className="text-xs border-slate-500 text-slate-300">
+                              #{String(index + 1).padStart(2, '0')}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-gray-400 text-xs">Position</p>
+                              <p className="text-white font-mono text-xs">
+                                {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400 text-xs">Altitude</p>
+                              <div className="flex items-center gap-1">
+                                <Gauge className="w-3 h-3 text-blue-400" />
+                                <p className="text-white font-medium">{Math.round(waypoint.altitude)} ft</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-white font-medium">
-                          {waypoint.waypointName || `Waypoint ${index + 1}`}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-white">{Math.round(waypoint.altitude)} ft</p>
                     </div>
                   </div>
                 ))}
@@ -252,11 +327,24 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, flownRo
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <p className="text-gray-400 text-center">
-              No flight plan available for this flight. The pilot may not have filed a flight plan.
-            </p>
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-600 shadow-xl">
+          <CardContent className="p-8">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center">
+                <Route className="w-8 h-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">No Flight Plan Filed</h3>
+                <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                  This flight is operating under visual flight rules (VFR) or the pilot hasn't filed a flight plan with the system.
+                </p>
+              </div>
+              <div className="flex justify-center">
+                <Badge variant="outline" className="border-yellow-500 text-yellow-400">
+                  VFR Flight
+                </Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
