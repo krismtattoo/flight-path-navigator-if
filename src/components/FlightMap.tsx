@@ -13,7 +13,7 @@ import FlightDetails from './flight/FlightDetails';
 import FlightCount from './flight/FlightCount';
 import LoadingIndicator from './flight/LoadingIndicator';
 import MapStyles from './flight/MapStyles';
-import LeafletMapContainer from './flight/LeafletMapContainer';
+import NativeLeafletMap from './flight/NativeLeafletMap';
 import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
 import LeafletFlightRoute from './flight/LeafletFlightRoute';
 
@@ -48,7 +48,7 @@ const FlightMap: React.FC = () => {
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
   
   const handleMapInit = useCallback((initializedMap: L.Map) => {
-    console.log("🗺️ Leaflet map initialized in FlightMap component");
+    console.log("🗺️ Native Leaflet map initialized in FlightMap component");
     
     setMap(initializedMap);
     setMapLoaded(true);
@@ -121,8 +121,8 @@ const FlightMap: React.FC = () => {
       {/* Flight Count */}
       <FlightCount count={flights.length} />
       
-      {/* Map Container */}
-      <LeafletMapContainer onMapInit={handleMapInit} />
+      {/* Native Leaflet Map Container */}
+      <NativeLeafletMap onMapInit={handleMapInit} />
       
       {/* Aircraft Markers and Flight Route - only render when map is loaded */}
       {map && mapLoaded && (
