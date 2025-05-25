@@ -94,7 +94,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 200;
   }, []);
 
-  // UPDATED: Light blue aircraft for selected state matching the image
+  // UPDATED: Enhanced aircraft icon with subtle shadow
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
@@ -111,13 +111,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     }
     
     const svgIcon = `
-      <svg width="${isSelected ? '28' : '24'}" height="${isSelected ? '28' : '24'}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg);" class="aircraft-svg">
-        <!-- Dark background shadow for ALL aircraft -->
-        <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
-              fill="#000000" 
-              opacity="0.3"
-              transform="translate(2,2)"
-              stroke="none"/>
+      <svg width="${isSelected ? '28' : '24'}" height="${isSelected ? '28' : '24'}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.4));" class="aircraft-svg">
         <!-- Main aircraft icon -->
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
               fill="${fillColor}" 
