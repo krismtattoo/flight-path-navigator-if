@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Plane, MapPin, Clock, Gauge, Navigation, User, BarChart3, Route, Zap } from 'lucide-react';
@@ -524,32 +523,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             currentAltitude={flight.altitude}
             currentSpeed={flight.speed}
           />
-          
-          {/* Flight Status Card */}
-          <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white flex items-center gap-2 text-sm">
-                <BarChart3 className="w-4 h-4" />
-                Flugstatus
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-xs">Status</span>
-                <Badge variant={isOnGround ? "secondary" : "default"} className={`text-xs ${isOnGround ? "bg-yellow-600" : "bg-green-600"}`}>
-                  {isOnGround ? "Am Boden" : "In der Luft"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-xs">Flugzeugtyp</span>
-                <span className="text-white font-semibold text-xs truncate max-w-[100px]">{flight.aircraft}</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-xs">Livery</span>
-                <span className="text-white font-semibold text-xs truncate max-w-[100px]">{flight.livery}</span>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </ScrollArea>
     );
