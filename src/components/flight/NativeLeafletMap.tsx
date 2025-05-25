@@ -22,21 +22,21 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing minimalist elegant dark blue map with OpenStreetMap");
+    console.log("🗺️ Initializing native Leaflet map");
 
     // Create the map
     const map = L.map(mapContainer.current, {
       center: [51.0, 10.5],
       zoom: 5,
       zoomControl: true,
-      preferCanvas: true,
+      preferCanvas: true, // Better performance for many markers
     });
 
-    // Use OpenStreetMap with custom styling for minimalist blue look
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-      className: 'minimalist-blue-tiles',
+    // Add bright tile layer (CartoDB Positron for a cleaner, brighter look)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
     }).addTo(map);
 
     // Enable all interactions
@@ -49,13 +49,13 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Minimalist elegant dark blue map initialized successfully with OpenStreetMap");
+    console.log("🗺️ Native Leaflet map initialized successfully");
     onMapInit(map);
 
     // Cleanup function
     return () => {
       if (mapInstance.current) {
-        console.log("🗑️ Cleaning up minimalist map");
+        console.log("🗑️ Cleaning up native Leaflet map");
         mapInstance.current.remove();
         mapInstance.current = null;
       }
@@ -64,17 +64,11 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
   return (
     <div className="absolute inset-0 z-0">
-      {/* Gradient Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#1e3a8a] to-[#0f172a] z-0"></div>
-      
       <div 
         ref={mapContainer} 
-        className="w-full h-full minimalist-elegant-map relative z-10"
+        className="w-full h-full"
         style={{ minHeight: '400px' }}
       />
-      
-      {/* Subtle overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/20 via-transparent to-[#1e3a8a]/10 pointer-events-none z-20"></div>
     </div>
   );
 };

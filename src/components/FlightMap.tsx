@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -15,7 +16,6 @@ import MapStyles from './flight/MapStyles';
 import NativeLeafletMap from './flight/NativeLeafletMap';
 import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
 import LeafletFlightRoute from './flight/LeafletFlightRoute';
-import StaticBlueMap from './flight/StaticBlueMap';
 
 // Import custom hook
 import { useFlightData } from '@/hooks/useFlightData';
@@ -51,7 +51,7 @@ const FlightMap: React.FC = () => {
   const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
   
   const handleMapInit = useCallback((initializedMap: L.Map) => {
-    console.log("🗺️ Static blue map initialized in FlightMap component");
+    console.log("🗺️ Native Leaflet map initialized in FlightMap component");
     
     setMap(initializedMap);
     setMapLoaded(true);
@@ -167,8 +167,8 @@ const FlightMap: React.FC = () => {
       {/* Flight Count */}
       <FlightCount count={flights.length} />
       
-      {/* Static Blue Map Container */}
-      <StaticBlueMap onMapInit={handleMapInit} />
+      {/* Native Leaflet Map Container */}
+      <NativeLeafletMap onMapInit={handleMapInit} />
       
       {/* Aircraft Markers and Flight Route - only render when map is loaded */}
       {map && mapLoaded && (
