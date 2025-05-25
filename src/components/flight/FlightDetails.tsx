@@ -230,40 +230,40 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   const isOnGround = flight.altitude < 100 && flight.speed < 50;
 
   const renderOverviewSection = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Aircraft Status Card */}
       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white flex items-center gap-2">
-              <Plane className="w-5 h-5" />
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Plane className="w-4 h-4" />
               Aircraft Status
             </CardTitle>
-            <Badge variant={isOnGround ? "secondary" : "default"} className={isOnGround ? "bg-yellow-600" : "bg-green-600"}>
+            <Badge variant={isOnGround ? "secondary" : "default"} className={`text-xs ${isOnGround ? "bg-yellow-600" : "bg-green-600"}`}>
               {isOnGround ? "On Ground" : "Airborne"}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="space-y-3 pt-0">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <p className="text-sm text-gray-400">Aircraft Type</p>
-              <p className="text-lg font-semibold text-white">{flight.aircraft}</p>
+              <p className="text-xs text-gray-400">Aircraft Type</p>
+              <p className="text-sm font-semibold text-white">{flight.aircraft}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-gray-400">Registration</p>
-              <p className="text-lg font-semibold text-white">{flight.callsign}</p>
+              <p className="text-xs text-gray-400">Registration</p>
+              <p className="text-sm font-semibold text-white">{flight.callsign}</p>
             </div>
           </div>
           <Separator className="bg-slate-600" />
           <div className="space-y-1">
-            <p className="text-sm text-gray-400">Livery</p>
-            <p className="text-white">{flight.livery}</p>
+            <p className="text-xs text-gray-400">Livery</p>
+            <p className="text-sm text-white truncate">{flight.livery}</p>
           </div>
           {flight.virtualOrganization && (
             <div className="space-y-1">
-              <p className="text-sm text-gray-400">Virtual Organization</p>
-              <Badge variant="outline" className="text-blue-400 border-blue-400">
+              <p className="text-xs text-gray-400">Virtual Organization</p>
+              <Badge variant="outline" className="text-blue-400 border-blue-400 text-xs">
                 {flight.virtualOrganization}
               </Badge>
             </div>
@@ -272,33 +272,33 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       </Card>
 
       {/* Flight Data Grid - All three in one row */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-3 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Gauge className="w-5 h-5 text-blue-400" />
+          <CardContent className="p-2 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Gauge className="w-4 h-4 text-blue-400" />
             </div>
-            <p className="text-xl font-bold text-white">{Math.round(flight.altitude)}</p>
+            <p className="text-lg font-bold text-white">{Math.round(flight.altitude)}</p>
             <p className="text-xs text-gray-400">Altitude (ft)</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-3 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Zap className="w-5 h-5 text-green-400" />
+          <CardContent className="p-2 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Zap className="w-4 h-4 text-green-400" />
             </div>
-            <p className="text-xl font-bold text-white">{Math.round(flight.speed)}</p>
+            <p className="text-lg font-bold text-white">{Math.round(flight.speed)}</p>
             <p className="text-xs text-gray-400">Speed (kts)</p>
           </CardContent>
         </Card>
 
         <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-3 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Navigation className="w-5 h-5 text-orange-400" />
+          <CardContent className="p-2 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Navigation className="w-4 h-4 text-orange-400" />
             </div>
-            <p className="text-xl font-bold text-white">{Math.round(flight.heading)}°</p>
+            <p className="text-lg font-bold text-white">{Math.round(flight.heading)}°</p>
             <p className="text-xs text-gray-400">Heading</p>
           </CardContent>
         </Card>
@@ -306,21 +306,21 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
 
       {/* Location Info */}
       <Card className="bg-slate-800 border-slate-700">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white flex items-center gap-2 text-lg">
+            <MapPin className="w-4 h-4" />
             Current Position
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-sm text-gray-400">Latitude</p>
-              <p className="text-white font-mono">{flight.latitude.toFixed(6)}</p>
+              <p className="text-xs text-gray-400">Latitude</p>
+              <p className="text-sm text-white font-mono">{flight.latitude.toFixed(6)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-400">Longitude</p>
-              <p className="text-white font-mono">{flight.longitude.toFixed(6)}</p>
+              <p className="text-xs text-gray-400">Longitude</p>
+              <p className="text-sm text-white font-mono">{flight.longitude.toFixed(6)}</p>
             </div>
           </div>
         </CardContent>
@@ -442,13 +442,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     const performanceData = generatePerformanceData();
     
     return (
-      <ScrollArea className="h-[70vh] w-full">
-        <div className="space-y-4 pr-4">
+      <ScrollArea className="h-[60vh] w-full">
+        <div className="space-y-3 pr-4">
           {/* Enhanced Performance Metrics Grid - All three in one compact row */}
           <div className="grid grid-cols-3 gap-2">
             <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="p-3 text-center">
-                <div className="flex items-center justify-center mb-2">
+              <CardContent className="p-2 text-center">
+                <div className="flex items-center justify-center mb-1">
                   <Zap className="w-4 h-4 text-blue-400" />
                 </div>
                 <p className="text-lg font-bold text-white">{Math.round(flight.speed)}</p>
@@ -457,8 +457,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             </Card>
 
             <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="p-3 text-center">
-                <div className="flex items-center justify-center mb-2">
+              <CardContent className="p-2 text-center">
+                <div className="flex items-center justify-center mb-1">
                   <Gauge className="w-4 h-4 text-green-400" />
                 </div>
                 <p className="text-lg font-bold text-white">{Math.round(flight.altitude)}</p>
@@ -467,8 +467,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             </Card>
 
             <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="p-3 text-center">
-                <div className="flex items-center justify-center mb-2">
+              <CardContent className="p-2 text-center">
+                <div className="flex items-center justify-center mb-1">
                   <Navigation className="w-4 h-4 text-orange-400" />
                 </div>
                 <p className="text-lg font-bold text-white">{Math.round(flight.heading)}°</p>
@@ -486,26 +486,26 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           
           {/* Flight Status Card */}
           <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-white flex items-center gap-2 text-sm">
                 <BarChart3 className="w-4 h-4" />
                 Flugstatus
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-sm">Status</span>
+            <CardContent className="space-y-2 pt-0">
+              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
+                <span className="text-gray-300 text-xs">Status</span>
                 <Badge variant={isOnGround ? "secondary" : "default"} className={`text-xs ${isOnGround ? "bg-yellow-600" : "bg-green-600"}`}>
                   {isOnGround ? "Am Boden" : "In der Luft"}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-sm">Flugzeugtyp</span>
-                <span className="text-white font-semibold text-sm">{flight.aircraft}</span>
+              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
+                <span className="text-gray-300 text-xs">Flugzeugtyp</span>
+                <span className="text-white font-semibold text-xs truncate max-w-[100px]">{flight.aircraft}</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                <span className="text-gray-300 text-sm">Livery</span>
-                <span className="text-white font-semibold text-sm">{flight.livery}</span>
+              <div className="flex justify-between items-center p-2 bg-slate-700/50 rounded-lg">
+                <span className="text-gray-300 text-xs">Livery</span>
+                <span className="text-white font-semibold text-xs truncate max-w-[100px]">{flight.livery}</span>
               </div>
             </CardContent>
           </Card>
@@ -595,17 +595,17 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   }, [flight]);
 
   return (
-    <div className="fixed top-4 right-4 w-96 max-h-[calc(100vh-2rem)] z-50">
+    <div className="fixed top-4 right-4 w-[480px] max-h-[calc(100vh-2rem)] z-50">
       <Card className="bg-slate-900 border-slate-700 shadow-2xl">
         {/* Header */}
-        <CardHeader className="border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
+        <CardHeader className="border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900 pb-3">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <h2 className="text-xl font-bold text-white">{flight.callsign}</h2>
+                <h2 className="text-lg font-bold text-white">{flight.callsign}</h2>
               </div>
-              <p className="text-sm text-gray-400">{flight.username} • {serverID}</p>
+              <p className="text-xs text-gray-400">{flight.username} • {serverID}</p>
             </div>
             <Button 
               variant="ghost" 
@@ -613,7 +613,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
               className="text-gray-400 hover:text-white hover:bg-slate-700" 
               onClick={onClose}
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
@@ -631,14 +631,14 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                 key={id}
                 variant="ghost"
                 size="sm"
-                className={`flex-1 rounded-none h-12 flex items-center gap-2 ${
+                className={`flex-1 rounded-none h-10 flex items-center gap-1 ${
                   activeSection === id 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'text-gray-400 hover:text-white hover:bg-slate-700'
                 }`}
                 onClick={() => setActiveSection(id as any)}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3 h-3" />
                 <span className="text-xs">{label}</span>
               </Button>
             ))}
@@ -646,7 +646,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         </div>
 
         {/* Content with custom scrollbar */}
-        <CardContent className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+        <CardContent className="p-4 overflow-y-auto max-h-[65vh] custom-scrollbar">
           {activeSection === 'overview' && renderOverviewSection()}
           {activeSection === 'route' && renderRouteSection()}
           {activeSection === 'performance' && renderPerformanceSection()}
