@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { FlightTrackPoint, Flight } from '@/services/flight';
@@ -92,6 +93,27 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
         
         routeLayersRef.current!.addLayer(polyline);
       });
+    }
+    
+    // Add waypoint connections with light gray lines
+    if (validFlightPlan.length > 1) {
+      for (let i = 0; i < validFlightPlan.length - 1; i++) {
+        const currentWaypoint = validFlightPlan[i];
+        const nextWaypoint = validFlightPlan[i + 1];
+        
+        const waypointConnection = L.polyline(
+          [[currentWaypoint.latitude, currentWaypoint.longitude], [nextWaypoint.latitude, nextWaypoint.longitude]], 
+          {
+            color: '#9ca3af', // Light gray color
+            weight: 2,
+            opacity: 0.6,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }
+        );
+        
+        routeLayersRef.current.addLayer(waypointConnection);
+      }
     }
     
     // Add destination waypoint (red circle)
