@@ -236,7 +236,7 @@ const FlightMap: React.FC = () => {
   }, [selectedFlight, selectionInProgress]);
 
   return (
-    <div className="relative h-screen w-full bg-[#151920] overflow-hidden">
+    <div className="relative h-screen w-full bg-[#151920]">
       {/* Server Selection Tabs */}
       <ServerSelection 
         servers={servers} 

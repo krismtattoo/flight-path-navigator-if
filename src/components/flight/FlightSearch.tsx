@@ -13,7 +13,6 @@ import {
 import { Flight } from '@/services/flight';
 import { Airport } from '@/data/airportData';
 import { SearchResult } from '@/hooks/useFlightSearch';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FlightSearchProps {
   isOpen: boolean;
@@ -36,7 +35,6 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
   isSearching = false,
   debouncedQuery = ''
 }) => {
-  const isMobile = useIsMobile();
   
   // Keyboard shortcut for opening search
   useEffect(() => {
@@ -108,18 +106,13 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
   };
 
   return (
-    <CommandDialog 
-      open={isOpen} 
-      onOpenChange={onOpenChange}
-      className={isMobile ? "w-[95vw] max-w-none" : ""}
-    >
+    <CommandDialog open={isOpen} onOpenChange={onOpenChange}>
       <CommandInput
         placeholder="Flugzeuge, Flughäfen oder Benutzer suchen..."
         value={query}
         onValueChange={onQueryChange}
-        className={isMobile ? "text-base" : ""} // Prevents zoom on iOS
       />
-      <CommandList className={isMobile ? "max-h-[60vh]" : ""}>
+      <CommandList>
         <CommandEmpty>
           {getEmptyMessage()}
         </CommandEmpty>
@@ -134,16 +127,16 @@ const FlightSearch: React.FC<FlightSearchProps> = ({
                   onSelectResult(result);
                   onOpenChange(false);
                 }}
-                className={`flex items-center gap-3 ${isMobile ? 'py-4 min-h-[60px]' : 'py-3'}`}
+                className="flex items-center gap-3 py-3"
               >
-                <div className={`flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400 ${isMobile ? 'w-10 h-10' : 'w-8 h-8'}`}>
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
                   {getIcon(result.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`font-medium text-gray-900 dark:text-gray-100 truncate ${isMobile ? 'text-base' : 'text-sm'}`}>
+                  <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                     {result.title}
                   </div>
-                  <div className={`text-gray-500 dark:text-gray-400 truncate ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                     {result.subtitle}
                   </div>
                 </div>
