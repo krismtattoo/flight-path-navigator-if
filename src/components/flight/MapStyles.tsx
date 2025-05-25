@@ -4,10 +4,20 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      /* Leaflet map container styles */
+      /* Bright Leaflet map container styles */
       .leaflet-container {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
         font-family: inherit;
+      }
+      
+      /* Enhanced bright map tiles */
+      .leaflet-tile {
+        filter: brightness(1.15) contrast(1.1) saturate(0.9);
+        image-rendering: optimizeQuality;
+      }
+      
+      .leaflet-tile-container img {
+        filter: brightness(1.2) contrast(1.05) saturate(0.85);
       }
       
       /* SIMPLIFIED aircraft marker styles - removed problematic animations */
@@ -72,19 +82,22 @@ const MapStyles = () => {
         contain: layout;
       }
       
+      /* Bright control styling */
       .leaflet-control-zoom {
         border: none;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
       }
       
       .leaflet-control-zoom a {
-        background-color: rgba(255,255,255,0.9);
+        background-color: rgba(255,255,255,0.95);
         color: #333;
         border: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-zoom a:hover {
         background-color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       }
       
       /* Enhanced route line styles for smooth gradients and curves */
@@ -131,15 +144,6 @@ const MapStyles = () => {
         filter: none;
       }
       
-      .leaflet-tile {
-        filter: none;
-        image-rendering: optimizeQuality;
-      }
-      
-      .leaflet-tile-container img {
-        filter: brightness(1.1) contrast(1.05);
-      }
-      
       .aircraft-marker svg path {
         vector-effect: non-scaling-stroke;
       }
@@ -183,6 +187,17 @@ const MapStyles = () => {
       .leaflet-zoom-anim .leaflet-marker-icon {
         transition: none !important;
         animation: none !important;
+      }
+      
+      /* Bright map overlay enhancements */
+      .leaflet-control-attribution {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-size: 11px;
+      }
+      
+      .leaflet-control-attribution a {
+        color: #0078A8;
       }
     `}</style>
   );
