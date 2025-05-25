@@ -25,16 +25,16 @@ export function useFlightSearch({ flights }: UseFlightSearchProps) {
     const normalizedQuery = query.toLowerCase().trim();
     const results: SearchResult[] = [];
 
-    // Search aircraft by username, callsign, and aircraft type
+    // Search aircraft by username, callsign, and aircraft type - with null safety
     const aircraftResults = flights.filter(flight => 
-      flight.username.toLowerCase().includes(normalizedQuery) ||
-      flight.callsign.toLowerCase().includes(normalizedQuery) ||
-      flight.aircraft.toLowerCase().includes(normalizedQuery)
+      (flight.username?.toLowerCase().includes(normalizedQuery)) ||
+      (flight.callsign?.toLowerCase().includes(normalizedQuery)) ||
+      (flight.aircraft?.toLowerCase().includes(normalizedQuery))
     ).slice(0, 8).map(flight => ({
       type: 'aircraft' as const,
       id: flight.flightId,
       title: flight.callsign || 'Unknown Callsign',
-      subtitle: `${flight.username} • ${flight.aircraft}`,
+      subtitle: `${flight.username || 'Unknown User'} • ${flight.aircraft || 'Unknown Aircraft'}`,
       data: flight
     }));
 
@@ -47,14 +47,14 @@ export function useFlightSearch({ flights }: UseFlightSearchProps) {
       data: airport
     }));
 
-    // Search users by username (same as aircraft search but grouped differently)
+    // Search users by username (same as aircraft search but grouped differently) - with null safety
     const userResults = flights.filter(flight => 
-      flight.username.toLowerCase().includes(normalizedQuery)
+      flight.username?.toLowerCase().includes(normalizedQuery)
     ).slice(0, 6).map(flight => ({
       type: 'user' as const,
       id: `user-${flight.userId}`,
-      title: flight.username,
-      subtitle: `Flying ${flight.aircraft} as ${flight.callsign}`,
+      title: flight.username || 'Unknown User',
+      subtitle: `Flying ${flight.aircraft || 'Unknown Aircraft'} as ${flight.callsign || 'Unknown Callsign'}`,
       data: flight
     }));
 
