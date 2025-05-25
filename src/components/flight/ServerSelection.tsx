@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,7 +22,7 @@ const ServerSelection: React.FC<ServerSelectionProps> = ({
 }) => {
   return (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-      <Card className="shadow-lg bg-white/90 backdrop-blur-sm">
+      <Card className="shadow-lg bg-slate-800/95 backdrop-blur-sm border-slate-700">
         <Tabs 
           defaultValue={defaultValue}
           className="w-[400px]"
@@ -30,9 +31,13 @@ const ServerSelection: React.FC<ServerSelectionProps> = ({
             onServerChange(value);
           }}
         >
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-3 w-full bg-slate-700/50">
             {servers.map(server => (
-              <TabsTrigger key={server.id} value={server.id}>
+              <TabsTrigger 
+                key={server.id} 
+                value={server.id}
+                className="text-white data-[state=active]:bg-slate-600 data-[state=active]:text-white"
+              >
                 {server.name}
               </TabsTrigger>
             ))}
