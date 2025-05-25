@@ -138,9 +138,7 @@ const FlightMap: React.FC = () => {
       {selectedFlight && activeServer && (
         <FlightDetails 
           flight={selectedFlight} 
-          serverID={activeServer.id}
-          flownRoute={flownRoute}
-          flightPlan={flightPlan}
+          serverID={activeServer.id} 
           onClose={handleCloseFlightDetails} 
         />
       )}
