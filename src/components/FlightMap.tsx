@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -16,10 +15,14 @@ import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
 import LeafletFlightRoute from './flight/LeafletFlightRoute';
 import FlightSearch from './flight/FlightSearch';
 import SearchButton from './flight/SearchButton';
+import AirportMarkers from './flight/AirportMarkers';
+import AirportDetails from './flight/AirportDetails';
 
 // Import custom hooks
 import { useFlightData } from '@/hooks/useFlightData';
 import { useFlightSearch, SearchResult } from '@/hooks/useFlightSearch';
+import { useAirportData } from '@/hooks/useAirportData';
+import { AirportStatus } from '@/services/flight/worldService';
 
 // Import airport data types
 import { Airport } from '@/data/airportData';
@@ -67,6 +70,14 @@ const FlightMap: React.FC = () => {
   
   // Critical: Track selection in progress to prevent race conditions
   const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
+  
+  // Airport data hook
+  const { airports, loading: airportsLoading } = useAirportData({ 
+    activeServerId: activeServer?.id || null 
+  });
+  
+  // Airport selection state
+  const [selectedAirport, setSelectedAirport] = useState<AirportStatus | null>(null);
   
   const handleMapInit = useCallback((initializedMap: L.Map) => {
     console.log("🗺️ Native Leaflet map initialized in FlightMap component");
@@ -188,7 +199,27 @@ const FlightMap: React.FC = () => {
     }
   }, [activeServer, map, airportMarkers]);
 
-  // Improved close handler
+  // Handle airport selection
+  const handleAirportSelect = useCallback((airport: AirportStatus) => {
+    console.log(`🏢 Airport selected: ${airport.airportIcao} - ${airport.airportName}`);
+    setSelectedAirport(airport);
+    
+    // Clear any selected flight when selecting an airport
+    if (selectedFlight) {
+      handleCloseFlightDetails();
+    }
+    
+    // Focus map on airport
+    if (map && airport.atcFacilities.length > 0) {
+      const coords = airport.atcFacilities[0];
+      map.flyTo([coords.latitude, coords.longitude], 10, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+  }, [map, selectedFlight, handleCloseFlightDetails]);
+
+  // Enhanced close handler to also clear airport selection
   const handleCloseFlightDetails = useCallback(() => {
     console.log("🔄 Closing flight details");
     
@@ -200,7 +231,7 @@ const FlightMap: React.FC = () => {
     airportMarkers.forEach(marker => map?.removeLayer(marker));
     setAirportMarkers([]);
     
-    // Clear selection after a short delay to allow smooth transition
+    // Clear selections after a short delay to allow smooth transition
     setTimeout(() => {
       console.log("🔄 Clearing selected flight");
       setSelectedFlight(null);
@@ -259,11 +290,20 @@ const FlightMap: React.FC = () => {
       />
       
       {/* Loading indicator */}
-      {(loading || initializing || !mapLoaded) && (
+      {(loading || initializing || !mapLoaded || airportsLoading) && (
         <LoadingIndicator 
           message={initializing ? "Connecting to Infinite Flight..." : 
                   !mapLoaded ? "Loading map..." : 
+                  airportsLoading ? "Loading airports..." :
                   "Loading flights..."} 
+        />
+      )}
+      
+      {/* Airport Details */}
+      {selectedAirport && (
+        <AirportDetails 
+          airport={selectedAirport}
+          onClose={handleCloseAirportDetails} 
         />
       )}
       
@@ -282,7 +322,7 @@ const FlightMap: React.FC = () => {
       {/* Native Leaflet Map Container */}
       <NativeLeafletMap onMapInit={handleMapInit} />
       
-      {/* Aircraft Markers and Flight Route - only render when map is loaded */}
+      {/* Aircraft Markers, Airport Markers and Flight Route - only render when map is loaded */}
       {map && mapLoaded && (
         <>
           <LeafletAircraftMarker 
@@ -291,6 +331,11 @@ const FlightMap: React.FC = () => {
             onFlightSelect={handleFlightSelect}
             selectedFlightId={selectedFlightId}
             selectionInProgress={selectionInProgress}
+          />
+          <AirportMarkers
+            map={map}
+            airports={airports}
+            onAirportSelect={handleAirportSelect}
           />
           <LeafletFlightRoute 
             map={map} 
