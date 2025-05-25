@@ -56,6 +56,8 @@ const FlightMap: React.FC = () => {
   // Optimized flight selection handler
   const handleFlightSelect = useCallback(async (flight: Flight) => {
     console.log(`🎯 Flight selected: ${flight.flightId}`);
+    
+    // Immediate state update to ensure synchronization
     setSelectedFlight(flight);
     
     if (!activeServer) return;
@@ -83,23 +85,34 @@ const FlightMap: React.FC = () => {
     }
   }, [activeServer, map]);
 
-  // Optimized close handler with improved state management
+  // Improved close handler that doesn't immediately clear the selected flight
   const handleCloseFlightDetails = useCallback(() => {
-    console.log("🔄 Closing flight details");
-    setSelectedFlight(null);
+    console.log("🔄 Closing flight details (keeping marker visible)");
+    
+    // Clear the details panel but keep the flight selected for marker purposes
+    // This allows the marker to remain visible and highlighted
     setFlownRoute([]);
     setFlightPlan([]);
-    // Note: selectedFlightId will be null due to selectedFlight being null,
-    // which will trigger the marker style update in LeafletAircraftMarker
+    
+    // Delay clearing the selected flight to allow marker to stay visible
+    setTimeout(() => {
+      console.log("🔄 Clearing selected flight after delay");
+      setSelectedFlight(null);
+    }, 1000); // 1 second delay
   }, []);
 
-  // Clear selection when changing servers
+  // Clear selection when changing servers (immediate clear is appropriate here)
   useEffect(() => {
-    console.log("🔄 Server changed, clearing flight selection");
+    console.log("🔄 Server changed, clearing flight selection immediately");
     setSelectedFlight(null);
     setFlownRoute([]);
     setFlightPlan([]);
   }, [activeServer]);
+
+  // Ensure selected flight ID is passed correctly to marker component
+  const selectedFlightId = useMemo(() => {
+    return selectedFlight?.flightId || null;
+  }, [selectedFlight]);
 
   return (
     <div className="relative h-screen w-full bg-[#151920]">
@@ -140,7 +153,7 @@ const FlightMap: React.FC = () => {
             map={map} 
             flights={memoizedFlights} 
             onFlightSelect={handleFlightSelect}
-            selectedFlightId={selectedFlight?.flightId || null}
+            selectedFlightId={selectedFlightId}
           />
           <LeafletFlightRoute 
             map={map} 

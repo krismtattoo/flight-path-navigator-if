@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -19,7 +18,13 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const selectedMarkerIdRef = useRef<string | null>(null);
   const lastKnownFlightDataRef = useRef<{ [key: string]: Flight }>({});
+  const markerMissCountRef = useRef<{ [key: string]: number }>({});
   const isUpdatingRef = useRef(false);
+  const selectedProtectionTimeRef = useRef<{ [key: string]: number }>({});
+
+  // Constants for marker protection
+  const MAX_MISS_COUNT = 3; // Allow 3 missing updates before removal
+  const SELECTED_PROTECTION_TIME = 60000; // 60 seconds protection for selected aircraft
 
   // Memoize flight lookup for better performance
   const flightLookup = useMemo(() => {
@@ -28,6 +33,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
       lookup[flight.flightId] = flight;
       // Store last known data for all flights
       lastKnownFlightDataRef.current[flight.flightId] = flight;
+      // Reset miss count for existing flights
+      markerMissCountRef.current[flight.flightId] = 0;
     });
     return lookup;
   }, [flights]);
@@ -39,8 +46,17 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
 
   // Update selected marker reference when prop changes
   useEffect(() => {
-    console.log(`🔄 selectedFlightId changed from ${selectedMarkerIdRef.current} to ${selectedFlightId}`);
-    selectedMarkerIdRef.current = selectedFlightId || null;
+    const prevSelected = selectedMarkerIdRef.current;
+    const newSelected = selectedFlightId || null;
+    
+    console.log(`🔄 selectedFlightId changed from ${prevSelected} to ${newSelected}`);
+    selectedMarkerIdRef.current = newSelected;
+    
+    // Set protection time for newly selected aircraft
+    if (newSelected && newSelected !== prevSelected) {
+      selectedProtectionTimeRef.current[newSelected] = Date.now();
+      console.log(`🛡️ Setting protection for selected flight ${newSelected}`);
+    }
     
     // Update all marker styles when selection changes
     if (!isUpdatingRef.current) {
@@ -113,6 +129,24 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     });
   }, [flightLookup, updateMarkerStyle]);
 
+  // Check if marker should be protected from removal
+  const isMarkerProtected = useCallback((flightId: string): boolean => {
+    // Always protect selected marker
+    if (selectedMarkerIdRef.current === flightId) {
+      console.log(`🛡️ Protecting selected marker ${flightId}`);
+      return true;
+    }
+    
+    // Protect recently selected markers for a time period
+    const protectionTime = selectedProtectionTimeRef.current[flightId];
+    if (protectionTime && (Date.now() - protectionTime) < SELECTED_PROTECTION_TIME) {
+      console.log(`🛡️ Protecting recently selected marker ${flightId} (${Math.round((SELECTED_PROTECTION_TIME - (Date.now() - protectionTime)) / 1000)}s remaining)`);
+      return true;
+    }
+    
+    return false;
+  }, []);
+
   // Create marker for flight with DOM safety check
   const createMarker = useCallback((flight: Flight): L.Marker | null => {
     try {
@@ -127,6 +161,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
           
           // Update selected marker reference immediately
           selectedMarkerIdRef.current = flight.flightId;
+          selectedProtectionTimeRef.current[flight.flightId] = Date.now();
           
           // Update all marker styles to reflect selection
           setTimeout(() => updateAllMarkerStyles(), 50);
@@ -146,30 +181,43 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     isUpdatingRef.current = true;
     console.log(`🔄 Updating ${flights.length} aircraft markers`);
     
-    // Remove markers for flights that no longer exist, BUT protect selected flight
+    // Update miss counts and handle marker removal with protection
     Object.keys(markersRef.current).forEach(flightId => {
       if (!currentFlightIds.has(flightId)) {
-        // Don't remove the selected flight marker even if it's not in current data
-        if (selectedMarkerIdRef.current === flightId) {
-          console.log(`🛡️ Protecting selected flight marker ${flightId} from removal`);
-          
+        // Increment miss count
+        markerMissCountRef.current[flightId] = (markerMissCountRef.current[flightId] || 0) + 1;
+        const missCount = markerMissCountRef.current[flightId];
+        
+        console.log(`📊 Flight ${flightId} missing (count: ${missCount}/${MAX_MISS_COUNT})`);
+        
+        // Check if marker should be protected
+        if (isMarkerProtected(flightId)) {
           // Update marker with last known data but keep it visible
           const lastKnownFlight = lastKnownFlightDataRef.current[flightId];
           if (lastKnownFlight) {
-            updateMarkerStyle(markersRef.current[flightId], lastKnownFlight, true);
+            const isSelected = selectedMarkerIdRef.current === flightId;
+            updateMarkerStyle(markersRef.current[flightId], lastKnownFlight, isSelected);
           }
-          return; // Skip removal for selected flight
+          return; // Skip removal for protected marker
         }
         
-        console.log(`🗑️ Removing marker for flight ${flightId}`);
-        try {
-          if (markersRef.current[flightId]) {
-            map.removeLayer(markersRef.current[flightId]);
-            delete markersRef.current[flightId];
+        // Only remove after MAX_MISS_COUNT consecutive misses
+        if (missCount >= MAX_MISS_COUNT) {
+          console.log(`🗑️ Removing marker for flight ${flightId} after ${missCount} misses`);
+          try {
+            if (markersRef.current[flightId]) {
+              map.removeLayer(markersRef.current[flightId]);
+              delete markersRef.current[flightId];
+              delete markerMissCountRef.current[flightId];
+              delete selectedProtectionTimeRef.current[flightId];
+            }
+          } catch (error) {
+            console.warn(`⚠️ Failed to remove marker for flight ${flightId}:`, error);
           }
-        } catch (error) {
-          console.warn(`⚠️ Failed to remove marker for flight ${flightId}:`, error);
         }
+      } else {
+        // Reset miss count for existing flights
+        markerMissCountRef.current[flightId] = 0;
       }
     });
 
@@ -197,6 +245,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
           try {
             newMarker.addTo(map);
             markersRef.current[flight.flightId] = newMarker;
+            markerMissCountRef.current[flight.flightId] = 0;
           } catch (error) {
             console.error(`❌ Failed to add marker to map for flight ${flight.flightId}:`, error);
           }
@@ -205,8 +254,9 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     });
 
     console.log(`📊 Active markers: ${Object.keys(markersRef.current).length}`);
+    console.log(`🛡️ Protected markers: ${Object.keys(selectedProtectionTimeRef.current).length}`);
     isUpdatingRef.current = false;
-  }, [map, flights, currentFlightIds, createMarker, updateMarkerStyle]);
+  }, [map, flights, currentFlightIds, createMarker, updateMarkerStyle, isMarkerProtected]);
 
   // Cleanup effect
   useEffect(() => {
@@ -218,6 +268,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
           }
         });
         markersRef.current = {};
+        markerMissCountRef.current = {};
+        selectedProtectionTimeRef.current = {};
       } catch (error) {
         console.warn('⚠️ Error during marker cleanup:', error);
       }
