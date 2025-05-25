@@ -49,12 +49,23 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   const [flightPlanData, setFlightPlanData] = useState<FlightPlanData | null>(null);
   const [loadingFlightPlan, setLoadingFlightPlan] = useState(false);
   
+  // Debug: Log flight data to see what IDs we have
+  useEffect(() => {
+    console.log('Flight data:', {
+      aircraftId: flight.aircraftId,
+      liveryId: flight.liveryId,
+      aircraft: flight.aircraft,
+      livery: flight.livery,
+      flightId: flight.flightId
+    });
+  }, [flight]);
+  
   // Fetch detailed aircraft information
   const { aircraftName, liveryName, loading: aircraftLoading, error: aircraftError } = useAircraftInfo(
     flight.aircraftId || '', 
     flight.liveryId || ''
   );
-  
+
   // Generate mock performance data for demonstration
   const generatePerformanceData = () => {
     const now = new Date();
@@ -258,12 +269,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
               <div className="min-h-[20px]">
                 {aircraftLoading ? (
                   <div className="animate-pulse bg-slate-600 h-4 w-3/4 rounded"></div>
-                ) : aircraftError ? (
-                  <p className="text-sm text-red-400">API Error</p>
                 ) : (
                   <p className="text-sm font-semibold text-white">
-                    {aircraftName || flight.aircraft || 'Unknown'}
+                    {aircraftName || flight.aircraft || 'Unknown Aircraft'}
                   </p>
+                )}
+                {aircraftError && (
+                  <p className="text-xs text-red-400 mt-1">API: {aircraftError}</p>
                 )}
               </div>
             </div>
@@ -278,12 +290,13 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             <div className="min-h-[20px]">
               {aircraftLoading ? (
                 <div className="animate-pulse bg-slate-600 h-4 w-2/3 rounded"></div>
-              ) : aircraftError ? (
-                <p className="text-sm text-red-400">API Error</p>
               ) : (
                 <p className="text-sm text-white truncate">
-                  {liveryName || flight.livery || 'Unknown'}
+                  {liveryName || flight.livery || 'Standard Livery'}
                 </p>
+              )}
+              {aircraftError && (
+                <p className="text-xs text-red-400 mt-1">API: {aircraftError}</p>
               )}
             </div>
           </div>
