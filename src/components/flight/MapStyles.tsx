@@ -10,13 +10,15 @@ const MapStyles = () => {
         font-family: inherit;
       }
       
+      /* SIMPLIFIED aircraft marker styles - removed problematic animations */
       .aircraft-marker {
-        will-change: transform;
-        backface-visibility: hidden;
-        transform-style: preserve-3d;
-        transition: all 0.2s ease-out;
+        will-change: auto;
+        backface-visibility: visible;
+        transform-style: flat;
+        transition: none;
         pointer-events: auto;
         cursor: pointer;
+        z-index: 500;
       }
       
       .aircraft-marker svg,
@@ -26,51 +28,44 @@ const MapStyles = () => {
         image-rendering: -webkit-optimize-contrast;
         image-rendering: optimize-contrast;
         transform: translateZ(0);
-        transition: all 0.2s ease-out;
+        transition: none;
         filter-rendering: optimizeQuality;
         vector-effect: non-scaling-stroke;
       }
       
+      /* SIMPLIFIED selected marker styles - no animations */
       .aircraft-marker-selected {
         z-index: 1000 !important;
-        animation: aircraft-pulse 2s ease-in-out infinite;
+        position: relative;
       }
       
-      .aircraft-marker-glow svg {
-        animation: glow-pulse 1.5s ease-in-out infinite alternate;
-      }
-      
+      /* SAFE hover effect - no scaling that could cause issues */
       .aircraft-marker:hover {
-        transform: scale(1.1);
         z-index: 999;
+        opacity: 0.8;
       }
       
-      .aircraft-marker:hover svg {
-        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
-      }
-      
-      @keyframes aircraft-pulse {
-        0%, 100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-      }
-      
-      @keyframes glow-pulse {
-        0% {
-          filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
-        }
-        100% {
-          filter: drop-shadow(0 0 16px rgba(59, 130, 246, 1)) drop-shadow(0 0 28px rgba(59, 130, 246, 0.6));
-        }
+      /* Remove all problematic animations */
+      .aircraft-marker,
+      .aircraft-marker svg,
+      .aircraft-marker-selected,
+      .aircraft-marker-selected svg {
+        animation: none !important;
+        transform-origin: center center;
       }
       
       .leaflet-marker-icon {
         pointer-events: auto;
-        contain: layout style paint;
+        contain: none;
         transform: translateZ(0);
+        position: relative;
+      }
+      
+      /* Ensure proper cleanup of marker icons */
+      .leaflet-marker-icon.aircraft-marker {
+        border: none;
+        background: transparent;
+        outline: none;
       }
       
       .leaflet-control-container {
@@ -170,6 +165,24 @@ const MapStyles = () => {
       .leaflet-overlay-pane * {
         image-rendering: optimizeQuality;
         shape-rendering: geometricPrecision;
+      }
+      
+      /* CRITICAL: Prevent ghost markers from CSS transforms */
+      .leaflet-marker-pane {
+        position: relative;
+        z-index: 600;
+      }
+      
+      /* Ensure markers don't leave trails */
+      .leaflet-marker-pane .leaflet-marker-icon {
+        position: absolute;
+        z-index: auto;
+      }
+      
+      /* Force proper cleanup of marker transformations */
+      .leaflet-zoom-anim .leaflet-marker-icon {
+        transition: none !important;
+        animation: none !important;
       }
     `}</style>
   );
