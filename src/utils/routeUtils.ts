@@ -72,7 +72,116 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
   return validPoints;
 }
 
-// Create individual line segments for altitude-based coloring
+// Enhanced color interpolation function
+export function interpolateColor(color1: string, color2: string, factor: number): string {
+  // Convert hex to RGB
+  const hex2rgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  };
+  
+  // Convert RGB to hex
+  const rgb2hex = (r: number, g: number, b: number) => {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  };
+  
+  const c1 = hex2rgb(color1);
+  const c2 = hex2rgb(color2);
+  
+  if (!c1 || !c2) return color1;
+  
+  const r = Math.round(c1.r + factor * (c2.r - c1.r));
+  const g = Math.round(c1.g + factor * (c2.g - c1.g));
+  const b = Math.round(c1.b + factor * (c2.b - c1.b));
+  
+  return rgb2hex(r, g, b);
+}
+
+// Enhanced altitude color mapping with smoother gradients
+export function getAltitudeColor(altitude: number): string {
+  // Modern, harmonious color palette for altitude visualization
+  const colorStops = [
+    { altitude: 0, color: '#ef4444' },      // Red (ground)
+    { altitude: 1000, color: '#f97316' },   // Orange
+    { altitude: 5000, color: '#eab308' },   // Yellow
+    { altitude: 10000, color: '#84cc16' },  // Lime
+    { altitude: 20000, color: '#22c55e' },  // Green
+    { altitude: 30000, color: '#06b6d4' },  // Cyan
+    { altitude: 40000, color: '#3b82f6' },  // Blue
+    { altitude: 50000, color: '#8b5cf6' },  // Purple
+    { altitude: 60000, color: '#a855f7' }   // Violet
+  ];
+  
+  // Find the two color stops to interpolate between
+  let lowerStop = colorStops[0];
+  let upperStop = colorStops[colorStops.length - 1];
+  
+  for (let i = 0; i < colorStops.length - 1; i++) {
+    if (altitude >= colorStops[i].altitude && altitude <= colorStops[i + 1].altitude) {
+      lowerStop = colorStops[i];
+      upperStop = colorStops[i + 1];
+      break;
+    }
+  }
+  
+  // If altitude is beyond our range, return the appropriate boundary color
+  if (altitude <= colorStops[0].altitude) return colorStops[0].color;
+  if (altitude >= colorStops[colorStops.length - 1].altitude) return colorStops[colorStops.length - 1].color;
+  
+  // Calculate interpolation factor
+  const factor = (altitude - lowerStop.altitude) / (upperStop.altitude - lowerStop.altitude);
+  
+  // Interpolate between the two colors
+  return interpolateColor(lowerStop.color, upperStop.color, factor);
+}
+
+// Create smooth segments with interpolated colors
+export function createSmoothAltitudeSegments(routePoints: FlightTrackPoint[]): Array<{
+  coordinates: [number, number][];
+  color: string;
+  opacity: number;
+}> {
+  const segments = [];
+  
+  for (let i = 0; i < routePoints.length - 1; i++) {
+    const currentPoint = routePoints[i];
+    const nextPoint = routePoints[i + 1];
+    
+    // Get colors for current and next point
+    const currentColor = getAltitudeColor(currentPoint.altitude || 0);
+    const nextColor = getAltitudeColor(nextPoint.altitude || 0);
+    
+    // Create multiple micro-segments for smooth transition
+    const microSegments = 3; // Number of segments between each point
+    
+    for (let j = 0; j < microSegments; j++) {
+      const factor1 = j / microSegments;
+      const factor2 = (j + 1) / microSegments;
+      
+      // Interpolate coordinates
+      const lat1 = currentPoint.latitude + factor1 * (nextPoint.latitude - currentPoint.latitude);
+      const lon1 = currentPoint.longitude + factor1 * (nextPoint.longitude - currentPoint.longitude);
+      const lat2 = currentPoint.latitude + factor2 * (nextPoint.latitude - currentPoint.latitude);
+      const lon2 = currentPoint.longitude + factor2 * (nextPoint.longitude - currentPoint.longitude);
+      
+      // Interpolate color
+      const segmentColor = interpolateColor(currentColor, nextColor, (factor1 + factor2) / 2);
+      
+      segments.push({
+        coordinates: [[lon1, lat1], [lon2, lat2]],
+        color: segmentColor,
+        opacity: 0.9
+      });
+    }
+  }
+  
+  return segments;
+}
+
 function createAltitudeSegments(routePoints: FlightTrackPoint[]) {
   const segments = [];
   
@@ -187,16 +296,4 @@ export function calculateDistance(
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
-}
-
-// Get color based on altitude for route visualization
-export function getAltitudeColor(altitude: number): string {
-  if (altitude >= 50000) return '#6600ff'; // Purple
-  else if (altitude >= 40000) return '#0066ff'; // Blue
-  else if (altitude >= 30000) return '#00ffff'; // Cyan
-  else if (altitude >= 20000) return '#00ff66'; // Green
-  else if (altitude >= 10000) return '#66ff00'; // Light green
-  else if (altitude >= 5000) return '#ffff00'; // Yellow
-  else if (altitude >= 1000) return '#ff6600'; // Orange
-  else return '#ff0000'; // Red
 }

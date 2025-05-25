@@ -1,8 +1,7 @@
-
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { FlightTrackPoint, Flight } from '@/services/flight';
-import { filterValidRoutePoints } from '@/utils/routeUtils';
+import { filterValidRoutePoints, createSmoothAltitudeSegments } from '@/utils/routeUtils';
 
 interface LeafletFlightRouteProps {
   map: L.Map;
@@ -32,7 +31,7 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
     };
   }, [map]);
 
-  // Update routes when data changes
+  // Update routes when data changes with smooth color transitions
   useEffect(() => {
     if (!map || !routeLayersRef.current) return;
     
@@ -63,36 +62,32 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
       routeLayersRef.current.addLayer(flightPlanLine);
     }
     
-    // Create flown route line with altitude-based colors
+    // Create smooth flown route with interpolated colors
     if (validFlownRoute.length > 1) {
-      // For simplicity, we'll use segments with different colors based on altitude
-      for (let i = 0; i < validFlownRoute.length - 1; i++) {
-        const point1 = validFlownRoute[i];
-        const point2 = validFlownRoute[i + 1];
+      console.log('Creating smooth altitude-based route segments...');
+      
+      // Create smooth segments with color interpolation
+      const smoothSegments = createSmoothAltitudeSegments(validFlownRoute);
+      
+      console.log(`Generated ${smoothSegments.length} smooth segments for route visualization`);
+      
+      // Add each smooth segment to the map
+      smoothSegments.forEach((segment, index) => {
+        const [coord1, coord2] = segment.coordinates;
         
-        // Calculate color based on altitude
-        const altitude = point1.altitude;
-        let color = '#ff0000'; // Default red
-        
-        if (altitude >= 50000) color = '#6600ff'; // Purple
-        else if (altitude >= 40000) color = '#0066ff'; // Blue
-        else if (altitude >= 30000) color = '#00ffff'; // Cyan
-        else if (altitude >= 20000) color = '#00ff66'; // Green
-        else if (altitude >= 10000) color = '#66ff00'; // Light green
-        else if (altitude >= 5000) color = '#ffff00'; // Yellow
-        else if (altitude >= 1000) color = '#ff6600'; // Orange
-        
-        const segment = L.polyline(
-          [[point1.latitude, point1.longitude], [point2.latitude, point2.longitude]], 
+        const polyline = L.polyline(
+          [[coord1[1], coord1[0]], [coord2[1], coord2[0]]], 
           {
-            color: color,
+            color: segment.color,
             weight: 4,
-            opacity: 0.9
+            opacity: segment.opacity,
+            lineCap: 'round',
+            lineJoin: 'round'
           }
         );
         
-        routeLayersRef.current.addLayer(segment);
-      }
+        routeLayersRef.current!.addLayer(polyline);
+      });
     }
     
     // Add destination waypoint (red circle)

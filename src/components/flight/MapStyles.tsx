@@ -10,7 +10,6 @@ const MapStyles = () => {
         font-family: inherit;
       }
       
-      /* Aircraft marker optimizations with improved SVG rendering */
       .aircraft-marker {
         will-change: transform;
         backface-visibility: hidden;
@@ -32,7 +31,6 @@ const MapStyles = () => {
         vector-effect: non-scaling-stroke;
       }
       
-      /* Glow animation for selected aircraft */
       .aircraft-marker-selected {
         z-index: 1000 !important;
         animation: aircraft-pulse 2s ease-in-out infinite;
@@ -42,7 +40,6 @@ const MapStyles = () => {
         animation: glow-pulse 1.5s ease-in-out infinite alternate;
       }
       
-      /* Smooth hover effects */
       .aircraft-marker:hover {
         transform: scale(1.1);
         z-index: 999;
@@ -52,7 +49,6 @@ const MapStyles = () => {
         filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
       }
       
-      /* Keyframe animations */
       @keyframes aircraft-pulse {
         0%, 100% {
           transform: scale(1);
@@ -71,14 +67,12 @@ const MapStyles = () => {
         }
       }
       
-      /* Leaflet marker optimizations */
       .leaflet-marker-icon {
         pointer-events: auto;
         contain: layout style paint;
         transform: translateZ(0);
       }
       
-      /* Leaflet controls styling */
       .leaflet-control-container {
         contain: layout;
       }
@@ -98,28 +92,41 @@ const MapStyles = () => {
         background-color: #fff;
       }
       
-      /* Route line optimizations */
+      /* Enhanced route line styles for smooth gradients */
       .leaflet-interactive {
         cursor: pointer;
       }
       
-      /* Tile layer optimizations - removed dark filter */
+      /* Smooth route line optimizations */
+      .leaflet-interactive path {
+        shape-rendering: geometricPrecision;
+        vector-effect: non-scaling-stroke;
+      }
+      
+      /* Route line anti-aliasing and smoothing */
+      .leaflet-overlay-pane svg {
+        shape-rendering: geometricPrecision;
+      }
+      
+      .leaflet-overlay-pane path {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+      }
+      
       .leaflet-tile {
         filter: none;
         image-rendering: optimizeQuality;
       }
       
-      /* Removed dark theme filter for brighter map */
       .leaflet-tile-container img {
         filter: brightness(1.1) contrast(1.05);
       }
       
-      /* SVG-specific optimizations for aircraft markers */
       .aircraft-marker svg path {
         vector-effect: non-scaling-stroke;
       }
       
-      /* Performance optimizations */
       .leaflet-zoom-animated {
         transform: translateZ(0);
       }
