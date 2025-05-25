@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Flight } from '@/services/flight';
@@ -37,10 +36,10 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({ map, flig
     const onGround = isOnGround(flight);
     
     // Color based on status
-    const color = onGround ? '#cccccc' : '#e84393'; // Gray for ground, pink for airborne
-    const strokeColor = isSelected ? '#ffffff' : '#000000';
-    const strokeWidth = isSelected ? '3' : '1';
-    const dropShadow = isSelected ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+    const color = onGround ? '#6b7280' : '#e84393'; // Gray for ground, pink for airborne
+    const strokeColor = isSelected ? '#ffffff' : 'none'; // No stroke for non-selected aircraft
+    const strokeWidth = isSelected ? '2' : '0'; // No stroke width for non-selected aircraft
+    const dropShadow = isSelected ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))';
     
     const svgIcon = `
       <svg width="28" height="28" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg); filter: ${dropShadow};">

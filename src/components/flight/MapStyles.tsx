@@ -6,7 +6,7 @@ const MapStyles = () => {
     <style>{`
       /* Leaflet map container styles */
       .leaflet-container {
-        background-color: #1a202c;
+        background-color: #f8f9fa;
         font-family: inherit;
       }
       
@@ -67,15 +67,15 @@ const MapStyles = () => {
         cursor: pointer;
       }
       
-      /* Tile layer optimizations */
+      /* Tile layer optimizations - removed dark filter */
       .leaflet-tile {
         filter: none;
         image-rendering: optimizeQuality;
       }
       
-      /* Dark theme for map tiles */
+      /* Removed dark theme filter for brighter map */
       .leaflet-tile-container img {
-        filter: brightness(0.8) contrast(1.1);
+        filter: brightness(1.1) contrast(1.05);
       }
       
       /* SVG-specific optimizations for aircraft markers */
