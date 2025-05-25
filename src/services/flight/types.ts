@@ -1,3 +1,4 @@
+
 // API key - Ensure this is always available
 export const API_KEY = "r8hxd0a54uoxrgj51ag5usiba3uls8ii";
 
@@ -34,6 +35,8 @@ export interface Flight {
   virtualOrganization?: string;
   lastReportTime: number;
   track: FlightTrackPoint[];
+  aircraftId?: string; // Added for API calls
+  liveryId?: string;   // Added for API calls
 }
 
 export interface FlightTrackPoint {

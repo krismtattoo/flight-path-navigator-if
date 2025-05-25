@@ -7,3 +7,4 @@ export * from './routeService';
 export * from './routeEndpoints';
 export * from './routeParser';
 export * from './routeFetcher';
+export * from './aircraftService';

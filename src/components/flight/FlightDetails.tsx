@@ -9,6 +9,7 @@ import { getFlightRoute } from '@/services/flight/routeService';
 import { toast } from "sonner";
 import PerformanceChart from './PerformanceChart';
 import { ScrollArea } from '../ui/scroll-area';
+import { useAircraftInfo } from '@/hooks/useAircraftInfo';
 
 interface FlightDetailsProps {
   flight: Flight;
@@ -47,6 +48,12 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   const [activeSection, setActiveSection] = useState<'overview' | 'route' | 'performance' | 'pilot'>('overview');
   const [flightPlanData, setFlightPlanData] = useState<FlightPlanData | null>(null);
   const [loadingFlightPlan, setLoadingFlightPlan] = useState(false);
+  
+  // Fetch detailed aircraft information
+  const { aircraftName, liveryName, loading: aircraftLoading } = useAircraftInfo(
+    flight.aircraftId || '', 
+    flight.liveryId || ''
+  );
   
   // Generate mock performance data for demonstration
   const generatePerformanceData = () => {
@@ -248,7 +255,15 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <p className="text-xs text-gray-400">Aircraft Type</p>
-              <p className="text-sm font-semibold text-white">{flight.aircraft}</p>
+              <div className="min-h-[20px]">
+                {aircraftLoading ? (
+                  <div className="animate-pulse bg-slate-600 h-4 w-3/4 rounded"></div>
+                ) : (
+                  <p className="text-sm font-semibold text-white">
+                    {aircraftName || flight.aircraft}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-gray-400">Registration</p>
@@ -258,7 +273,15 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           <Separator className="bg-slate-600" />
           <div className="space-y-1">
             <p className="text-xs text-gray-400">Livery</p>
-            <p className="text-sm text-white truncate">{flight.livery}</p>
+            <div className="min-h-[20px]">
+              {aircraftLoading ? (
+                <div className="animate-pulse bg-slate-600 h-4 w-2/3 rounded"></div>
+              ) : (
+                <p className="text-sm text-white truncate">
+                  {liveryName || flight.livery}
+                </p>
+              )}
+            </div>
           </div>
           {flight.virtualOrganization && (
             <div className="space-y-1">
