@@ -29,7 +29,7 @@ export function findCurrentPositionIndex(
   return currentPositionIndex;
 }
 
-// Filter valid route points
+// Enhanced filter for valid route points with better smoothing
 export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightTrackPoint[] {
   // Filter valid points and remove duplicates
   const validPoints = routePoints.filter(point => 
@@ -41,40 +41,66 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
     point.longitude >= -180 && point.longitude <= 180
   );
   
-  // Make sure start and end points are included by keeping first and last points
   if (validPoints.length < 2) {
-    return validPoints; // Not enough points for a route
+    return validPoints;
   }
   
-  // Ensure points are sorted by timestamp if available
+  // Sort by timestamp if available
   if (validPoints.length > 0 && validPoints[0].timestamp) {
-    return [...validPoints].sort((a, b) => a.timestamp - b.timestamp);
+    validPoints.sort((a, b) => a.timestamp - b.timestamp);
   }
   
-  // If we have too many points, reduce their number for smoother rendering
-  // But always keep start and end points
-  if (validPoints.length > 300) {
-    const startPoint = validPoints[0];
-    const endPoint = validPoints[validPoints.length - 1];
+  // Enhanced smoothing: Remove points that create sharp angles or are too close
+  const smoothedPoints = [validPoints[0]]; // Always keep first point
+  
+  for (let i = 1; i < validPoints.length - 1; i++) {
+    const prev = validPoints[i - 1];
+    const current = validPoints[i];
+    const next = validPoints[i + 1];
     
-    // Keep approximately 300 points including start and end
-    const samplingRate = Math.ceil((validPoints.length - 2) / 298);
+    // Calculate distance between consecutive points
+    const distToPrev = calculateDistance(prev.latitude, prev.longitude, current.latitude, current.longitude);
+    const distToNext = calculateDistance(current.latitude, current.longitude, next.latitude, next.longitude);
     
-    // Filter middle points
-    const middlePoints = validPoints
-      .slice(1, validPoints.length - 1)
+    // Skip points that are too close (creates jagged lines)
+    if (distToPrev < 0.1 && distToNext < 0.1) {
+      continue;
+    }
+    
+    // Calculate angle to detect sharp turns that cause pixelation
+    const angle1 = Math.atan2(current.latitude - prev.latitude, current.longitude - prev.longitude);
+    const angle2 = Math.atan2(next.latitude - current.latitude, next.longitude - current.longitude);
+    const angleDiff = Math.abs(angle1 - angle2);
+    
+    // Include point if it's not creating a sharp angle or if it's significant distance
+    if (angleDiff > 0.1 || distToPrev > 1.0) {
+      smoothedPoints.push(current);
+    }
+  }
+  
+  // Always keep the last point
+  if (validPoints.length > 1) {
+    smoothedPoints.push(validPoints[validPoints.length - 1]);
+  }
+  
+  // Adaptive sampling for very long routes
+  if (smoothedPoints.length > 150) {
+    const startPoint = smoothedPoints[0];
+    const endPoint = smoothedPoints[smoothedPoints.length - 1];
+    const samplingRate = Math.ceil((smoothedPoints.length - 2) / 148);
+    
+    const sampledPoints = smoothedPoints
+      .slice(1, smoothedPoints.length - 1)
       .filter((_, index) => index % samplingRate === 0);
     
-    // Return combined array with start, sampled middle points, and end
-    return [startPoint, ...middlePoints, endPoint];
+    return [startPoint, ...sampledPoints, endPoint];
   }
   
-  return validPoints;
+  return smoothedPoints;
 }
 
 // Enhanced color interpolation function
 export function interpolateColor(color1: string, color2: string, factor: number): string {
-  // Convert hex to RGB
   const hex2rgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -84,7 +110,6 @@ export function interpolateColor(color1: string, color2: string, factor: number)
     } : null;
   };
   
-  // Convert RGB to hex
   const rgb2hex = (r: number, g: number, b: number) => {
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
   };
@@ -103,7 +128,6 @@ export function interpolateColor(color1: string, color2: string, factor: number)
 
 // Enhanced altitude color mapping with smoother gradients
 export function getAltitudeColor(altitude: number): string {
-  // Modern, harmonious color palette for altitude visualization
   const colorStops = [
     { altitude: 0, color: '#ef4444' },      // Red (ground)
     { altitude: 1000, color: '#f97316' },   // Orange
@@ -116,7 +140,6 @@ export function getAltitudeColor(altitude: number): string {
     { altitude: 60000, color: '#a855f7' }   // Violet
   ];
   
-  // Find the two color stops to interpolate between
   let lowerStop = colorStops[0];
   let upperStop = colorStops[colorStops.length - 1];
   
@@ -128,80 +151,78 @@ export function getAltitudeColor(altitude: number): string {
     }
   }
   
-  // If altitude is beyond our range, return the appropriate boundary color
   if (altitude <= colorStops[0].altitude) return colorStops[0].color;
   if (altitude >= colorStops[colorStops.length - 1].altitude) return colorStops[colorStops.length - 1].color;
   
-  // Calculate interpolation factor
   const factor = (altitude - lowerStop.altitude) / (upperStop.altitude - lowerStop.altitude);
-  
-  // Interpolate between the two colors
   return interpolateColor(lowerStop.color, upperStop.color, factor);
 }
 
-// Bézier curve interpolation for smooth curves
-function calculateBezierPoint(t: number, p0: [number, number], p1: [number, number], p2: [number, number], p3: [number, number]): [number, number] {
-  const cx = 3 * (p1[0] - p0[0]);
-  const bx = 3 * (p2[0] - p1[0]) - cx;
-  const ax = p3[0] - p0[0] - cx - bx;
+// Ultra-smooth Catmull-Rom spline interpolation for natural curves
+function calculateCatmullRomPoint(t: number, p0: [number, number], p1: [number, number], p2: [number, number], p3: [number, number]): [number, number] {
+  const t2 = t * t;
+  const t3 = t2 * t;
   
-  const cy = 3 * (p1[1] - p0[1]);
-  const by = 3 * (p2[1] - p1[1]) - cy;
-  const ay = p3[1] - p0[1] - cy - by;
+  const x = 0.5 * (
+    (2 * p1[0]) +
+    (-p0[0] + p2[0]) * t +
+    (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+    (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
+  );
   
-  const tSquared = t * t;
-  const tCubed = tSquared * t;
+  const y = 0.5 * (
+    (2 * p1[1]) +
+    (-p0[1] + p2[1]) * t +
+    (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+    (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
+  );
   
-  const resultX = (ax * tCubed) + (bx * tSquared) + (cx * t) + p0[0];
-  const resultY = (ay * tCubed) + (by * tSquared) + (cy * t) + p0[1];
-  
-  return [resultX, resultY];
+  return [x, y];
 }
 
-// Generate control points for smooth Bézier curves
-function generateControlPoints(points: FlightTrackPoint[]): Array<{
-  p0: [number, number];
-  p1: [number, number];
-  p2: [number, number];
-  p3: [number, number];
+// Generate ultra-smooth control points using Catmull-Rom splines
+function generateSmoothControlPoints(points: FlightTrackPoint[]): Array<{
+  segments: [number, number][];
+  startAltitude: number;
+  endAltitude: number;
 }> {
   if (points.length < 2) return [];
   
   const controlPointSets = [];
+  const resolution = 25; // Higher resolution for ultra-smooth curves
   
   for (let i = 0; i < points.length - 1; i++) {
-    const current = [points[i].longitude, points[i].latitude] as [number, number];
-    const next = [points[i + 1].longitude, points[i + 1].latitude] as [number, number];
+    // Get 4 points for Catmull-Rom (p0, p1, p2, p3)
+    const p0 = i > 0 ? 
+      [points[i - 1].longitude, points[i - 1].latitude] as [number, number] : 
+      [points[i].longitude, points[i].latitude] as [number, number];
     
-    // Calculate control points for smooth curves
-    let prev = i > 0 ? [points[i - 1].longitude, points[i - 1].latitude] as [number, number] : current;
-    let after = i < points.length - 2 ? [points[i + 2].longitude, points[i + 2].latitude] as [number, number] : next;
+    const p1 = [points[i].longitude, points[i].latitude] as [number, number];
+    const p2 = [points[i + 1].longitude, points[i + 1].latitude] as [number, number];
     
-    // Control point calculation for natural curves
-    const tension = 0.3; // Smoothness factor
+    const p3 = i < points.length - 2 ? 
+      [points[i + 2].longitude, points[i + 2].latitude] as [number, number] : 
+      [points[i + 1].longitude, points[i + 1].latitude] as [number, number];
     
-    const cp1: [number, number] = [
-      current[0] + (next[0] - prev[0]) * tension,
-      current[1] + (next[1] - prev[1]) * tension
-    ];
+    // Generate smooth curve segments
+    const segments: [number, number][] = [];
     
-    const cp2: [number, number] = [
-      next[0] - (after[0] - current[0]) * tension,
-      next[1] - (after[1] - current[1]) * tension
-    ];
+    for (let t = 0; t <= 1; t += 1 / resolution) {
+      const point = calculateCatmullRomPoint(t, p0, p1, p2, p3);
+      segments.push(point);
+    }
     
     controlPointSets.push({
-      p0: current,
-      p1: cp1,
-      p2: cp2,
-      p3: next
+      segments,
+      startAltitude: points[i].altitude || 0,
+      endAltitude: points[i + 1].altitude || 0
     });
   }
   
   return controlPointSets;
 }
 
-// Create smooth curved segments with interpolated colors
+// Create ultra-smooth curved segments with perfect color interpolation
 export function createSmoothAltitudeSegments(routePoints: FlightTrackPoint[]): Array<{
   coordinates: [number, number][];
   color: string;
@@ -210,36 +231,21 @@ export function createSmoothAltitudeSegments(routePoints: FlightTrackPoint[]): A
   if (routePoints.length < 2) return [];
   
   const segments = [];
-  const controlPointSets = generateControlPoints(routePoints);
-  const curveResolution = 8; // Number of points per curve segment
+  const smoothControlPointSets = generateSmoothControlPoints(routePoints);
   
-  controlPointSets.forEach((controlPoints, segmentIndex) => {
-    const currentPoint = routePoints[segmentIndex];
-    const nextPoint = routePoints[segmentIndex + 1];
+  smoothControlPointSets.forEach((controlSet) => {
+    const currentColor = getAltitudeColor(controlSet.startAltitude);
+    const nextColor = getAltitudeColor(controlSet.endAltitude);
     
-    const currentColor = getAltitudeColor(currentPoint.altitude || 0);
-    const nextColor = getAltitudeColor(nextPoint.altitude || 0);
-    
-    // Create smooth curve points using Bézier interpolation
-    const curvePoints: [number, number][] = [];
-    
-    for (let t = 0; t <= 1; t += 1 / curveResolution) {
-      const point = calculateBezierPoint(t, controlPoints.p0, controlPoints.p1, controlPoints.p2, controlPoints.p3);
-      curvePoints.push(point);
-    }
-    
-    // Create multiple micro-segments along the curve with color interpolation
-    for (let i = 0; i < curvePoints.length - 1; i++) {
-      const t1 = i / (curvePoints.length - 1);
-      const t2 = (i + 1) / (curvePoints.length - 1);
-      const avgT = (t1 + t2) / 2;
-      
-      const segmentColor = interpolateColor(currentColor, nextColor, avgT);
+    // Create micro-segments along the smooth curve
+    for (let i = 0; i < controlSet.segments.length - 1; i++) {
+      const t = i / (controlSet.segments.length - 1);
+      const segmentColor = interpolateColor(currentColor, nextColor, t);
       
       segments.push({
-        coordinates: [curvePoints[i], curvePoints[i + 1]],
+        coordinates: [controlSet.segments[i], controlSet.segments[i + 1]],
         color: segmentColor,
-        opacity: 0.9
+        opacity: 0.95
       });
     }
   });

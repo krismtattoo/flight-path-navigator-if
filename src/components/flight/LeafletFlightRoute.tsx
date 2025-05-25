@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { FlightTrackPoint, Flight } from '@/services/flight';
@@ -18,7 +19,6 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
 }) => {
   const routeLayersRef = useRef<L.LayerGroup | null>(null);
   
-  // Initialize route layer group
   useEffect(() => {
     if (!map) return;
     
@@ -31,66 +31,82 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
     };
   }, [map]);
 
-  // Update routes when data changes with ultra-smooth curved transitions
   useEffect(() => {
     if (!map || !routeLayersRef.current) return;
     
-    // Clear existing route layers
     routeLayersRef.current.clearLayers();
     
     if ((!flownRoute || flownRoute.length === 0) && (!flightPlan || flightPlan.length === 0)) {
       return;
     }
     
-    // Process route data
     const validFlownRoute = filterValidRoutePoints(flownRoute || []);
     const validFlightPlan = filterValidRoutePoints(flightPlan || []);
     
-    console.log(`Rendering smooth curved route: ${validFlownRoute.length} flown, ${validFlightPlan.length} planned points`);
+    console.log(`Rendering ultra-smooth route: ${validFlownRoute.length} flown, ${validFlightPlan.length} planned points`);
     
-    // Create flight plan line (white dashed) - keep this as straight lines
+    // Create flight plan line (white dashed)
     if (validFlightPlan.length > 1) {
       const flightPlanCoords: L.LatLngExpression[] = validFlightPlan.map(point => [point.latitude, point.longitude]);
       
       const flightPlanLine = L.polyline(flightPlanCoords, {
         color: '#ffffff',
         weight: 3,
-        opacity: 0.8,
-        dashArray: '10, 10',
+        opacity: 0.85,
+        dashArray: '8, 12',
         lineCap: 'round',
-        lineJoin: 'round'
+        lineJoin: 'round',
+        smoothFactor: 5.0, // Maximum smoothing
+        noClip: true // Better performance for smooth lines
       });
       
       routeLayersRef.current.addLayer(flightPlanLine);
     }
     
-    // Create ultra-smooth flown route with curved interpolation
+    // Create ultra-smooth flown route with Catmull-Rom splines
     if (validFlownRoute.length > 1) {
-      console.log('Creating ultra-smooth curved altitude-based route segments...');
+      console.log('Creating ultra-smooth spline-based route with perfect anti-aliasing...');
       
-      // Create smooth segments with color interpolation
       const smoothSegments = createSmoothAltitudeSegments(validFlownRoute);
       
-      console.log(`Generated ${smoothSegments.length} ultra-smooth curved segments for route visualization`);
+      console.log(`Generated ${smoothSegments.length} ultra-smooth spline segments`);
       
-      // Add each smooth curved segment to the map
-      smoothSegments.forEach((segment, index) => {
+      // Group segments by color to reduce the number of polylines
+      const colorGroups = new Map<string, L.LatLngExpression[]>();
+      
+      smoothSegments.forEach((segment) => {
         const [coord1, coord2] = segment.coordinates;
+        const coords: L.LatLngExpression[] = [[coord1[1], coord1[0]], [coord2[1], coord2[0]]];
         
-        const polyline = L.polyline(
-          [[coord1[1], coord1[0]], [coord2[1], coord2[0]]], 
-          {
-            color: segment.color,
-            weight: 5,
-            opacity: segment.opacity,
+        if (!colorGroups.has(segment.color)) {
+          colorGroups.set(segment.color, []);
+        }
+        
+        // Connect segments of the same color
+        const existingCoords = colorGroups.get(segment.color)!;
+        if (existingCoords.length === 0) {
+          existingCoords.push(...coords);
+        } else {
+          existingCoords.push(coords[1]); // Add only the end point to continue the line
+        }
+      });
+      
+      // Create optimized polylines for each color group
+      colorGroups.forEach((coords, color) => {
+        if (coords.length > 1) {
+          const polyline = L.polyline(coords, {
+            color: color,
+            weight: 4, // Slightly thinner for sharper appearance
+            opacity: 0.95,
             lineCap: 'round',
             lineJoin: 'round',
-            smoothFactor: 1.5, // Enhanced smoothing
-            noClip: false
-          }
-        );
-        
-        routeLayersRef.current!.addLayer(polyline);
+            smoothFactor: 8.0, // Ultra-high smoothing
+            noClip: true, // Prevent clipping for smoother rendering
+            className: 'ultra-smooth-route' // CSS class for additional styling
+          });
+          
+          routeLayersRef.current!.addLayer(polyline);
+        }
       });
     }
     

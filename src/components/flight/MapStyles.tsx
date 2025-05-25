@@ -20,7 +20,7 @@ const MapStyles = () => {
         filter: brightness(1.1) contrast(1.02) saturate(0.9);
       }
       
-      /* SIMPLIFIED aircraft marker styles - removed problematic animations */
+      /* SIMPLIFIED aircraft marker styles */
       .aircraft-marker {
         will-change: auto;
         backface-visibility: visible;
@@ -43,19 +43,16 @@ const MapStyles = () => {
         vector-effect: non-scaling-stroke;
       }
       
-      /* SIMPLIFIED selected marker styles - no animations */
       .aircraft-marker-selected {
         z-index: 1000 !important;
         position: relative;
       }
       
-      /* SAFE hover effect - no scaling that could cause issues */
       .aircraft-marker:hover {
         z-index: 999;
         opacity: 0.8;
       }
       
-      /* Remove all problematic animations */
       .aircraft-marker,
       .aircraft-marker svg,
       .aircraft-marker-selected,
@@ -71,7 +68,6 @@ const MapStyles = () => {
         position: relative;
       }
       
-      /* Ensure proper cleanup of marker icons */
       .leaflet-marker-icon.aircraft-marker {
         border: none;
         background: transparent;
@@ -82,7 +78,6 @@ const MapStyles = () => {
         contain: layout;
       }
       
-      /* Clean control styling for CartoDB Positron */
       .leaflet-control-zoom {
         border: none;
         box-shadow: 0 2px 10px rgba(0,0,0,0.15);
@@ -100,48 +95,78 @@ const MapStyles = () => {
         box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       }
       
-      /* Enhanced route line styles for smooth gradients and curves */
       .leaflet-interactive {
         cursor: pointer;
       }
       
-      /* Smooth route line optimizations with enhanced anti-aliasing */
-      .leaflet-interactive path {
-        shape-rendering: geometricPrecision;
-        vector-effect: non-scaling-stroke;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        image-rendering: optimizeQuality;
-        filter: none;
+      /* ULTRA-SMOOTH route line styles - complete anti-aliasing system */
+      .leaflet-interactive path,
+      .ultra-smooth-route {
+        shape-rendering: geometricPrecision !important;
+        vector-effect: non-scaling-stroke !important;
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+        image-rendering: optimizeQuality !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+        filter: none !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        will-change: auto !important;
+        backface-visibility: hidden !important;
       }
       
-      /* Route line anti-aliasing and ultra-smooth rendering */
+      /* Enhanced SVG rendering for ultra-smooth lines */
       .leaflet-overlay-pane svg {
-        shape-rendering: geometricPrecision;
-        image-rendering: optimizeQuality;
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: optimize-contrast;
-        filter: none;
+        shape-rendering: geometricPrecision !important;
+        image-rendering: optimizeQuality !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: optimize-contrast !important;
+        filter: none !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
       }
       
-      .leaflet-overlay-pane path {
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        vector-effect: non-scaling-stroke;
-        image-rendering: optimizeQuality;
-        shape-rendering: geometricPrecision;
-        filter: none;
+      /* Perfect line rendering - no pixelation */
+      .leaflet-overlay-pane path,
+      .leaflet-overlay-pane polyline {
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+        vector-effect: non-scaling-stroke !important;
+        image-rendering: optimizeQuality !important;
+        shape-rendering: geometricPrecision !important;
+        filter: none !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
       }
       
-      /* Enhanced smoothing for polylines */
-      .leaflet-overlay-pane polyline,
+      /* Ultra-smooth polyline rendering */
       .leaflet-overlay-pane path[stroke] {
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        shape-rendering: geometricPrecision;
-        image-rendering: optimizeQuality;
-        vector-effect: non-scaling-stroke;
-        filter: none;
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+        shape-rendering: geometricPrecision !important;
+        image-rendering: optimizeQuality !important;
+        vector-effect: non-scaling-stroke !important;
+        filter: none !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+      }
+      
+      /* Specific ultra-smooth route class */
+      .ultra-smooth-route path {
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+        shape-rendering: geometricPrecision !important;
+        image-rendering: optimizeQuality !important;
+        vector-effect: non-scaling-stroke !important;
+        filter: none !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
       }
       
       .aircraft-marker svg path {
@@ -156,40 +181,40 @@ const MapStyles = () => {
         transform: translateZ(0);
       }
       
-      /* Ultra-smooth line rendering enhancements */
+      /* Global SVG anti-aliasing */
       svg path[stroke] {
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        shape-rendering: geometricPrecision;
-        image-rendering: optimizeQuality;
-        vector-effect: non-scaling-stroke;
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+        shape-rendering: geometricPrecision !important;
+        image-rendering: optimizeQuality !important;
+        vector-effect: non-scaling-stroke !important;
       }
       
-      /* Disable any pixelation or aliasing */
+      /* Hardware acceleration for smooth rendering */
       .leaflet-overlay-pane * {
-        image-rendering: optimizeQuality;
-        shape-rendering: geometricPrecision;
+        image-rendering: optimizeQuality !important;
+        shape-rendering: geometricPrecision !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
       }
       
-      /* CRITICAL: Prevent ghost markers from CSS transforms */
+      /* Prevent ghost markers */
       .leaflet-marker-pane {
         position: relative;
         z-index: 600;
       }
       
-      /* Ensure markers don't leave trails */
       .leaflet-marker-pane .leaflet-marker-icon {
         position: absolute;
         z-index: auto;
       }
       
-      /* Force proper cleanup of marker transformations */
       .leaflet-zoom-anim .leaflet-marker-icon {
         transition: none !important;
         animation: none !important;
       }
       
-      /* Clean map overlay for CartoDB Positron */
       .leaflet-control-attribution {
         background-color: rgba(255, 255, 255, 0.9);
         color: #333;
@@ -199,6 +224,31 @@ const MapStyles = () => {
       
       .leaflet-control-attribution a {
         color: #0078A8;
+      }
+      
+      /* Ultimate smoothing - browser-specific optimizations */
+      @supports (image-rendering: -webkit-optimize-contrast) {
+        .leaflet-overlay-pane path,
+        .ultra-smooth-route path {
+          image-rendering: -webkit-optimize-contrast !important;
+        }
+      }
+      
+      @supports (image-rendering: optimize-contrast) {
+        .leaflet-overlay-pane path,
+        .ultra-smooth-route path {
+          image-rendering: optimize-contrast !important;
+        }
+      }
+      
+      /* Force GPU acceleration for ultra-smooth lines */
+      .leaflet-overlay-pane {
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        -webkit-perspective: 1000 !important;
+        perspective: 1000 !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
       }
     `}</style>
   );
