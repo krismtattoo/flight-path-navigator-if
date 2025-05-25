@@ -4,25 +4,45 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      /* Minimalist Elegant Dark Blue Map Theme */
+      /* Static Blue Map Background */
+      .static-blue-map-background {
+        background: 
+          radial-gradient(circle at 30% 20%, rgba(96, 165, 250, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+          linear-gradient(135deg, #0a1628 0%, #1e3a8a 30%, #0f172a 70%, #1e40af 100%);
+        position: relative;
+      }
+      
+      /* Add continent outlines with CSS for elegant appearance */
+      .static-blue-map-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+          /* Simplified continent outlines using CSS gradients and shapes */
+          radial-gradient(ellipse 200px 100px at 20% 40%, transparent 48%, rgba(96, 165, 250, 0.3) 49%, rgba(96, 165, 250, 0.3) 51%, transparent 52%),
+          radial-gradient(ellipse 150px 80px at 60% 35%, transparent 48%, rgba(96, 165, 250, 0.25) 49%, rgba(96, 165, 250, 0.25) 51%, transparent 52%),
+          radial-gradient(ellipse 180px 120px at 45% 60%, transparent 48%, rgba(96, 165, 250, 0.2) 49%, rgba(96, 165, 250, 0.2) 51%, transparent 52%),
+          radial-gradient(ellipse 100px 60px at 80% 50%, transparent 48%, rgba(96, 165, 250, 0.25) 49%, rgba(96, 165, 250, 0.25) 51%, transparent 52%);
+        opacity: 0.6;
+      }
+      
+      /* Static Elegant Map Container */
       .leaflet-container {
-        background: linear-gradient(135deg, #0a1628 0%, #1e3a8a 50%, #0f172a 100%);
+        background: transparent !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       
-      .minimalist-elegant-map {
+      .static-elegant-map {
         background: transparent;
       }
       
-      /* Elegant blue filter for tiles - much lighter to keep map visible */
+      /* Remove tile-related styles since we're using static background */
       .minimalist-blue-tiles {
-        filter: 
-          hue-rotate(210deg) 
-          saturate(0.4)
-          brightness(0.7) 
-          contrast(1.2)
-          opacity(0.8);
-        mix-blend-mode: multiply;
+        display: none;
       }
       
       /* Enhanced aircraft markers for elegant look */
@@ -169,19 +189,11 @@ const MapStyles = () => {
       }
       
       .leaflet-tile {
-        filter: none;
-        image-rendering: optimizeQuality;
+        display: none; /* Hide any tiles since we're using static background */
       }
       
-      /* Adjusted tile enhancement for visibility */
-      .leaflet-tile-container img {
-        filter: 
-          hue-rotate(210deg) 
-          saturate(0.4)
-          brightness(0.7) 
-          contrast(1.2)
-          opacity(0.8);
-        mix-blend-mode: multiply;
+      .leaflet-tile-container {
+        display: none; /* Hide tile containers */
       }
       
       .aircraft-marker svg path {
@@ -210,26 +222,6 @@ const MapStyles = () => {
         shape-rendering: geometricPrecision;
       }
       
-      /* Elegant attribution styling */
-      .leaflet-control-attribution {
-        background: rgba(10, 22, 40, 0.75);
-        backdrop-filter: blur(8px);
-        color: #94a3b8;
-        border-radius: 8px;
-        font-size: 11px;
-        border: 1px solid rgba(147, 197, 253, 0.15);
-        box-shadow: 0 4px 16px rgba(10, 22, 40, 0.3);
-      }
-      
-      .leaflet-control-attribution a {
-        color: #93c5fd;
-        transition: color 0.2s ease;
-      }
-      
-      .leaflet-control-attribution a:hover {
-        color: #bfdbfe;
-      }
-      
       /* Remove any unwanted map decorations */
       .leaflet-container .leaflet-control-container .leaflet-routing-container-hide {
         display: none;
@@ -246,6 +238,21 @@ const MapStyles = () => {
         background: radial-gradient(circle at center, transparent 0%, rgba(10, 22, 40, 0.1) 100%);
         pointer-events: none;
         z-index: 1000;
+      }
+      
+      /* Enhance the static map with subtle grid lines */
+      .static-blue-map-background::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+          linear-gradient(rgba(96, 165, 250, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
+        background-size: 100px 100px;
+        opacity: 0.3;
       }
     `}</style>
   );
