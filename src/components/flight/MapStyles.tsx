@@ -4,24 +4,23 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      /* CartoDB Dark Matter map container styles */
+      /* CartoDB Positron map container styles */
       .leaflet-container {
-        background-color: #1a1a1a;
+        background-color: #ffffff;
         font-family: inherit;
       }
       
-      /* Dark styling for CartoDB Dark Matter tiles */
+      /* Light styling for CartoDB Positron tiles */
       .leaflet-tile {
-        filter: brightness(0.9) contrast(1.1) saturate(1.1);
+        filter: brightness(1.05) contrast(1.05) saturate(0.95);
         image-rendering: optimizeQuality;
       }
       
       .leaflet-tile-container img {
-        filter: brightness(0.95) contrast(1.05) saturate(1.05);
+        filter: brightness(1.1) contrast(1.02) saturate(0.9);
       }
       
-      /* ... keep existing code (aircraft marker styles) */
-      
+      /* SIMPLIFIED aircraft marker styles - removed problematic animations */
       .aircraft-marker {
         will-change: auto;
         backface-visibility: visible;
@@ -44,16 +43,19 @@ const MapStyles = () => {
         vector-effect: non-scaling-stroke;
       }
       
+      /* SIMPLIFIED selected marker styles - no animations */
       .aircraft-marker-selected {
         z-index: 1000 !important;
         position: relative;
       }
       
+      /* SAFE hover effect - no scaling that could cause issues */
       .aircraft-marker:hover {
         z-index: 999;
         opacity: 0.8;
       }
       
+      /* Remove all problematic animations */
       .aircraft-marker,
       .aircraft-marker svg,
       .aircraft-marker-selected,
@@ -69,6 +71,7 @@ const MapStyles = () => {
         position: relative;
       }
       
+      /* Ensure proper cleanup of marker icons */
       .leaflet-marker-icon.aircraft-marker {
         border: none;
         background: transparent;
@@ -79,30 +82,30 @@ const MapStyles = () => {
         contain: layout;
       }
       
-      /* Dark control styling for CartoDB Dark Matter */
+      /* Clean control styling for CartoDB Positron */
       .leaflet-control-zoom {
         border: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
       }
       
       .leaflet-control-zoom a {
-        background-color: rgba(45, 45, 45, 0.95);
-        color: #ffffff;
+        background-color: rgba(255,255,255,0.95);
+        color: #333;
         border: none;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-zoom a:hover {
-        background-color: rgba(60, 60, 60, 1);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        background-color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       }
       
-      /* ... keep existing code (route line styles and other marker optimizations) */
-      
+      /* Enhanced route line styles for smooth gradients and curves */
       .leaflet-interactive {
         cursor: pointer;
       }
       
+      /* Smooth route line optimizations with enhanced anti-aliasing */
       .leaflet-interactive path {
         shape-rendering: geometricPrecision;
         vector-effect: non-scaling-stroke;
@@ -112,6 +115,7 @@ const MapStyles = () => {
         filter: none;
       }
       
+      /* Route line anti-aliasing and ultra-smooth rendering */
       .leaflet-overlay-pane svg {
         shape-rendering: geometricPrecision;
         image-rendering: optimizeQuality;
@@ -129,6 +133,7 @@ const MapStyles = () => {
         filter: none;
       }
       
+      /* Enhanced smoothing for polylines */
       .leaflet-overlay-pane polyline,
       .leaflet-overlay-pane path[stroke] {
         stroke-linecap: round;
@@ -151,6 +156,7 @@ const MapStyles = () => {
         transform: translateZ(0);
       }
       
+      /* Ultra-smooth line rendering enhancements */
       svg path[stroke] {
         stroke-linecap: round;
         stroke-linejoin: round;
@@ -159,36 +165,40 @@ const MapStyles = () => {
         vector-effect: non-scaling-stroke;
       }
       
+      /* Disable any pixelation or aliasing */
       .leaflet-overlay-pane * {
         image-rendering: optimizeQuality;
         shape-rendering: geometricPrecision;
       }
       
+      /* CRITICAL: Prevent ghost markers from CSS transforms */
       .leaflet-marker-pane {
         position: relative;
         z-index: 600;
       }
       
+      /* Ensure markers don't leave trails */
       .leaflet-marker-pane .leaflet-marker-icon {
         position: absolute;
         z-index: auto;
       }
       
+      /* Force proper cleanup of marker transformations */
       .leaflet-zoom-anim .leaflet-marker-icon {
         transition: none !important;
         animation: none !important;
       }
       
-      /* Dark map overlay for CartoDB Dark Matter */
+      /* Clean map overlay for CartoDB Positron */
       .leaflet-control-attribution {
-        background-color: rgba(45, 45, 45, 0.9);
-        color: #cccccc;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #333;
         font-size: 11px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }
       
       .leaflet-control-attribution a {
-        color: #66B2FF;
+        color: #0078A8;
       }
     `}</style>
   );
