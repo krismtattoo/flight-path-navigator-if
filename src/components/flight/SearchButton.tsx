@@ -13,11 +13,11 @@ const SearchButton: React.FC<SearchButtonProps> = ({ onClick }) => {
       <Button
         onClick={onClick}
         size="sm"
-        className="bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-white shadow-lg border border-gray-200 flex items-center gap-2"
+        className="bg-slate-800/95 backdrop-blur-sm text-white hover:bg-slate-700 shadow-lg border border-slate-700 flex items-center gap-2"
       >
         <Search className="w-4 h-4" />
         <span className="hidden sm:inline">Suchen</span>
-        <span className="hidden md:inline text-xs text-gray-500 ml-1">⌘K</span>
+        <span className="hidden md:inline text-xs text-gray-400 ml-1">⌘K</span>
       </Button>
     </div>
   );
