@@ -1,4 +1,3 @@
-import mapboxgl from 'mapbox-gl';
 import { FlightTrackPoint, Flight } from '@/services/flight';
 
 // Find the current position index in the route based on the flight's position
@@ -37,7 +36,9 @@ export function filterValidRoutePoints(routePoints: FlightTrackPoint[]): FlightT
     typeof point.latitude === 'number' && 
     typeof point.longitude === 'number' && 
     !isNaN(point.latitude) && 
-    !isNaN(point.longitude)
+    !isNaN(point.longitude) &&
+    point.latitude >= -90 && point.latitude <= 90 &&
+    point.longitude >= -180 && point.longitude <= 180
   );
   
   // Make sure start and end points are included by keeping first and last points
@@ -168,4 +169,34 @@ export function createRouteGeoJSON(
     type: 'FeatureCollection' as const,
     features: features
   };
+}
+
+// Calculate distance between two points (Haversine formula)
+export function calculateDistance(
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Get color based on altitude for route visualization
+export function getAltitudeColor(altitude: number): string {
+  if (altitude >= 50000) return '#6600ff'; // Purple
+  else if (altitude >= 40000) return '#0066ff'; // Blue
+  else if (altitude >= 30000) return '#00ffff'; // Cyan
+  else if (altitude >= 20000) return '#00ff66'; // Green
+  else if (altitude >= 10000) return '#66ff00'; // Light green
+  else if (altitude >= 5000) return '#ffff00'; // Yellow
+  else if (altitude >= 1000) return '#ff6600'; // Orange
+  else return '#ff0000'; // Red
 }

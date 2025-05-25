@@ -4,26 +4,26 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      .mapboxgl-map {
+      /* Leaflet map container styles */
+      .leaflet-container {
         background-color: #1a202c;
+        font-family: inherit;
       }
       
+      /* Aircraft marker optimizations */
       .aircraft-marker {
         will-change: transform;
         backface-visibility: hidden;
         transform-style: preserve-3d;
-        /* Optimized for smooth animations */
         transition: none;
+        pointer-events: auto;
+        cursor: pointer;
       }
       
       .aircraft-marker svg {
-        /* Optimized SVG rendering */
         shape-rendering: optimizeSpeed;
-        /* GPU acceleration for SVG */
         transform: translateZ(0);
-        /* Smooth SVG transforms */
         transition: transform 0.1s ease-out;
-        /* Prevent SVG blurriness */
         image-rendering: crisp-edges;
       }
       
@@ -32,38 +32,64 @@ const MapStyles = () => {
       }
       
       .aircraft-marker-selected svg {
-        /* Enhanced glow for selected aircraft */
         filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)) !important;
       }
       
-      /* Optimize marker interactions */
-      .mapboxgl-marker {
+      /* Leaflet marker optimizations */
+      .leaflet-marker-icon {
         pointer-events: auto;
-        /* Reduce paint events */
         contain: layout style paint;
-      }
-      
-      .mapboxgl-marker .aircraft-marker {
-        pointer-events: auto;
-        /* GPU acceleration for better performance */
         transform: translateZ(0);
       }
       
-      /* Optimize map canvas performance */
-      .mapboxgl-canvas {
-        /* Enable hardware acceleration */
-        transform: translateZ(0);
-      }
-      
-      /* Reduce repaints on map interactions */
-      .mapboxgl-control-container {
+      /* Leaflet controls styling */
+      .leaflet-control-container {
         contain: layout;
       }
       
-      /* SVG-specific optimizations */
+      .leaflet-control-zoom {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+      
+      .leaflet-control-zoom a {
+        background-color: rgba(255,255,255,0.9);
+        color: #333;
+        border: none;
+      }
+      
+      .leaflet-control-zoom a:hover {
+        background-color: #fff;
+      }
+      
+      /* Route line optimizations */
+      .leaflet-interactive {
+        cursor: pointer;
+      }
+      
+      /* Tile layer optimizations */
+      .leaflet-tile {
+        filter: none;
+        image-rendering: optimizeQuality;
+      }
+      
+      /* Dark theme for map tiles */
+      .leaflet-tile-container img {
+        filter: brightness(0.8) contrast(1.1);
+      }
+      
+      /* SVG-specific optimizations for aircraft markers */
       .aircraft-marker svg path {
-        /* Optimize path rendering */
         vector-effect: non-scaling-stroke;
+      }
+      
+      /* Performance optimizations */
+      .leaflet-zoom-animated {
+        transform: translateZ(0);
+      }
+      
+      .leaflet-layer {
+        transform: translateZ(0);
       }
     `}</style>
   );

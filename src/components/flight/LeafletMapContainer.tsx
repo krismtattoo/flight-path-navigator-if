@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,16 +16,13 @@ interface LeafletMapContainerProps {
   onMapInit: (map: L.Map) => void;
 }
 
-const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
-  const mapRef = useRef<L.Map | null>(null);
-  const mapContainerRef = useRef<L.Map | null>(null);
-
-  // Handle map initialization when the MapContainer is ready
-  const handleMapReady = (map: L.Map) => {
-    if (map && !mapRef.current) {
+// Component to handle map events and initialization
+const MapInitializer: React.FC<{ onMapInit: (map: L.Map) => void }> = ({ onMapInit }) => {
+  const map = useMapEvents({});
+  
+  useEffect(() => {
+    if (map) {
       console.log("🗺️ Leaflet map initialized successfully");
-      mapRef.current = map;
-      mapContainerRef.current = map;
       
       // Enable standard Leaflet interactions
       map.dragging.enable();
@@ -37,14 +34,19 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
       
       onMapInit(map);
     }
-  };
+  }, [map, onMapInit]);
+
+  return null;
+};
+
+const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
-        mapContainerRef.current = null;
       }
     };
   }, []);
@@ -56,14 +58,13 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        whenReady={handleMapReady}
-        ref={mapContainerRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
+        <MapInitializer onMapInit={onMapInit} />
       </MapContainer>
     </div>
   );
