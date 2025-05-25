@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { getAircraftInfo, getLiveryInfo, AircraftInfo } from '@/services/flight/aircraftService';
+import { getAircraftInfo, AircraftInfo } from '@/services/flight/aircraftService';
 
 interface DetailedAircraftInfo {
   aircraftName?: string;
@@ -21,8 +21,8 @@ export function useAircraftInfo(aircraftId: string, liveryId: string): DetailedA
       console.log('🔍 useAircraftInfo - Fetching aircraft info:', { aircraftId, liveryId });
       setAircraftInfo({ loading: true });
 
-      if (!aircraftId && !liveryId) {
-        console.log('❌ useAircraftInfo - No aircraft or livery ID provided');
+      if (!aircraftId || !liveryId) {
+        console.log('❌ useAircraftInfo - Missing aircraft or livery ID');
         setAircraftInfo({
           loading: false,
           error: 'No aircraft/livery ID'
@@ -31,48 +31,24 @@ export function useAircraftInfo(aircraftId: string, liveryId: string): DetailedA
       }
 
       try {
-        // Try to get aircraft info first (includes both aircraft and livery info)
-        if (aircraftId) {
-          console.log('🔍 useAircraftInfo - Trying to get aircraft info for:', aircraftId);
-          const aircraftData = await getAircraftInfo(aircraftId);
-          
-          if (isMounted) {
-            if (aircraftData) {
-              console.log('✅ useAircraftInfo - Aircraft data received:', aircraftData);
-              setAircraftInfo({
-                aircraftName: aircraftData.aircraftName,
-                liveryName: aircraftData.liveryName,
-                loading: false
-              });
-              return;
-            } else {
-              console.log('❌ useAircraftInfo - No aircraft data returned');
-            }
-          }
-        }
-
-        // Fallback: try to get livery info separately
-        if (liveryId && isMounted) {
-          console.log('🔍 useAircraftInfo - Trying to get livery info for:', liveryId);
-          const liveryData = await getLiveryInfo(liveryId);
-          if (liveryData) {
-            console.log('✅ useAircraftInfo - Livery data received:', liveryData);
+        console.log(`🔍 useAircraftInfo - Getting aircraft info for: ${aircraftId}, livery: ${liveryId}`);
+        const aircraftData = await getAircraftInfo(aircraftId, liveryId);
+        
+        if (isMounted) {
+          if (aircraftData) {
+            console.log('✅ useAircraftInfo - Aircraft data received:', aircraftData);
             setAircraftInfo({
-              liveryName: liveryData.liveryName,
+              aircraftName: aircraftData.aircraftName,
+              liveryName: aircraftData.liveryName,
               loading: false
             });
           } else {
-            console.log('❌ useAircraftInfo - No livery data returned');
+            console.log('❌ useAircraftInfo - No aircraft data returned');
             setAircraftInfo({
               loading: false,
               error: 'Aircraft details not found'
             });
           }
-        } else {
-          setAircraftInfo({
-            loading: false,
-            error: 'Aircraft details not available'
-          });
         }
       } catch (error) {
         if (isMounted) {
