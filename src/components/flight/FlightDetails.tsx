@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Plane, MapPin, Clock, Gauge, Navigation, User, BarChart3, Route, Zap } from 'lucide-react';
@@ -656,7 +655,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
       </Card>
 
       {/* Custom scrollbar styles */}
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
