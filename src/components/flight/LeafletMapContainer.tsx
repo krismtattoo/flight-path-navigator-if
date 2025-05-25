@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,21 +19,24 @@ interface LeafletMapContainerProps {
 const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) => {
   const mapRef = useRef<L.Map | null>(null);
 
-  const handleMapCreated = (map: L.Map) => {
-    console.log("🗺️ Leaflet map initialized successfully");
-    
-    mapRef.current = map;
-    
-    // Enable standard Leaflet interactions with null checks
-    if (map && map.dragging) map.dragging.enable();
-    if (map && map.touchZoom) map.touchZoom.enable();
-    if (map && map.doubleClickZoom) map.doubleClickZoom.enable();
-    if (map && map.scrollWheelZoom) map.scrollWheelZoom.enable();
-    if (map && map.boxZoom) map.boxZoom.enable();
-    if (map && map.keyboard) map.keyboard.enable();
-    
-    onMapInit(map);
-  };
+  useEffect(() => {
+    // If map is available, initialize it
+    if (mapRef.current && !mapRef.current.hasEventListeners('ready')) {
+      console.log("🗺️ Leaflet map initialized successfully");
+      
+      const map = mapRef.current;
+      
+      // Enable standard Leaflet interactions with null checks
+      if (map && map.dragging) map.dragging.enable();
+      if (map && map.touchZoom) map.touchZoom.enable();
+      if (map && map.doubleClickZoom) map.doubleClickZoom.enable();
+      if (map && map.scrollWheelZoom) map.scrollWheelZoom.enable();
+      if (map && map.boxZoom) map.boxZoom.enable();
+      if (map && map.keyboard) map.keyboard.enable();
+      
+      onMapInit(map);
+    }
+  }, [onMapInit]);
 
   return (
     <div className="absolute inset-0 z-0">
@@ -42,7 +45,7 @@ const LeafletMapContainer: React.FC<LeafletMapContainerProps> = ({ onMapInit }) 
         zoom={5}
         className="w-full h-full"
         zoomControl={true}
-        whenReady={handleMapCreated}
+        ref={mapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
