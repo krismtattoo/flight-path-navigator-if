@@ -139,45 +139,110 @@ export function getAltitudeColor(altitude: number): string {
   return interpolateColor(lowerStop.color, upperStop.color, factor);
 }
 
-// Create smooth segments with interpolated colors
+// Bézier curve interpolation for smooth curves
+function calculateBezierPoint(t: number, p0: [number, number], p1: [number, number], p2: [number, number], p3: [number, number]): [number, number] {
+  const cx = 3 * (p1[0] - p0[0]);
+  const bx = 3 * (p2[0] - p1[0]) - cx;
+  const ax = p3[0] - p0[0] - cx - bx;
+  
+  const cy = 3 * (p1[1] - p0[1]);
+  const by = 3 * (p2[1] - p1[1]) - cy;
+  const ay = p3[1] - p0[1] - cy - by;
+  
+  const tSquared = t * t;
+  const tCubed = tSquared * t;
+  
+  const resultX = (ax * tCubed) + (bx * tSquared) + (cx * t) + p0[0];
+  const resultY = (ay * tCubed) + (by * tSquared) + (cy * t) + p0[1];
+  
+  return [resultX, resultY];
+}
+
+// Generate control points for smooth Bézier curves
+function generateControlPoints(points: FlightTrackPoint[]): Array<{
+  p0: [number, number];
+  p1: [number, number];
+  p2: [number, number];
+  p3: [number, number];
+}> {
+  if (points.length < 2) return [];
+  
+  const controlPointSets = [];
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = [points[i].longitude, points[i].latitude] as [number, number];
+    const next = [points[i + 1].longitude, points[i + 1].latitude] as [number, number];
+    
+    // Calculate control points for smooth curves
+    let prev = i > 0 ? [points[i - 1].longitude, points[i - 1].latitude] as [number, number] : current;
+    let after = i < points.length - 2 ? [points[i + 2].longitude, points[i + 2].latitude] as [number, number] : next;
+    
+    // Control point calculation for natural curves
+    const tension = 0.3; // Smoothness factor
+    
+    const cp1: [number, number] = [
+      current[0] + (next[0] - prev[0]) * tension,
+      current[1] + (next[1] - prev[1]) * tension
+    ];
+    
+    const cp2: [number, number] = [
+      next[0] - (after[0] - current[0]) * tension,
+      next[1] - (after[1] - current[1]) * tension
+    ];
+    
+    controlPointSets.push({
+      p0: current,
+      p1: cp1,
+      p2: cp2,
+      p3: next
+    });
+  }
+  
+  return controlPointSets;
+}
+
+// Create smooth curved segments with interpolated colors
 export function createSmoothAltitudeSegments(routePoints: FlightTrackPoint[]): Array<{
   coordinates: [number, number][];
   color: string;
   opacity: number;
 }> {
-  const segments = [];
+  if (routePoints.length < 2) return [];
   
-  for (let i = 0; i < routePoints.length - 1; i++) {
-    const currentPoint = routePoints[i];
-    const nextPoint = routePoints[i + 1];
+  const segments = [];
+  const controlPointSets = generateControlPoints(routePoints);
+  const curveResolution = 8; // Number of points per curve segment
+  
+  controlPointSets.forEach((controlPoints, segmentIndex) => {
+    const currentPoint = routePoints[segmentIndex];
+    const nextPoint = routePoints[segmentIndex + 1];
     
-    // Get colors for current and next point
     const currentColor = getAltitudeColor(currentPoint.altitude || 0);
     const nextColor = getAltitudeColor(nextPoint.altitude || 0);
     
-    // Create multiple micro-segments for smooth transition
-    const microSegments = 3; // Number of segments between each point
+    // Create smooth curve points using Bézier interpolation
+    const curvePoints: [number, number][] = [];
     
-    for (let j = 0; j < microSegments; j++) {
-      const factor1 = j / microSegments;
-      const factor2 = (j + 1) / microSegments;
+    for (let t = 0; t <= 1; t += 1 / curveResolution) {
+      const point = calculateBezierPoint(t, controlPoints.p0, controlPoints.p1, controlPoints.p2, controlPoints.p3);
+      curvePoints.push(point);
+    }
+    
+    // Create multiple micro-segments along the curve with color interpolation
+    for (let i = 0; i < curvePoints.length - 1; i++) {
+      const t1 = i / (curvePoints.length - 1);
+      const t2 = (i + 1) / (curvePoints.length - 1);
+      const avgT = (t1 + t2) / 2;
       
-      // Interpolate coordinates
-      const lat1 = currentPoint.latitude + factor1 * (nextPoint.latitude - currentPoint.latitude);
-      const lon1 = currentPoint.longitude + factor1 * (nextPoint.longitude - currentPoint.longitude);
-      const lat2 = currentPoint.latitude + factor2 * (nextPoint.latitude - currentPoint.latitude);
-      const lon2 = currentPoint.longitude + factor2 * (nextPoint.longitude - currentPoint.longitude);
-      
-      // Interpolate color
-      const segmentColor = interpolateColor(currentColor, nextColor, (factor1 + factor2) / 2);
+      const segmentColor = interpolateColor(currentColor, nextColor, avgT);
       
       segments.push({
-        coordinates: [[lon1, lat1], [lon2, lat2]],
+        coordinates: [curvePoints[i], curvePoints[i + 1]],
         color: segmentColor,
         opacity: 0.9
       });
     }
-  }
+  });
   
   return segments;
 }
@@ -189,7 +254,6 @@ function createAltitudeSegments(routePoints: FlightTrackPoint[]) {
     const currentPoint = routePoints[i];
     const nextPoint = routePoints[i + 1];
     
-    // Create a line segment between consecutive points
     segments.push({
       type: 'Feature' as const,
       properties: {
@@ -218,7 +282,6 @@ export function createRouteGeoJSON(
   
   console.log(`Creating GeoJSON with flown route=${flownRoute.length} and flight plan=${flightPlan.length} points`);
   
-  // Add flight plan line (white dashed line)
   if (flightPlan.length > 1) {
     const flightPlanCoords = flightPlan.map(p => [p.longitude, p.latitude]);
     features.push({
@@ -233,17 +296,14 @@ export function createRouteGeoJSON(
     });
   }
   
-  // Add flown route as individual segments with altitude information
   if (flownRoute.length > 1) {
     const altitudeSegments = createAltitudeSegments(flownRoute);
     features.push(...altitudeSegments);
   }
   
-  // Add waypoints from flight plan (only destination and intermediate)
   if (flightPlan.length >= 2) {
     const endPoint = flightPlan[flightPlan.length - 1];
     
-    // Add destination waypoint (red)
     features.push({
       type: 'Feature' as const,
       properties: {
@@ -256,7 +316,6 @@ export function createRouteGeoJSON(
       }
     });
     
-    // Add intermediate waypoints (small white circles)
     if (flightPlan.length > 2) {
       flightPlan.slice(1, -1).forEach(point => {
         features.push({

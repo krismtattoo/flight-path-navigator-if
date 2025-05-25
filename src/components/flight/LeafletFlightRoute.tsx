@@ -31,7 +31,7 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
     };
   }, [map]);
 
-  // Update routes when data changes with smooth color transitions
+  // Update routes when data changes with ultra-smooth curved transitions
   useEffect(() => {
     if (!map || !routeLayersRef.current) return;
     
@@ -46,9 +46,9 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
     const validFlownRoute = filterValidRoutePoints(flownRoute || []);
     const validFlightPlan = filterValidRoutePoints(flightPlan || []);
     
-    console.log(`Rendering route: ${validFlownRoute.length} flown, ${validFlightPlan.length} planned points`);
+    console.log(`Rendering smooth curved route: ${validFlownRoute.length} flown, ${validFlightPlan.length} planned points`);
     
-    // Create flight plan line (white dashed)
+    // Create flight plan line (white dashed) - keep this as straight lines
     if (validFlightPlan.length > 1) {
       const flightPlanCoords: L.LatLngExpression[] = validFlightPlan.map(point => [point.latitude, point.longitude]);
       
@@ -56,22 +56,24 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
         color: '#ffffff',
         weight: 3,
         opacity: 0.8,
-        dashArray: '10, 10'
+        dashArray: '10, 10',
+        lineCap: 'round',
+        lineJoin: 'round'
       });
       
       routeLayersRef.current.addLayer(flightPlanLine);
     }
     
-    // Create smooth flown route with interpolated colors
+    // Create ultra-smooth flown route with curved interpolation
     if (validFlownRoute.length > 1) {
-      console.log('Creating smooth altitude-based route segments...');
+      console.log('Creating ultra-smooth curved altitude-based route segments...');
       
       // Create smooth segments with color interpolation
       const smoothSegments = createSmoothAltitudeSegments(validFlownRoute);
       
-      console.log(`Generated ${smoothSegments.length} smooth segments for route visualization`);
+      console.log(`Generated ${smoothSegments.length} ultra-smooth curved segments for route visualization`);
       
-      // Add each smooth segment to the map
+      // Add each smooth curved segment to the map
       smoothSegments.forEach((segment, index) => {
         const [coord1, coord2] = segment.coordinates;
         
@@ -79,10 +81,12 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
           [[coord1[1], coord1[0]], [coord2[1], coord2[0]]], 
           {
             color: segment.color,
-            weight: 4,
+            weight: 5,
             opacity: segment.opacity,
             lineCap: 'round',
-            lineJoin: 'round'
+            lineJoin: 'round',
+            smoothFactor: 1.5, // Enhanced smoothing
+            noClip: false
           }
         );
         

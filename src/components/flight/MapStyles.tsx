@@ -92,26 +92,48 @@ const MapStyles = () => {
         background-color: #fff;
       }
       
-      /* Enhanced route line styles for smooth gradients */
+      /* Enhanced route line styles for smooth gradients and curves */
       .leaflet-interactive {
         cursor: pointer;
       }
       
-      /* Smooth route line optimizations */
+      /* Smooth route line optimizations with enhanced anti-aliasing */
       .leaflet-interactive path {
         shape-rendering: geometricPrecision;
         vector-effect: non-scaling-stroke;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        image-rendering: optimizeQuality;
+        filter: none;
       }
       
-      /* Route line anti-aliasing and smoothing */
+      /* Route line anti-aliasing and ultra-smooth rendering */
       .leaflet-overlay-pane svg {
         shape-rendering: geometricPrecision;
+        image-rendering: optimizeQuality;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+        filter: none;
       }
       
       .leaflet-overlay-pane path {
         stroke-linecap: round;
         stroke-linejoin: round;
         vector-effect: non-scaling-stroke;
+        image-rendering: optimizeQuality;
+        shape-rendering: geometricPrecision;
+        filter: none;
+      }
+      
+      /* Enhanced smoothing for polylines */
+      .leaflet-overlay-pane polyline,
+      .leaflet-overlay-pane path[stroke] {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        shape-rendering: geometricPrecision;
+        image-rendering: optimizeQuality;
+        vector-effect: non-scaling-stroke;
+        filter: none;
       }
       
       .leaflet-tile {
@@ -133,6 +155,21 @@ const MapStyles = () => {
       
       .leaflet-layer {
         transform: translateZ(0);
+      }
+      
+      /* Ultra-smooth line rendering enhancements */
+      svg path[stroke] {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        shape-rendering: geometricPrecision;
+        image-rendering: optimizeQuality;
+        vector-effect: non-scaling-stroke;
+      }
+      
+      /* Disable any pixelation or aliasing */
+      .leaflet-overlay-pane * {
+        image-rendering: optimizeQuality;
+        shape-rendering: geometricPrecision;
       }
     `}</style>
   );
