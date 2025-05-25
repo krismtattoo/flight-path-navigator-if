@@ -5,17 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Flight } from '@/services/flight';
+import { Flight, FlightTrackPoint } from '@/services/flight';
 import { toast } from "sonner";
 import PerformanceChart from './PerformanceChart';
 
 interface FlightDetailsProps {
   flight: Flight;
   serverID: string;
+  flownRoute: FlightTrackPoint[];
+  flightPlan: FlightTrackPoint[];
   onClose: () => void;
 }
 
-const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose }) => {
+const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, flownRoute, flightPlan, onClose }) => {
   const [activeSection, setActiveSection] = useState<'overview' | 'route' | 'performance' | 'pilot'>('overview');
 
   // Helper function to format flight time
@@ -141,7 +143,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-400">Flight Plan</p>
-              <p className="text-white font-medium">N/A</p>
+              <p className="text-white font-medium">{flightPlan.length > 0 ? `${flightPlan.length} waypoints` : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-400">Track</p>
@@ -195,8 +197,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
         <CardContent>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-400">Flight Plan</p>
-              <p className="text-white">No flight plan available</p>
+              <p className="text-sm text-gray-400">Flight Plan Status</p>
+              <p className="text-white">{flightPlan.length > 0 ? `${flightPlan.length} waypoints loaded` : 'No flight plan available'}</p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -205,21 +207,59 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                 <p className="text-white font-medium">{Math.round(flight.heading)}°</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400">Current Heading</p>
-                <p className="text-white font-medium">{Math.round(flight.heading)}°</p>
+                <p className="text-sm text-gray-400">Flown Route</p>
+                <p className="text-white font-medium">{flownRoute.length > 0 ? `${flownRoute.length} points` : 'N/A'}</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      <Card className="bg-slate-800 border-slate-700">
-        <CardContent className="p-6">
-          <p className="text-gray-400 text-center">
-            Detailed route information will be displayed here when available.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Flight Plan Waypoints */}
+      {flightPlan.length > 0 ? (
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Route className="w-5 h-5 text-blue-400" />
+              Flight Plan Waypoints
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64">
+              <div className="space-y-3">
+                {flightPlan.map((waypoint, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white font-bold">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">
+                          {waypoint.waypointName || `Waypoint ${index + 1}`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {waypoint.latitude.toFixed(4)}, {waypoint.longitude.toFixed(4)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-white">{Math.round(waypoint.altitude)} ft</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-slate-800 border-slate-700">
+          <CardContent className="p-6">
+            <p className="text-gray-400 text-center">
+              No flight plan available for this flight. The pilot may not have filed a flight plan.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 
