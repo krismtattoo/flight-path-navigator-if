@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { getFlights, getServers, SERVER_TYPES, Flight, ServerInfo } from '@/services/flight';
 
@@ -19,7 +19,7 @@ export function useFlightData() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const serversInitialized = useRef(false);
+  const [serversInitialized, setServersInitialized] = useState(false);
 
   // Load available servers on mount
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useFlightData() {
       try {
         const serverData = await getServers();
         setAvailableServers(serverData);
-        serversInitialized.current = true;
+        setServersInitialized(true);
         
         // Set default server once we have server data
         if (serverData.length > 0) {
@@ -56,9 +56,9 @@ export function useFlightData() {
       setLoading(true);
       try {
         // Make sure server IDs are initialized before fetching flights
-        if (!serversInitialized.current) {
+        if (!serversInitialized) {
           await getServers();
-          serversInitialized.current = true;
+          setServersInitialized(true);
         }
         
         console.log(`Fetching flights for server: ${activeServer.id}`);
@@ -78,7 +78,7 @@ export function useFlightData() {
     // Poll for updated flight data every 15 seconds
     const interval = setInterval(fetchFlights, 15000);
     return () => clearInterval(interval);
-  }, [activeServer]);
+  }, [activeServer, serversInitialized]);
 
   // Handle server change
   const handleServerChange = (serverId: string) => {
