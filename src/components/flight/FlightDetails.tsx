@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Plane, MapPin, Clock, Gauge, Navigation, User, BarChart3, Route, Zap } from 'lucide-react';
@@ -422,7 +423,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                 )}
               </div>
               
-              {flightPlanData.cruisingAltitude && (
+              {flightPlanData.cruisingAltitude && flightPlanData.cruisingAltitude > 0 && (
                 <div className="text-center mt-4 pt-4 border-t border-blue-700">
                   <span className="text-sm text-blue-200">Cruising Altitude: </span>
                   <span className="text-white font-semibold">{Math.round(flightPlanData.cruisingAltitude)} ft</span>
