@@ -17,7 +17,6 @@ const SearchButton: React.FC<SearchButtonProps> = ({ onClick }) => {
       >
         <Search className="w-4 h-4" />
         <span className="hidden sm:inline">Suchen</span>
-        <span className="hidden md:inline text-xs text-gray-400 ml-1">⌘K</span>
       </Button>
     </div>
   );
