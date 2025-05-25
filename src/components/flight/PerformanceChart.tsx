@@ -3,19 +3,26 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Area, AreaChart } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TrendingUp, TrendingDown, Activity, Gauge, Plane } from 'lucide-react';
-import { Flight } from '@/services/flight';
-import { generatePerformanceFromTrack, PerformanceData } from '@/utils/flightPerformanceUtils';
 
-interface PerformanceChartProps {
-  flight: Flight;
+interface PerformanceData {
+  time: string;
+  altitude: number;
+  speed: number;
+  verticalSpeed: number;
+  heading: number;
 }
 
-const PerformanceChart: React.FC<PerformanceChartProps> = ({ flight }) => {
-  // Generate performance data from the flight's track data
-  const data = generatePerformanceFromTrack(flight.track || []);
-  const currentAltitude = flight.altitude;
-  const currentSpeed = flight.speed;
+interface PerformanceChartProps {
+  data: PerformanceData[];
+  currentAltitude: number;
+  currentSpeed: number;
+}
 
+const PerformanceChart: React.FC<PerformanceChartProps> = ({ 
+  data, 
+  currentAltitude, 
+  currentSpeed 
+}) => {
   // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -51,12 +58,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ flight }) => {
 
   const isClimbing = currentVerticalSpeed > 50;
   const isDescending = currentVerticalSpeed < -50;
-
-  // Check if we have real track data or using mock data
-  const hasRealData = flight.track && flight.track.length > 0;
-  const chartTitle = hasRealData 
-    ? `Kompletter Flugverlauf - ${flight.callsign}` 
-    : `Flugverlauf - ${flight.callsign} (Simulierte Daten)`;
 
   return (
     <div className="space-y-6">
@@ -114,19 +115,14 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ flight }) => {
         </Card>
       </div>
 
-      {/* Main Performance Chart with Complete Flight Data */}
+      {/* Main Performance Chart with Multiple Metrics */}
       <Card className="bg-gradient-to-br from-gray-900 to-slate-800 border-gray-700 shadow-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-white flex items-center gap-3 text-lg">
             <div className="bg-blue-600 p-2 rounded-lg">
               <Activity className="w-5 h-5 text-white" />
             </div>
-            {chartTitle}
-            {!hasRealData && (
-              <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded-full">
-                Keine Verlaufsdaten verfügbar
-              </span>
-            )}
+            Flugverlauf - Höhe, Geschwindigkeit & Steigrate
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -244,15 +240,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({ flight }) => {
               </div>
             </div>
           </div>
-          
-          {/* Flight Data Info */}
-          {hasRealData && (
-            <div className="mt-4 text-center">
-              <p className="text-gray-400 text-xs">
-                Basierend auf {flight.track?.length || 0} Tracking-Punkten vom kompletten Flugverlauf
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
