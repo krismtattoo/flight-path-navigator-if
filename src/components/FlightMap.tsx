@@ -3,8 +3,6 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
-
-// Import Leaflet types
 import L from 'leaflet';
 
 // Import our components
@@ -16,9 +14,15 @@ import MapStyles from './flight/MapStyles';
 import NativeLeafletMap from './flight/NativeLeafletMap';
 import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
 import LeafletFlightRoute from './flight/LeafletFlightRoute';
+import FlightSearch from './flight/FlightSearch';
+import SearchButton from './flight/SearchButton';
 
-// Import custom hook
+// Import custom hooks
 import { useFlightData } from '@/hooks/useFlightData';
+import { useFlightSearch, SearchResult } from '@/hooks/useFlightSearch';
+
+// Import airport data types
+import { Airport } from '@/data/airportData';
 
 const FlightMap: React.FC = () => {
   const { 
@@ -29,6 +33,17 @@ const FlightMap: React.FC = () => {
     initializing, 
     handleServerChange 
   } = useFlightData();
+  
+  // Search functionality
+  const {
+    query,
+    setQuery,
+    searchResults,
+    isOpen,
+    setIsOpen,
+    clearSearch,
+    openSearch
+  } = useFlightSearch({ flights });
   
   // Memoize flights to prevent unnecessary re-renders
   const memoizedFlights = useMemo(() => flights, [flights]);
@@ -46,6 +61,7 @@ const FlightMap: React.FC = () => {
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
+  const [airportMarkers, setAirportMarkers] = useState<L.Marker[]>([]);
   
   // Critical: Track selection in progress to prevent race conditions
   const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
@@ -57,9 +73,74 @@ const FlightMap: React.FC = () => {
     setMapLoaded(true);
   }, []);
 
+  // Handle search result selection
+  const handleSelectSearchResult = useCallback((result: SearchResult) => {
+    if (!map) return;
+
+    console.log(`🔍 Search result selected:`, result);
+
+    if (result.type === 'aircraft' || result.type === 'user') {
+      const flight = result.data as Flight;
+      
+      // Select the flight
+      handleFlightSelect(flight);
+      
+      // Focus map on flight
+      map.flyTo([flight.latitude, flight.longitude], 12, {
+        animate: true,
+        duration: 1.5
+      });
+      
+    } else if (result.type === 'airport') {
+      const airport = result.data as Airport;
+      
+      // Clear any existing airport markers
+      airportMarkers.forEach(marker => map.removeLayer(marker));
+      
+      // Create airport marker
+      const airportIcon = L.divIcon({
+        html: `
+          <div class="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-lg">
+            ✈
+          </div>
+        `,
+        className: 'airport-marker',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      const marker = L.marker([airport.latitude, airport.longitude], { 
+        icon: airportIcon 
+      })
+        .bindPopup(`
+          <div class="text-center">
+            <h3 class="font-bold text-lg">${airport.icao} / ${airport.iata}</h3>
+            <p class="text-sm">${airport.name}</p>
+            <p class="text-xs text-gray-600">${airport.city}, ${airport.country}</p>
+          </div>
+        `)
+        .addTo(map)
+        .openPopup();
+
+      setAirportMarkers([marker]);
+      
+      // Focus map on airport
+      map.flyTo([airport.latitude, airport.longitude], 10, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+
+    clearSearch();
+  }, [map, airportMarkers, clearSearch]);
+
   // Improved flight selection handler with immediate state protection
   const handleFlightSelect = useCallback(async (flight: Flight) => {
     console.log(`🎯 Flight selected: ${flight.flightId} - Starting selection process`);
+    
+    // Clear any airport markers when selecting a flight
+    airportMarkers.forEach(marker => map?.removeLayer(marker));
+    setAirportMarkers([]);
     
     // CRITICAL: Set selection in progress IMMEDIATELY to protect marker
     setSelectionInProgress(flight.flightId);
@@ -103,7 +184,7 @@ const FlightMap: React.FC = () => {
         console.log(`🔓 Selection process finished for flight ${flight.flightId}`);
       }, 2000); // 2 second delay to ensure stability
     }
-  }, [activeServer, map]);
+  }, [activeServer, map, airportMarkers]);
 
   // Improved close handler
   const handleCloseFlightDetails = useCallback(() => {
@@ -113,13 +194,17 @@ const FlightMap: React.FC = () => {
     setFlownRoute([]);
     setFlightPlan([]);
     
+    // Clear airport markers
+    airportMarkers.forEach(marker => map?.removeLayer(marker));
+    setAirportMarkers([]);
+    
     // Clear selection after a short delay to allow smooth transition
     setTimeout(() => {
       console.log("🔄 Clearing selected flight");
       setSelectedFlight(null);
       setSelectionInProgress(null);
     }, 1000);
-  }, []);
+  }, [airportMarkers, map]);
 
   // Clear selection when changing servers
   useEffect(() => {
@@ -128,7 +213,11 @@ const FlightMap: React.FC = () => {
     setFlownRoute([]);
     setFlightPlan([]);
     setSelectionInProgress(null);
-  }, [activeServer]);
+    
+    // Clear airport markers
+    airportMarkers.forEach(marker => map?.removeLayer(marker));
+    setAirportMarkers([]);
+  }, [activeServer, airportMarkers, map]);
 
   // Enhanced selected flight ID calculation
   const selectedFlightId = useMemo(() => {
@@ -144,6 +233,19 @@ const FlightMap: React.FC = () => {
       <ServerSelection 
         servers={servers} 
         onServerChange={handleServerChange} 
+      />
+      
+      {/* Search Button */}
+      <SearchButton onClick={openSearch} />
+      
+      {/* Search Dialog */}
+      <FlightSearch
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        query={query}
+        onQueryChange={setQuery}
+        searchResults={searchResults}
+        onSelectResult={handleSelectSearchResult}
       />
       
       {/* Loading indicator */}
