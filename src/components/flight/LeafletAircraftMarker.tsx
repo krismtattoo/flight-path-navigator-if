@@ -84,17 +84,18 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     }
   }, [selectedFlightId, selectionInProgress]);
 
-  // Function to determine if aircraft is on ground
+  // Updated function to determine if aircraft is on ground - only use altitude < 200ft
   const isOnGround = useCallback((flight: Flight): boolean => {
-    return flight.altitude < 100 && flight.speed < 50;
+    return flight.altitude < 200;
   }, []);
 
-  // Create SVG icon for aircraft
+  // Create SVG icon for aircraft with updated colors for ground aircraft
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    const baseColor = onGround ? '#64748b' : '#475569';
-    const selectedColor = '#334155';
+    // Updated color scheme: light gray for ground aircraft, darker colors for airborne
+    const baseColor = onGround ? '#9ca3af' : '#475569'; // Light gray for ground, slate for airborne
+    const selectedColor = '#334155'; // Dark slate for selected
     const color = isSelected ? selectedColor : baseColor;
     
     const glowEffect = isSelected 
@@ -139,7 +140,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
       
       const marker = L.marker([flight.latitude, flight.longitude], { icon })
         .on('click', () => {
-          console.log(`🎯 Aircraft clicked: ${flight.flightId} (${flight.callsign})`);
+          console.log(`🎯 Aircraft clicked: ${flight.flightId} (${flight.callsign}) - Altitude: ${flight.altitude}ft ${isOnGround(flight) ? '(ON GROUND)' : '(AIRBORNE)'}`);
           
           // CRITICAL: Add immediate protection before calling selection handler
           protectedMarkersRef.current.add(flight.flightId);
@@ -154,14 +155,19 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
       console.error(`❌ Failed to create marker for flight ${flight.flightId}:`, error);
       return null;
     }
-  }, [createAircraftIcon, onFlightSelect, map]);
+  }, [createAircraftIcon, onFlightSelect, map, isOnGround]);
 
   // Enhanced main effect to manage markers with better protection
   useEffect(() => {
     if (!map) return;
 
     isUpdatingRef.current = true;
-    console.log(`🔄 Updating ${flights.length} aircraft markers (Protected: ${Array.from(protectedMarkersRef.current).join(', ')})`);
+    
+    // Count ground vs airborne aircraft for debugging
+    const groundAircraft = flights.filter(f => isOnGround(f)).length;
+    const airborneAircraft = flights.length - groundAircraft;
+    
+    console.log(`🔄 Updating ${flights.length} aircraft markers (Ground: ${groundAircraft}, Airborne: ${airborneAircraft}, Protected: ${Array.from(protectedMarkersRef.current).join(', ')})`);
     
     // Enhanced marker removal logic with better protection
     Object.keys(markersRef.current).forEach(flightId => {
@@ -222,7 +228,8 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
         }
       } else {
         // Create new marker
-        console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign})`);
+        const groundStatus = isOnGround(flight) ? 'ON GROUND' : 'AIRBORNE';
+        console.log(`➕ Creating new marker for flight ${flight.flightId} (${flight.callsign}) - ${flight.altitude}ft ${groundStatus}`);
         const newMarker = createMarker(flight);
         
         if (newMarker) {
@@ -239,7 +246,7 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
 
     console.log(`📊 Active markers: ${Object.keys(markersRef.current).length}, Protected: ${protectedMarkersRef.current.size}`);
     isUpdatingRef.current = false;
-  }, [map, flights, currentFlightIds, createMarker, updateMarkerStyle, isMarkerProtected, selectedFlightId, selectionInProgress]);
+  }, [map, flights, currentFlightIds, createMarker, updateMarkerStyle, isMarkerProtected, selectedFlightId, selectionInProgress, isOnGround]);
 
   // Enhanced cleanup effect
   useEffect(() => {
