@@ -34,7 +34,7 @@ const AltitudeChart: React.FC<AltitudeChartProps> = ({ data, currentAltitude }) 
   const yAxisMax = Math.max(maxAltitude + 1000, 5000);
 
   return (
-    <Card className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border-emerald-700/50 shadow-lg">
+    <Card className="border-slate-700 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center gap-3 text-base">
           <div className="bg-emerald-600 p-2 rounded-lg">

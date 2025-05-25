@@ -266,7 +266,7 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-1">
               <p className="text-xs text-gray-400">Aircraft Type</p>
               <div className="min-h-[20px]">
@@ -281,10 +281,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                   <p className="text-xs text-red-400 mt-1">API: {aircraftError}</p>
                 )}
               </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs text-gray-400">Registration</p>
-              <p className="text-sm font-semibold text-white">{flight.callsign}</p>
             </div>
           </div>
           <Separator className="bg-slate-600" />

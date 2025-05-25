@@ -34,7 +34,7 @@ const SpeedChart: React.FC<SpeedChartProps> = ({ data, currentSpeed }) => {
   const yAxisMax = Math.max(maxSpeed + 50, 200);
 
   return (
-    <Card className="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-700/50 shadow-lg">
+    <Card className="border-slate-700 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center gap-3 text-base">
           <div className="bg-blue-600 p-2 rounded-lg">

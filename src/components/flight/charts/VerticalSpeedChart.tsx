@@ -37,11 +37,7 @@ const VerticalSpeedChart: React.FC<VerticalSpeedChartProps> = ({ data }) => {
   const isDescending = currentVerticalSpeed < -50;
 
   return (
-    <Card className={`shadow-lg border-opacity-50 ${
-      isClimbing ? 'bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-700/50' :
-      isDescending ? 'bg-gradient-to-br from-red-900/30 to-pink-900/30 border-red-700/50' :
-      'bg-gradient-to-br from-gray-900/30 to-slate-900/30 border-gray-700/50'
-    }`}>
+    <Card className="border-slate-700 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-white flex items-center gap-3 text-base">
           <div className={`p-2 rounded-lg ${
