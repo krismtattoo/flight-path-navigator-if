@@ -4,10 +4,19 @@ import React from 'react';
 const MapStyles = () => {
   return (
     <style>{`
-      /* Leaflet map container styles */
+      /* Dark Blue Map Theme */
       .leaflet-container {
-        background-color: #f8f9fa;
+        background-color: #0f1629;
         font-family: inherit;
+      }
+      
+      .dark-blue-map {
+        background-color: #0f1629;
+      }
+      
+      /* Dark blue filter for tiles */
+      .dark-blue-tiles {
+        filter: hue-rotate(220deg) saturate(1.2) brightness(0.8) contrast(1.1);
       }
       
       .aircraft-marker {
@@ -46,7 +55,7 @@ const MapStyles = () => {
       }
       
       .aircraft-marker:hover svg {
-        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) !important;
+        filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.8)) !important;
       }
       
       @keyframes aircraft-pulse {
@@ -60,10 +69,10 @@ const MapStyles = () => {
       
       @keyframes glow-pulse {
         0% {
-          filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
+          filter: drop-shadow(0 0 12px rgba(96, 165, 250, 0.8)) drop-shadow(0 0 20px rgba(96, 165, 250, 0.4));
         }
         100% {
-          filter: drop-shadow(0 0 16px rgba(59, 130, 246, 1)) drop-shadow(0 0 28px rgba(59, 130, 246, 0.6));
+          filter: drop-shadow(0 0 16px rgba(96, 165, 250, 1)) drop-shadow(0 0 28px rgba(96, 165, 250, 0.6));
         }
       }
       
@@ -77,27 +86,43 @@ const MapStyles = () => {
         contain: layout;
       }
       
+      /* Dark Blue Zoom Controls */
       .leaflet-control-zoom {
         border: none;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        background: rgba(15, 22, 41, 0.9);
+        border-radius: 6px;
       }
       
       .leaflet-control-zoom a {
-        background-color: rgba(255,255,255,0.9);
-        color: #333;
-        border: none;
+        background-color: rgba(15, 22, 41, 0.95);
+        color: #e2e8f0;
+        border: 1px solid rgba(96, 165, 250, 0.3);
+        transition: all 0.2s ease;
       }
       
       .leaflet-control-zoom a:hover {
-        background-color: #fff;
+        background-color: rgba(96, 165, 250, 0.2);
+        color: #96c7f2;
+        border-color: rgba(96, 165, 250, 0.6);
       }
       
-      /* Enhanced route line styles for smooth gradients and curves */
+      .leaflet-control-zoom a:first-child {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+      
+      .leaflet-control-zoom a:last-child {
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+      
+      /* Enhanced route line styles for dark background */
       .leaflet-interactive {
         cursor: pointer;
       }
       
-      /* Smooth route line optimizations with enhanced anti-aliasing */
+      /* Smooth route line optimizations with enhanced anti-aliasing for dark theme */
       .leaflet-interactive path {
         shape-rendering: geometricPrecision;
         vector-effect: non-scaling-stroke;
@@ -107,7 +132,7 @@ const MapStyles = () => {
         filter: none;
       }
       
-      /* Route line anti-aliasing and ultra-smooth rendering */
+      /* Route line anti-aliasing and ultra-smooth rendering for dark background */
       .leaflet-overlay-pane svg {
         shape-rendering: geometricPrecision;
         image-rendering: optimizeQuality;
@@ -125,7 +150,7 @@ const MapStyles = () => {
         filter: none;
       }
       
-      /* Enhanced smoothing for polylines */
+      /* Enhanced smoothing for polylines on dark background */
       .leaflet-overlay-pane polyline,
       .leaflet-overlay-pane path[stroke] {
         stroke-linecap: round;
@@ -141,8 +166,9 @@ const MapStyles = () => {
         image-rendering: optimizeQuality;
       }
       
+      /* Dark blue tile enhancement */
       .leaflet-tile-container img {
-        filter: brightness(1.1) contrast(1.05);
+        filter: hue-rotate(220deg) saturate(1.2) brightness(0.8) contrast(1.1);
       }
       
       .aircraft-marker svg path {
@@ -157,7 +183,7 @@ const MapStyles = () => {
         transform: translateZ(0);
       }
       
-      /* Ultra-smooth line rendering enhancements */
+      /* Ultra-smooth line rendering enhancements for dark theme */
       svg path[stroke] {
         stroke-linecap: round;
         stroke-linejoin: round;
@@ -166,10 +192,26 @@ const MapStyles = () => {
         vector-effect: non-scaling-stroke;
       }
       
-      /* Disable any pixelation or aliasing */
+      /* Disable any pixelation or aliasing on dark background */
       .leaflet-overlay-pane * {
         image-rendering: optimizeQuality;
         shape-rendering: geometricPrecision;
+      }
+      
+      /* Attribution styling for dark theme */
+      .leaflet-control-attribution {
+        background-color: rgba(15, 22, 41, 0.8);
+        color: #94a3b8;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+      
+      .leaflet-control-attribution a {
+        color: #96c7f2;
+      }
+      
+      .leaflet-control-attribution a:hover {
+        color: #bfdbfe;
       }
     `}</style>
   );

@@ -22,7 +22,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    console.log("🗺️ Initializing native Leaflet map");
+    console.log("🗺️ Initializing native Leaflet map with dark blue theme");
 
     // Create the map
     const map = L.map(mapContainer.current, {
@@ -32,11 +32,12 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
       preferCanvas: true, // Better performance for many markers
     });
 
-    // Add bright tile layer (CartoDB Positron for a cleaner, brighter look)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // Add dark blue tile layer (CartoDB Dark Matter with blue filter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 19,
+      className: 'dark-blue-tiles',
     }).addTo(map);
 
     // Enable all interactions
@@ -49,7 +50,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
 
     mapInstance.current = map;
 
-    console.log("🗺️ Native Leaflet map initialized successfully");
+    console.log("🗺️ Native Leaflet map initialized successfully with dark blue theme");
     onMapInit(map);
 
     // Cleanup function
@@ -66,7 +67,7 @@ const NativeLeafletMap: React.FC<NativeLeafletMapProps> = ({ onMapInit }) => {
     <div className="absolute inset-0 z-0">
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
+        className="w-full h-full dark-blue-map"
         style={{ minHeight: '400px' }}
       />
     </div>
