@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { FlightTrackPoint, Flight } from '@/services/flight';
@@ -56,8 +55,8 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
         dashArray: '8, 12',
         lineCap: 'round',
         lineJoin: 'round',
-        smoothFactor: 5.0, // Maximum smoothing
-        noClip: true // Better performance for smooth lines
+        smoothFactor: 5.0,
+        noClip: true
       });
       
       routeLayersRef.current.addLayer(flightPlanLine);
@@ -96,13 +95,13 @@ const LeafletFlightRoute: React.FC<LeafletFlightRouteProps> = ({
         if (coords.length > 1) {
           const polyline = L.polyline(coords, {
             color: color,
-            weight: 4, // Slightly thinner for sharper appearance
+            weight: 2.5, // Reduced from 4 to 2.5 for thinner line
             opacity: 0.95,
             lineCap: 'round',
             lineJoin: 'round',
-            smoothFactor: 8.0, // Ultra-high smoothing
-            noClip: true, // Prevent clipping for smoother rendering
-            className: 'ultra-smooth-route' // CSS class for additional styling
+            smoothFactor: 8.0,
+            noClip: true,
+            className: 'ultra-smooth-route'
           });
           
           routeLayersRef.current!.addLayer(polyline);
