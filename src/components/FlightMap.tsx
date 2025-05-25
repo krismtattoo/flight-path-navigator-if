@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
@@ -207,7 +208,7 @@ const FlightMap: React.FC = () => {
     }, 1000);
   }, [airportMarkers, map]);
 
-  // Clear selection when changing servers
+  // FIXED: Clear selection when changing servers (removed problematic dependencies)
   useEffect(() => {
     console.log("🔄 Server changed, clearing flight selection immediately");
     setSelectedFlight(null);
@@ -215,10 +216,16 @@ const FlightMap: React.FC = () => {
     setFlightPlan([]);
     setSelectionInProgress(null);
     
-    // Clear airport markers
-    airportMarkers.forEach(marker => map?.removeLayer(marker));
-    setAirportMarkers([]);
-  }, [activeServer, airportMarkers, map]);
+    // Clear airport markers using current state
+    setAirportMarkers(prevMarkers => {
+      prevMarkers.forEach(marker => {
+        if (map) {
+          map.removeLayer(marker);
+        }
+      });
+      return [];
+    });
+  }, [activeServer]); // ONLY activeServer as dependency
 
   // Enhanced selected flight ID calculation
   const selectedFlightId = useMemo(() => {
