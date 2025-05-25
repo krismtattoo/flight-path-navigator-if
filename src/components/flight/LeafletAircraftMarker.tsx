@@ -94,24 +94,25 @@ const LeafletAircraftMarker: React.FC<LeafletAircraftMarkerProps> = ({
     return flight.altitude < 200;
   }, []);
 
-  // FIXED: Improved aircraft icon creation with better selected state visualization
+  // FIXED: Improved aircraft icon with pink highlight and shadow for selected state
   const createAircraftIcon = useCallback((flight: Flight, isSelected: boolean = false): L.DivIcon => {
     const onGround = isOnGround(flight);
     
-    // Improved color scheme with better selected state
+    // Use same color as airborne aircraft for selected state
     const baseColor = onGround ? '#9ca3af' : '#475569';
-    const selectedColor = '#3b82f6'; // Blue for selected
-    const color = isSelected ? selectedColor : baseColor;
+    const color = '#475569'; // Always use airborne color for selected aircraft
     
-    // FIXED: Much thinner stroke and better visual hierarchy
     const svgIcon = `
       <svg width="${isSelected ? '28' : '24'}" height="${isSelected ? '28' : '24'}" viewBox="0 0 512 512" style="transform: rotate(${flight.heading}deg);" class="aircraft-svg">
+        ${isSelected ? `
+          <!-- Pink highlight background with shadow -->
+          <circle cx="256" cy="256" r="220" fill="#ec4899" opacity="0.3" 
+                  filter="drop-shadow(0 4px 8px rgba(236, 72, 153, 0.4))"/>
+          <circle cx="256" cy="256" r="200" fill="none" stroke="#ec4899" stroke-width="3" opacity="0.6"/>
+        ` : ''}
         <path d="M256 64c-32 0-64 32-64 64v128l-128 64v32l128-32v96l-32 32v32l64-16 64 16v-32l-32-32v-96l128 32v-32l-128-64V128c0-32-32-64-64-64z" 
-              fill="${color}" 
-              stroke="${isSelected ? '#ffffff' : 'none'}"
-              stroke-width="${isSelected ? '2' : '0'}"
-              vector-effect="non-scaling-stroke"/>
-        ${isSelected ? `<circle cx="256" cy="256" r="200" fill="none" stroke="#3b82f6" stroke-width="3" opacity="0.3"/>` : ''}
+              fill="${isSelected ? color : (onGround ? baseColor : color)}" 
+              stroke="none"/>
       </svg>
     `;
 
