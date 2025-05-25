@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Flight } from '@/services/flight';
 import { X, Plane, MapPin, Clock, Gauge, Navigation, User, BarChart3, Route, Zap } from 'lucide-react';
@@ -48,28 +49,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
   const [flightPlanData, setFlightPlanData] = useState<FlightPlanData | null>(null);
   const [loadingFlightPlan, setLoadingFlightPlan] = useState(false);
   
-  // Format last report time with proper validation
-  const formatTime = (timestamp: number): string => {
-    try {
-      // Validate timestamp
-      if (!timestamp || isNaN(timestamp) || timestamp <= 0) {
-        return 'Unknown';
-      }
-      
-      const date = new Date(timestamp);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return 'Unknown';
-      }
-      
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      console.error('Error formatting time:', e);
-      return 'Unknown';
-    }
-  };
-
   // Generate mock performance data for demonstration
   const generatePerformanceData = () => {
     const now = new Date();
@@ -324,16 +303,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             <p className="text-sm text-gray-400">Heading</p>
           </CardContent>
         </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Clock className="w-6 h-6 text-purple-400" />
-            </div>
-            <p className="text-2xl font-bold text-white">{formatTime(flight.lastReportTime)}</p>
-            <p className="text-sm text-gray-400">Last Update</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Location Info */}
@@ -505,16 +474,6 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
                 </div>
                 <p className="text-xl font-bold text-white">{Math.round(flight.heading)}°</p>
                 <p className="text-xs text-orange-200">Kurs</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/50 border-purple-700/50 backdrop-blur-sm">
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Clock className="w-5 h-5 text-purple-400" />
-                </div>
-                <p className="text-xl font-bold text-white">{formatTime(flight.lastReportTime)}</p>
-                <p className="text-xs text-purple-200">Letztes Update</p>
               </CardContent>
             </Card>
           </div>
