@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import PerformanceChart from './PerformanceChart';
 import { ScrollArea } from '../ui/scroll-area';
 import { useAircraftInfo } from '@/hooks/useAircraftInfo';
+import AltitudeChart from './charts/AltitudeChart';
+import SpeedChart from './charts/SpeedChart';
+import VerticalSpeedChart from './charts/VerticalSpeedChart';
 
 interface FlightDetailsProps {
   flight: Flight;
@@ -483,8 +486,8 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
     
     return (
       <ScrollArea className="h-[60vh] w-full">
-        <div className="space-y-3 pr-4">
-          {/* Enhanced Performance Metrics Grid - All three in one compact row */}
+        <div className="space-y-4 pr-4">
+          {/* Performance Metrics Grid */}
           <div className="grid grid-cols-3 gap-2">
             <Card className="bg-slate-800 border-slate-700">
               <CardContent className="p-2 text-center">
@@ -517,11 +520,19 @@ const FlightDetails: React.FC<FlightDetailsProps> = ({ flight, serverID, onClose
             </Card>
           </div>
 
-          {/* Performance Chart */}
-          <PerformanceChart 
-            data={performanceData}
+          {/* Separate Performance Charts */}
+          <AltitudeChart 
+            data={performanceData.map(d => ({ time: d.time, altitude: d.altitude }))}
             currentAltitude={flight.altitude}
+          />
+          
+          <SpeedChart 
+            data={performanceData.map(d => ({ time: d.time, speed: d.speed }))}
             currentSpeed={flight.speed}
+          />
+          
+          <VerticalSpeedChart 
+            data={performanceData.map(d => ({ time: d.time, verticalSpeed: d.verticalSpeed }))}
           />
         </div>
       </ScrollArea>
