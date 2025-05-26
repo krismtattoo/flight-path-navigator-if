@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import { AirportStatus } from '@/services/flight/worldService';
@@ -59,14 +58,14 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
     const { liveData, staticData, priority } = airportData;
     
     if (priority === 'live' && liveData) {
-      // Live airport with activity - green circles
+      // Live airport with activity - green circles with pulsing animation
       const totalFlights = liveData.inboundFlightsCount + liveData.outboundFlightsCount;
       const hasATC = liveData.atcFacilities.length > 0;
       const size = Math.min(Math.max(16, totalFlights * 2), 32);
       
       return L.divIcon({
         html: `
-          <div class="unified-airport-marker rounded-full ${hasATC ? 'bg-green-500' : 'bg-green-400'} shadow-lg border-2 border-white opacity-90" 
+          <div class="unified-airport-marker animate-pulse-subtle rounded-full ${hasATC ? 'bg-green-500' : 'bg-green-400'} shadow-lg border-2 border-white opacity-60" 
                style="width: ${size}px; height: ${size}px;">
           </div>
         `,
@@ -75,13 +74,13 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
         iconAnchor: [size / 2, size / 2],
       });
     } else if (staticData) {
-      // Static airport only - blue circles
+      // Static airport only - blue circles with subtle pulsing animation
       const isInternational = staticData.iata && staticData.iata.length > 0;
       const colorClass = isInternational ? 'bg-blue-500' : 'bg-blue-400';
       
       return L.divIcon({
         html: `
-          <div class="unified-airport-marker rounded-full ${colorClass} shadow-lg border-2 border-white opacity-90" 
+          <div class="unified-airport-marker animate-pulse-subtle rounded-full ${colorClass} shadow-lg border-2 border-white opacity-50" 
                style="width: 16px; height: 16px;">
           </div>
         `,
@@ -93,7 +92,7 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
     
     // Fallback (shouldn't happen)
     return L.divIcon({
-      html: `<div class="w-4 h-4 bg-gray-300 rounded-full opacity-90"></div>`,
+      html: `<div class="w-4 h-4 bg-gray-300 rounded-full opacity-40 animate-pulse-subtle"></div>`,
       className: 'unified-airport-marker-container',
       iconSize: [16, 16],
       iconAnchor: [8, 8],
