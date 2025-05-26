@@ -33,7 +33,7 @@ const AirportDetails: React.FC<AirportDetailsProps> = ({ airport, onClose }) => 
   const formatTime = (timeString: string): string => {
     try {
       const date = new Date(timeString);
-      return date.toLocaleTimeString('de-DE', { 
+      return date.toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',
         timeZone: 'UTC'
@@ -73,7 +73,7 @@ const AirportDetails: React.FC<AirportDetailsProps> = ({ airport, onClose }) => 
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="flex items-center gap-2">
                 <Plane className="h-4 w-4 text-blue-600 transform rotate-45" />
-                <span className="text-sm font-medium text-blue-800">Ankommende</span>
+                <span className="text-sm font-medium text-blue-800">Arrivals</span>
               </div>
               <p className="text-2xl font-bold text-blue-900">{airport.inboundFlightsCount}</p>
             </div>
@@ -81,7 +81,7 @@ const AirportDetails: React.FC<AirportDetailsProps> = ({ airport, onClose }) => 
             <div className="bg-green-50 p-3 rounded-lg">
               <div className="flex items-center gap-2">
                 <Plane className="h-4 w-4 text-green-600 transform -rotate-45" />
-                <span className="text-sm font-medium text-green-800">Abfliegende</span>
+                <span className="text-sm font-medium text-green-800">Departures</span>
               </div>
               <p className="text-2xl font-bold text-green-900">{airport.outboundFlightsCount}</p>
             </div>
@@ -92,16 +92,16 @@ const AirportDetails: React.FC<AirportDetailsProps> = ({ airport, onClose }) => 
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Radio className="h-4 w-4 text-gray-600" />
-                <h3 className="font-semibold text-gray-900">ATC Dienste</h3>
+                <h3 className="font-semibold text-gray-900">ATC Services</h3>
               </div>
               
               <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs py-2">Typ</TableHead>
+                      <TableHead className="text-xs py-2">Type</TableHead>
                       <TableHead className="text-xs py-2">Controller</TableHead>
-                      <TableHead className="text-xs py-2">Start</TableHead>
+                      <TableHead className="text-xs py-2">Start Time</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

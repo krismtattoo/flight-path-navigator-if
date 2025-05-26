@@ -28,7 +28,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     if (active && payload && payload.length) {
       return (
         <div className="bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-xl p-4 shadow-2xl">
-          <p className="text-white font-semibold mb-3 text-sm">{`Zeit: ${label}`}</p>
+          <p className="text-white font-semibold mb-3 text-sm">{`Time: ${label}`}</p>
           <div className="space-y-2">
             {payload.map((entry: any, index: number) => (
               <div key={index} className="flex items-center gap-2">
@@ -71,7 +71,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               </div>
             </div>
             <p className="text-2xl font-bold text-white mb-1">{Math.round(currentSpeed)}</p>
-            <p className="text-xs text-indigo-100 uppercase tracking-wide">Geschwindigkeit</p>
+            <p className="text-xs text-indigo-100 uppercase tracking-wide">Airspeed</p>
             <p className="text-xs text-indigo-200">knots</p>
           </CardContent>
         </Card>
@@ -84,7 +84,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               </div>
             </div>
             <p className="text-2xl font-bold text-white mb-1">{Math.round(currentAltitude).toLocaleString()}</p>
-            <p className="text-xs text-emerald-100 uppercase tracking-wide">Höhe</p>
+            <p className="text-xs text-emerald-100 uppercase tracking-wide">Altitude</p>
             <p className="text-xs text-emerald-200">feet</p>
           </CardContent>
         </Card>
@@ -109,7 +109,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             <p className="text-2xl font-bold text-white mb-1">
               {currentVerticalSpeed > 0 ? '+' : ''}{Math.round(currentVerticalSpeed)}
             </p>
-            <p className="text-xs text-white/80 uppercase tracking-wide">Steigrate</p>
+            <p className="text-xs text-white/80 uppercase tracking-wide">Vertical Speed</p>
             <p className="text-xs text-white/60">ft/min</p>
           </CardContent>
         </Card>
@@ -122,7 +122,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             <div className="bg-blue-600 p-2 rounded-lg">
               <Activity className="w-5 h-5 text-white" />
             </div>
-            Flugverlauf - Höhe, Geschwindigkeit & Steigrate
+            Flight Profile - Altitude, Speed & Vertical Speed
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -187,7 +187,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   stroke="#10b981"
                   strokeWidth={3}
                   fill="url(#altitudeGradient)"
-                  name="Höhe"
+                  name="Altitude"
                   dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2, fill: '#ffffff' }}
                   connectNulls={false}
@@ -200,7 +200,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   dataKey="speed"
                   stroke="#3b82f6"
                   strokeWidth={2.5}
-                  name="Geschwindigkeit"
+                  name="Airspeed"
                   dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
                   activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2, fill: '#ffffff' }}
                   connectNulls={false}
@@ -213,7 +213,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   dataKey="verticalSpeed"
                   stroke="#f59e0b"
                   strokeWidth={2}
-                  name="Steigrate"
+                  name="Vertical Speed"
                   dot={{ fill: '#f59e0b', strokeWidth: 2, r: 2 }}
                   activeDot={{ r: 4, stroke: '#f59e0b', strokeWidth: 2, fill: '#ffffff' }}
                   strokeDasharray="5 5"
@@ -228,15 +228,15 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             <div className="flex items-center space-x-6 bg-gray-800/50 px-6 py-3 rounded-full">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-sm"></div>
-                <span className="text-gray-300 text-sm font-medium">Höhe (ft)</span>
+                <span className="text-gray-300 text-sm font-medium">Altitude (ft)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full shadow-sm"></div>
-                <span className="text-gray-300 text-sm font-medium">Geschwindigkeit (kts)</span>
+                <span className="text-gray-300 text-sm font-medium">Airspeed (kts)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gradient-to-r from-amber-400 to-amber-600 rounded-full shadow-sm border-2 border-dashed border-amber-500"></div>
-                <span className="text-gray-300 text-sm font-medium">Steigrate (fpm)</span>
+                <span className="text-gray-300 text-sm font-medium">Vertical Speed (fpm)</span>
               </div>
             </div>
           </div>

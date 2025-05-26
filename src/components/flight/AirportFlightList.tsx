@@ -50,7 +50,7 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
         <div className="flex items-center gap-1">
           <Plane className={`h-3 w-3 ${type === 'inbound' ? 'text-blue-400 rotate-45' : 'text-green-400 -rotate-45'}`} />
           <span className={`text-xs ${type === 'inbound' ? 'text-blue-300' : 'text-green-300'}`}>
-            {type === 'inbound' ? 'Ankunft' : 'Abflug'}
+            {type === 'inbound' ? 'Arrival' : 'Departure'}
           </span>
         </div>
       </TableCell>
@@ -66,7 +66,7 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-blue-300 flex items-center gap-2">
                 <Plane className="h-4 w-4 transform rotate-45" />
-                Ankommende Flüge ({inboundFlights.length})
+                Arriving Flights ({inboundFlights.length})
               </CardTitle>
               <Button
                 variant="ghost"
@@ -116,7 +116,7 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-green-300 flex items-center gap-2">
                 <Plane className="h-4 w-4 transform -rotate-45" />
-                Abfliegende Flüge ({outboundFlights.length})
+                Departing Flights ({outboundFlights.length})
               </CardTitle>
               <Button
                 variant="ghost"
@@ -163,7 +163,7 @@ const AirportFlightList: React.FC<AirportFlightListProps> = ({
       {inboundFlights.length === 0 && outboundFlights.length === 0 && (
         <div className="bg-slate-800/60 border border-slate-600 rounded-lg p-4 text-center backdrop-blur-sm">
           <MapPin className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-          <p className="text-sm text-gray-400">Keine aktiven Flüge an diesem Flughafen</p>
+          <p className="text-sm text-gray-400">No active flights at this airport</p>
         </div>
       )}
     </div>

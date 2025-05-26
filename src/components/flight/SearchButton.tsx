@@ -16,7 +16,7 @@ const SearchButton: React.FC<SearchButtonProps> = ({ onClick }) => {
         className="bg-slate-800/95 backdrop-blur-sm text-white hover:bg-slate-700 shadow-lg border border-slate-700 flex items-center gap-2"
       >
         <Search className="w-4 h-4" />
-        <span className="hidden sm:inline">Suchen</span>
+        <span className="hidden sm:inline">Search</span>
       </Button>
     </div>
   );

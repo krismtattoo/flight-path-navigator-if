@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import { AirportStatus } from '@/services/flight/worldService';
@@ -131,7 +132,7 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
         keyboard: false
       })
         .on('click', (e) => {
-          console.log(`🏢 Unified airport clicked: ${airportData.icao} (${displayName})`);
+          console.log(`🏢 Airport clicked: ${airportData.icao} (${displayName})`);
           L.DomEvent.stopPropagation(e);
           onAirportSelect(airportData);
         })
@@ -143,7 +144,7 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
 
       return marker;
     } catch (error) {
-      console.error(`❌ Failed to create unified airport marker for ${airportData.icao}:`, error);
+      console.error(`❌ Failed to create airport marker for ${airportData.icao}:`, error);
       return null;
     }
   }, [map, createAirportIcon, getAirportCoordinates, onAirportSelect]);
@@ -167,7 +168,7 @@ const UnifiedAirportMarkers: React.FC<UnifiedAirportMarkersProps> = ({
           marker.addTo(map);
           markersRef.current[airportData.icao] = marker;
         } catch (error) {
-          console.error(`❌ Failed to add unified airport marker to map for ${airportData.icao}:`, error);
+          console.error(`❌ Failed to add airport marker to map for ${airportData.icao}:`, error);
         }
       }
     });
