@@ -1,21 +1,20 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Flight, FlightTrackPoint } from '@/services/flight';
 import { getFlightRoute } from '@/services/flight';
 import { toast } from "sonner";
 import L from 'leaflet';
 
-// Import our components
-import ServerSelection from './flight/ServerSelection';
+// Import our redesigned components
+import AviationHeader from './flight/AviationHeader';
+import FlightControlPanel from './flight/FlightControlPanel';
+import RadarDisplay from './flight/RadarDisplay';
 import FlightDetails from './flight/FlightDetails';
-import FlightCount from './flight/FlightCount';
 import LoadingIndicator from './flight/LoadingIndicator';
 import MapStyles from './flight/MapStyles';
 import NativeLeafletMap from './flight/NativeLeafletMap';
 import LeafletAircraftMarker from './flight/LeafletAircraftMarker';
 import LeafletFlightRoute from './flight/LeafletFlightRoute';
 import FlightSearch from './flight/FlightSearch';
-import SearchButton from './flight/SearchButton';
 import EnhancedAirportDetails from './flight/EnhancedAirportDetails';
 import UnifiedAirportMarkers, { UnifiedAirportData } from './flight/UnifiedAirportMarkers';
 import { useFlightData } from '@/hooks/useFlightData';
@@ -64,6 +63,7 @@ const FlightMap: React.FC = () => {
   const [flownRoute, setFlownRoute] = useState<FlightTrackPoint[]>([]);
   const [flightPlan, setFlightPlan] = useState<FlightTrackPoint[]>([]);
   const [airportMarkers, setAirportMarkers] = useState<L.Marker[]>([]);
+  const [viewMode, setViewMode] = useState<'standard' | 'radar' | 'satellite'>('standard');
   
   // Critical: Track selection in progress to prevent race conditions
   const [selectionInProgress, setSelectionInProgress] = useState<string | null>(null);
@@ -80,7 +80,7 @@ const FlightMap: React.FC = () => {
   const { airportInfo, loading: airportInfoLoading, fetchAirportInfo, clearAirportInfo } = useAirportInfo();
 
   const handleMapInit = useCallback((initializedMap: L.Map) => {
-    console.log("🗺️ Native Leaflet map initialized in FlightMap component");
+    console.log("🗺️ Aviation radar map initialized");
     
     setMap(initializedMap);
     setMapLoaded(true);
@@ -140,7 +140,7 @@ const FlightMap: React.FC = () => {
       // Create airport marker
       const airportIcon = L.divIcon({
         html: `
-          <div class="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-lg">
+          <div class="bg-radar-green text-black rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-lg glow-effect">
             ✈
           </div>
         `,
@@ -153,10 +153,10 @@ const FlightMap: React.FC = () => {
         icon: airportIcon 
       })
         .bindPopup(`
-          <div class="text-center">
-            <h3 class="font-bold text-lg">${airport.icao} / ${airport.iata}</h3>
+          <div class="text-center bg-aviation-navy text-white p-3 rounded-lg">
+            <h3 class="font-aviation font-bold text-lg text-aviation-sky">${airport.icao} / ${airport.iata}</h3>
             <p class="text-sm">${airport.name}</p>
-            <p class="text-xs text-gray-600">${airport.city}, ${airport.country}</p>
+            <p class="text-xs text-gray-400">${airport.city}, ${airport.country}</p>
           </div>
         `)
         .addTo(map)
@@ -302,15 +302,31 @@ const FlightMap: React.FC = () => {
   }, [selectedFlight, selectionInProgress]);
 
   return (
-    <div className="relative h-screen w-full bg-[#151920]">
-      {/* Server Selection Tabs */}
-      <ServerSelection 
-        servers={servers} 
-        onServerChange={handleServerChange} 
+    <div className="relative h-screen w-full bg-gradient-to-br from-aviation-navy via-slate-900 to-aviation-navy">
+      {/* Aviation Header */}
+      <AviationHeader 
+        servers={servers}
+        activeServer={activeServer}
+        onServerChange={handleServerChange}
+        flightCount={flights.length}
+        onSearchClick={openSearch}
       />
       
-      {/* Search Button */}
-      <SearchButton onClick={openSearch} />
+      {/* Flight Control Panel */}
+      <FlightControlPanel 
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        isLoading={loading || initializing || !mapLoaded || airportsLoading}
+      />
+      
+      {/* Radar Display */}
+      {viewMode === 'radar' && (
+        <RadarDisplay 
+          flights={memoizedFlights}
+          onFlightSelect={handleFlightSelect}
+          selectedFlightId={selectedFlightId}
+        />
+      )}
       
       {/* Search Dialog */}
       <FlightSearch
@@ -327,14 +343,14 @@ const FlightMap: React.FC = () => {
       {/* Loading indicator */}
       {(loading || initializing || !mapLoaded || airportsLoading) && (
         <LoadingIndicator 
-          message={initializing ? "Connecting to Infinite Flight..." : 
-                  !mapLoaded ? "Loading map..." : 
-                  airportsLoading ? "Loading airports..." :
-                  "Loading flights..."} 
+          message={initializing ? "Establishing radar contact..." : 
+                  !mapLoaded ? "Initializing navigation..." : 
+                  airportsLoading ? "Loading airport data..." :
+                  "Acquiring flight data..."} 
         />
       )}
       
-      {/* Enhanced Airport Details with unified data */}
+      {/* Enhanced Airport Details */}
       {selectedAirportData && (
         <EnhancedAirportDetails 
           airport={selectedAirportData.liveData}
@@ -361,8 +377,8 @@ const FlightMap: React.FC = () => {
       {/* Native Leaflet Map Container */}
       <NativeLeafletMap onMapInit={handleMapInit} />
       
-      {/* Aircraft Markers, Unified Airport Markers and Flight Route - only render when map is loaded */}
-      {map && mapLoaded && (
+      {/* Aircraft Markers, Airport Markers and Flight Route */}
+      {map && mapLoaded && viewMode !== 'radar' && (
         <>
           <LeafletAircraftMarker 
             map={map} 

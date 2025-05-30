@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Radar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SearchButtonProps {
@@ -13,10 +13,10 @@ const SearchButton: React.FC<SearchButtonProps> = ({ onClick }) => {
       <Button
         onClick={onClick}
         size="sm"
-        className="bg-slate-800/95 backdrop-blur-sm text-white hover:bg-slate-700 shadow-lg border border-slate-700 flex items-center gap-2"
+        className="btn-aviation glow-effect font-aviation tracking-wider"
       >
-        <Search className="w-4 h-4" />
-        <span className="hidden sm:inline">Search</span>
+        <Search className="w-4 h-4 mr-2" />
+        <span className="hidden sm:inline">SEARCH</span>
       </Button>
     </div>
   );

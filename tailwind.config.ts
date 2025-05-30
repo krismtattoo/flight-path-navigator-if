@@ -63,13 +63,24 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors for flight map
-				flight: {
-					'light-blue': '#5DADEC',
-					'dark-blue': '#0F52BA',
-					'marker': '#4BB4E6',
-					'route': '#AAD3DF',
-					'traveled': '#2271B3'
+				// Premium Aviation Theme Colors
+				aviation: {
+					'navy': '#0A1428',
+					'blue': '#1E40AF',
+					'sky': '#0EA5E9',
+					'cyan': '#06B6D4',
+					'emerald': '#10B981',
+					'amber': '#F59E0B',
+					'orange': '#F97316',
+					'red': '#EF4444',
+					'purple': '#8B5CF6',
+					'slate': '#64748B'
+				},
+				radar: {
+					'green': '#00FF41',
+					'amber': '#FFB000',
+					'red': '#FF0040',
+					'background': '#001122'
 				}
 			},
 			borderRadius: {
@@ -96,18 +107,40 @@ export default {
 				},
 				'pulse-subtle': {
 					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.8' }
+					'50%': { opacity: '0.6' }
 				},
 				'fade-in': {
 					'0%': { opacity: '0', transform: 'translateY(10px)' },
 					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'slide-up': {
+					'0%': { opacity: '0', transform: 'translateY(20px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px rgba(14, 165, 233, 0.5)' },
+					'50%': { boxShadow: '0 0 20px rgba(14, 165, 233, 0.8)' }
+				},
+				'radar-sweep': {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-subtle': 'pulse-subtle 2s infinite ease-in-out',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'pulse-subtle': 'pulse-subtle 3s infinite ease-in-out',
+				'fade-in': 'fade-in 0.4s ease-out',
+				'slide-up': 'slide-up 0.5s ease-out',
+				'glow': 'glow 2s infinite ease-in-out',
+				'radar-sweep': 'radar-sweep 4s linear infinite'
+			},
+			fontFamily: {
+				'aviation': ['Orbitron', 'monospace'],
+				'display': ['Inter', 'system-ui', 'sans-serif']
+			},
+			backdropBlur: {
+				'xs': '2px'
 			}
 		}
 	},
