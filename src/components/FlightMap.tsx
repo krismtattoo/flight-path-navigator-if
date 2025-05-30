@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import L from 'leaflet';
 
 // Import our redesigned components
-import AviationHeader from './flight/AviationHeader';
+import AviationHeader, { Server } from './flight/AviationHeader';
 import FlightControlPanel from './flight/FlightControlPanel';
 import RadarDisplay from './flight/RadarDisplay';
 import FlightDetails from './flight/FlightDetails';
@@ -17,6 +17,7 @@ import LeafletFlightRoute from './flight/LeafletFlightRoute';
 import FlightSearch from './flight/FlightSearch';
 import EnhancedAirportDetails from './flight/EnhancedAirportDetails';
 import UnifiedAirportMarkers, { UnifiedAirportData } from './flight/UnifiedAirportMarkers';
+import FlightCount from './flight/FlightCount';
 import { useFlightData } from '@/hooks/useFlightData';
 import { useFlightSearch, SearchResult } from '@/hooks/useFlightSearch';
 import { useAirportData } from '@/hooks/useAirportData';
@@ -30,8 +31,17 @@ const FlightMap: React.FC = () => {
     flights, 
     loading, 
     initializing, 
-    handleServerChange 
+    handleServerChange: originalHandleServerChange 
   } = useFlightData();
+  
+  // Create a wrapper function to handle the server change with proper typing
+  const handleServerChange = useCallback((server: Server) => {
+    // Find the matching server from the original servers list
+    const matchingServer = servers.find(s => s.id === server.id);
+    if (matchingServer) {
+      originalHandleServerChange(matchingServer);
+    }
+  }, [servers, originalHandleServerChange]);
   
   // Search functionality
   const {
@@ -372,7 +382,7 @@ const FlightMap: React.FC = () => {
       )}
       
       {/* Flight Count */}
-      <FlightCount count={flights.length} />
+      <FlightCount count={flights.length} loading={loading} />
       
       {/* Native Leaflet Map Container */}
       <NativeLeafletMap onMapInit={handleMapInit} />
