@@ -189,6 +189,7 @@
 
   .radar-sweep::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-conic from-transparent via-radar-green/20 to-transparent animate-radar-sweep;
+    @apply absolute inset-0 animate-radar-sweep;
+    background: conic-gradient(from 0deg, transparent, rgba(0, 255, 65, 0.2), transparent);
   }
 }

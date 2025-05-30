@@ -2,7 +2,11 @@
 import React from 'react';
 import { Radar, Search, Plane, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Server } from '@/services/flight/serverService';
+
+export interface Server {
+  id: string;
+  name: string;
+}
 
 interface AviationHeaderProps {
   servers: Server[];
